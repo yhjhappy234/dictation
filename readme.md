@@ -8,82 +8,57 @@
 dictation/
 ├── prd.md                    # 产品需求文档
 ├── readme.md                 # 项目说明文档
-├── backend/                  # Spring Boot后端项目
-│   ├── pom.xml               # Maven配置文件
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/yhj/dictation/
-│   │   │   │   ├── DictationApplication.java    # 主启动类
-│   │   │   │   ├── config/                      # 配置类
-│   │   │   │   │   ├── CorsConfig.java          # 跨域配置
-│   │   │   │   │   ├── GlobalExceptionHandler.java # 全局异常处理
-│   │   │   │   │   └── JpaConfig.java           # JPA配置
-│   │   │   │   ├── controller/                  # REST控制器
-│   │   │   │   │   ├── DictationBatchController.java
-│   │   │   │   │   ├── WordController.java
-│   │   │   │   │   ├── DictationRecordController.java
-│   │   │   │   │   ├── DifficultWordController.java
-│   │   │   │   │   └── SuggestionController.java
-│   │   │   │   ├── dto/                         # 数据传输对象
-│   │   │   │   ├── entity/                      # JPA实体类
-│   │   │   │   │   ├── DictationBatch.java      # 听写批次
-│   │   │   │   │   ├── Word.java                # 词语
-│   │   │   │   │   ├── DictationRecord.java     # 听写记录
-│   │   │   │   │   ├── DifficultWord.java       # 生词本
-│   │   │   │   │   └── Suggestion.java          # 学习建议
-│   │   │   │   ├── repository/                  # JPA Repository接口
-│   │   │   │   │   ├── DictationBatchRepository.java
-│   │   │   │   │   ├── WordRepository.java
-│   │   │   │   │   ├── DictationRecordRepository.java
-│   │   │   │   │   ├── DifficultWordRepository.java
-│   │   │   │   │   └── SuggestionRepository.java
-│   │   │   │   └── service/                     # 业务服务层
-│   │   │   │       ├── DictationBatchService.java
-│   │   │   │       ├── WordService.java
-│   │   │   │       ├── DictationRecordService.java
-│   │   │   │       ├── DifficultWordService.java
-│   │   │   │       └── SuggestionService.java
-│   │   │   └── resources/
-│   │   │       └── application.yml              # 应用配置
-│   │   └── test/                                # 测试目录
-│   └── target/                                  # 编译输出目录
-└── frontend/                  # Vue.js前端项目
-    ├── package.json           # npm依赖配置
-    ├── vite.config.js         # Vite构建配置
-    ├── index.html             # 入口HTML
-    └── src/
-        ├── main.js            # Vue应用入口
-        ├── App.vue            # 根组件
-        ├── router/
-        │   └── index.js       # 路由配置
-        ├── store/
-        │   ├── index.js       # Pinia状态管理
-        │   └── dictation.js   # 听写状态
-        ├── views/             # 页面视图
-        │   ├── Home.vue       # 主页面（听写）
-        │   ├── History.vue    # 历史记录
-        │   ├── DifficultWords.vue # 生词本
-        │   └── Reports.vue    # 学习报表
-        ├── components/        # 可复用组件
-        │   ├── WordInput.vue  # 词语输入组件
-        │   ├── WordDisplay.vue # 词语显示组件
-        │   ├── StatisticsPanel.vue # 统计面板
-        │   └── ControlButtons.vue # 控制按钮
-        ├── api/               # API封装
-        │   ├── index.js
-        │   ├── request.js     # Axios封装
-        │   ├── batch.js
-        │   ├── word.js
-        │   ├── dictation.js
-        │   ├── difficultWord.js
-        │   └── report.js
-        ├── composables/       # Vue组合式函数
-        │   ├── useSpeech.js   # 语音播报/识别
-        │   └── useDictation.js # 听写逻辑
-        └── assets/
-            └── styles/
-                ├── global.scss
-                └── variables.scss
+├── pom.xml                   # Maven配置文件
+├── src/
+│   ├── main/
+│   │   ├── java/com/yhj/dictation/
+│   │   │   ├── DictationApplication.java    # 主启动类
+│   │   │   ├── config/                      # 配置类
+│   │   │   │   ├── CorsConfig.java          # 跨域配置
+│   │   │   │   ├── GlobalExceptionHandler.java # 全局异常处理
+│   │   │   │   └── JpaConfig.java           # JPA配置
+│   │   │   ├── controller/                  # 控制器
+│   │   │   │   ├── DictationBatchController.java
+│   │   │   │   ├── WordController.java
+│   │   │   │   ├── DictationRecordController.java
+│   │   │   │   ├── DifficultWordController.java
+│   │   │   │   ├── SuggestionController.java
+│   │   │   │   └── PageController.java       # 页面控制器
+│   │   │   ├── dto/                         # 数据传输对象
+│   │   │   ├── entity/                      # JPA实体类
+│   │   │   │   ├── DictationBatch.java      # 听写批次
+│   │   │   │   ├── Word.java                # 词语
+│   │   │   │   ├── DictationRecord.java     # 听写记录
+│   │   │   │   ├── DifficultWord.java       # 生词本
+│   │   │   │   └── Suggestion.java          # 学习建议
+│   │   │   ├── repository/                  # JPA Repository接口
+│   │   │   │   ├── DictationBatchRepository.java
+│   │   │   │   ├── WordRepository.java
+│   │   │   │   ├── DictationRecordRepository.java
+│   │   │   │   ├── DifficultWordRepository.java
+│   │   │   │   └── SuggestionRepository.java
+│   │   │   └── service/                     # 业务服务层
+│   │   │       ├── DictationBatchService.java
+│   │   │       ├── WordService.java
+│   │   │       ├── DictationRecordService.java
+│   │   │       ├── DifficultWordService.java
+│   │   │       └── SuggestionService.java
+│   │   └── resources/
+│   │       ├── application.yml              # 应用配置
+│   │       ├── templates/                   # Thymeleaf模板
+│   │       │   ├── index.html               # 主页面（听写）
+│   │       │   ├── history.html             # 历史记录页面
+│   │       │   ├── difficult-words.html     # 生词本页面
+│   │       │   └── reports.html             # 学习报表页面
+│   │       └── static/                      # 静态资源
+│   │           ├── css/
+│   │           │   └── style.css            # 样式文件
+│   │           └── js/
+│   │               ├── app.js               # 主应用逻辑
+│   │               ├── speech.js            # 语音播报/识别
+│   │               └── api.js               # API调用封装
+│   └── test/                                # 测试目录
+└── target/                                  # 编译输出目录
 ```
 
 ## 技术架构
@@ -93,17 +68,14 @@ dictation/
 - **Java版本**: JDK 21
 - **数据库**: SQLite 3
 - **ORM**: Spring Data JPA (Hibernate)
+- **模板引擎**: Thymeleaf 3.1
 - **构建工具**: Maven 3.11+
 
 ### 前端技术栈
-- **框架**: Vue.js 3.4 (Composition API)
-- **UI组件库**: Element Plus 2.4
-- **状态管理**: Pinia 2.1
-- **路由**: Vue Router 4.2
-- **HTTP客户端**: Axios 1.6
-- **图表库**: ECharts 5.4
-- **构建工具**: Vite 5.0
-- **样式**: SCSS
+- **模板引擎**: Thymeleaf (服务端渲染)
+- **JavaScript**: 原生 JavaScript (ES6+)
+- **样式**: CSS3
+- **图表库**: Chart.js 4.4
 
 ### 语音交互
 - **语音播报**: Web Speech API - SpeechSynthesis
@@ -112,29 +84,52 @@ dictation/
 ## 系统架构图
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    浏览器前端                        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│  │   Vue.js    │  │  Web Speech │  │   Axios     │ │
-│  │   UI组件    │  │     API     │  │   HTTP      │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘ │
-└────────────────────┬────────────────────────────────┘
-                     │ REST API (JSON)
-┌────────────────────┴────────────────────────────────┐
-│                 Spring Boot Backend                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│  │ Controller  │  │  Service    │  │ Repository  │ │
-│  │    Layer    │──▶│   Layer     │──▶│   Layer    │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘ │
-└────────────────────┬────────────────────────────────┘
-                     │ JPA/Hibernate
-┌────────────────────┴────────────────────────────────┐
-│                   SQLite Database                   │
-│  ┌─────────────────────────────────────────────┐   │
-│  │ dictation_batch │ word │ dictation_record   │   │
-│  │ difficult_word │ suggestion               │   │
-│  └─────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     Spring Boot 单体应用                        │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                    Thymeleaf 模板层                       │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │  │
+│  │  │  HTML页面   │  │  Web Speech │  │   原生JS    │      │  │
+│  │  │  (Thymeleaf)│  │     API     │  │   交互逻辑  │      │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘      │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                    Controller 层                          │  │
+│  │  ┌─────────────────┐  ┌─────────────────────────────┐   │  │
+│  │  │  PageController │  │    REST API Controllers     │   │  │
+│  │  │   (页面路由)    │  │  (Batch/Word/Record/...)   │   │  │
+│  │  └─────────────────┘  └─────────────────────────────┘   │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                    Service 业务层                         │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │  │
+│  │  │ BatchService│  │ WordService │  │RecordService│      │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘      │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                  Repository 数据层                        │  │
+│  │  ┌─────────────────────────────────────────────────┐     │  │
+│  │  │        Spring Data JPA (Hibernate)             │     │  │
+│  │  └─────────────────────────────────────────────────┘     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                   SQLite Database                        │  │
+│  │  ┌─────────────────────────────────────────────┐        │  │
+│  │  │ dictation_batch │ word │ dictation_record  │        │  │
+│  │  │ difficult_word │ suggestion              │        │  │
+│  │  └─────────────────────────────────────────────┘        │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+
+单体架构优势：
+  - 简化部署：一个应用包含所有功能，一次启动即可运行
+  - 统一管理：前后端代码在同一项目中，便于维护
+  - 减少复杂度：无需前后端分离的额外配置和依赖
+  - 开发效率高：Thymeleaf模板热更新，快速迭代
 ```
 
 ## 核心功能
@@ -224,37 +219,33 @@ dictation/
 
 ### 环境要求
 - JDK 21+
-- Node.js 18+
 - Maven 3.11+
 
-### 后端启动
+### 启动应用
 ```bash
-cd backend
+# 编译项目
 mvn clean install
-mvn spring-boot:run
-# 或直接运行jar
-java --enable-preview -jar target/dictation-backend-1.0.0.jar
-```
-后端默认运行在 `http://localhost:8080`
 
-### 前端启动
-```bash
-cd frontend
-npm install
-npm run dev
+# 启动Spring Boot应用
+mvn spring-boot:run
+
+# 或直接运行jar包
+java --enable-preview -jar target/dictation-1.0.0.jar
 ```
-前端默认运行在 `http://localhost:3000`
+
+应用启动后访问 `http://localhost:8080`
+
+### 开发模式
+Thymeleaf模板支持热更新，修改HTML模板后刷新浏览器即可看到效果。
 
 ### 生产部署
 ```bash
-# 后端打包
-cd backend
+# 打包应用
 mvn clean package -DskipTests
 
-# 前端打包
-cd frontend
-npm run build
-# 生成的静态文件在 dist/ 目录
+# 生成的jar包在 target/ 目录
+# 包含内嵌Tomcat服务器，直接运行即可
+java --enable-preview -jar target/dictation-1.0.0.jar
 ```
 
 ## 数据库设计
