@@ -54,7 +54,16 @@ dictation/
 │   │       │   ├── common-idioms-50.json    # 50个常用成语
 │   │       │   ├── common-poems-20.json     # 20首古诗
 │   │       │   ├── classics-5.json          # 5篇古文
-│   │       │   └── grade2-unit*.json        # 二年级各单元词语
+│   │       │   ├── grade1-up.json           # 一年级上册词语
+│   │       │   ├── grade1-down.json         # 一年级下册词语
+│   │       │   ├── grade2-up.json           # 二年级上册词语
+│   │       │   ├── grade2-unit1~8.json      # 二年级下册词语(按单元)
+│   │       │   ├── grade3-up.json           # 三年级上册词语
+│   │       │   ├── grade3-down.json         # 三年级下册词语
+│   │       │   ├── grade4-up.json           # 四年级上册词语
+│   │       │   ├── grade4-down.json         # 四年级下册词语
+│   │       │   ├── grade5-up.json           # 五年级上册词语
+│   │       │   └── grade5-down.json         # 五年级下册词语
 │   │       ├── templates/                   # Thymeleaf模板
 │   │       │   ├── index.html               # 首页（听写页面）
 │   │       │   ├── tasks.html               # 任务管理页面
