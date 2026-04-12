@@ -10,6 +10,34 @@
         <i class="bi bi-graph-up me-2"></i>学习报表
     </h2>
 
+    <!-- 总体统计 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTasks">0</div>
+                <div class="stat-label">已完成任务</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number" id="totalWords">0</div>
+                <div class="stat-label">总听写词语</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number text-success" id="totalCorrect">0</div>
+                <div class="stat-label">总正确数</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number" id="avgAccuracy">0%</div>
+                <div class="stat-label">平均正确率</div>
+            </div>
+        </div>
+    </div>
+
     <!-- 报表切换标签 -->
     <ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
         <li class="nav-item" role="presentation">
@@ -34,54 +62,45 @@
         <div class="tab-pane fade show active" id="daily" role="tabpanel">
             <!-- 今日统计 -->
             <div class="row mb-4">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stat-card">
-                        <div class="stat-number" id="dailyWords">0</div>
-                        <div class="stat-label">今日听写词语</div>
+                        <div class="stat-number" id="dailyTasks">0</div>
+                        <div class="stat-label">今日完成任务</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stat-card">
                         <div class="stat-number text-success" id="dailyCorrect">0</div>
-                        <div class="stat-label">正确数</div>
+                        <div class="stat-label">今日正确数</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stat-card">
                         <div class="stat-number text-danger" id="dailyWrong">0</div>
-                        <div class="stat-label">错误数</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card">
-                        <div class="stat-number" id="dailyAccuracy">0%</div>
-                        <div class="stat-label">正确率</div>
+                        <div class="stat-label">今日错误数</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 今日图表 -->
-            <div class="chart-container mb-4">
-                <h5 class="mb-3">今日听写时段分布</h5>
-                <div id="dailyChart" style="height: 300px;"></div>
-            </div>
-
-            <!-- 今日错误词语 -->
+            <!-- 今日任务列表 -->
             <div class="card">
                 <div class="card-header">
-                    <i class="bi bi-exclamation-triangle me-2"></i>今日错误词语
+                    <i class="bi bi-list-check me-2"></i>今日完成任务
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>词语</th>
-                                    <th>错误次数</th>
-                                    <th>操作</th>
+                                    <th>任务名称</th>
+                                    <th>听写人</th>
+                                    <th>词语数</th>
+                                    <th>正确</th>
+                                    <th>错误</th>
+                                    <th>正确率</th>
                                 </tr>
                             </thead>
-                            <tbody id="dailyErrorsTable">
+                            <tbody id="dailyTasksTable">
                             </tbody>
                         </table>
                     </div>
@@ -95,8 +114,8 @@
             <div class="row mb-4">
                 <div class="col-md-3">
                     <div class="stat-card">
-                        <div class="stat-number" id="weeklyBatches">0</div>
-                        <div class="stat-label">本周批次数</div>
+                        <div class="stat-number" id="weeklyTasks">0</div>
+                        <div class="stat-label">本周完成任务</div>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -124,35 +143,6 @@
                 <h5 class="mb-3">本周每日趋势</h5>
                 <div id="weeklyTrendChart" style="height: 350px;"></div>
             </div>
-
-            <!-- 正确率趋势图 -->
-            <div class="chart-container mb-4">
-                <h5 class="mb-3">本周正确率趋势</h5>
-                <div id="weeklyAccuracyChart" style="height: 300px;"></div>
-            </div>
-
-            <!-- 本周易错词语 -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-exclamation-triangle me-2"></i>本周易错词语 Top 10
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th style="width: 50px;">排名</th>
-                                    <th>词语</th>
-                                    <th>错误次数</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="weeklyErrorsTable">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- 月报表 -->
@@ -161,8 +151,8 @@
             <div class="row mb-4">
                 <div class="col-md-3">
                     <div class="stat-card">
-                        <div class="stat-number" id="monthlyBatches">0</div>
-                        <div class="stat-label">本月批次数</div>
+                        <div class="stat-number" id="monthlyTasks">0</div>
+                        <div class="stat-label">本月完成任务</div>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -185,30 +175,33 @@
                 </div>
             </div>
 
-            <!-- 月度统计图 -->
+            <!-- 每日听写数量图 -->
             <div class="chart-container mb-4">
                 <h5 class="mb-3">本月每日听写数量</h5>
                 <div id="monthlyChart" style="height: 400px;"></div>
             </div>
 
-            <!-- 月度正确率趋势 -->
-            <div class="chart-container mb-4">
-                <h5 class="mb-3">本月正确率趋势</h5>
-                <div id="monthlyAccuracyChart" style="height: 300px;"></div>
-            </div>
-
-            <!-- 学习进步对比 -->
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="chart-container">
-                        <h5 class="mb-3">学习时长分布</h5>
-                        <div id="monthlyTimeChart" style="height: 300px;"></div>
-                    </div>
+            <!-- 听写人统计 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-people me-2"></i>听写人统计
                 </div>
-                <div class="col-md-6 mb-4">
-                    <div class="chart-container">
-                        <h5 class="mb-3">词语类型分布</h5>
-                        <div id="monthlyCategoryChart" style="height: 300px;"></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>听写人</th>
+                                    <th>完成任务数</th>
+                                    <th>总词语数</th>
+                                    <th>正确数</th>
+                                    <th>错误数</th>
+                                    <th>正确率</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dictatorStatsTable">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -226,212 +219,170 @@
 
 <script>
     // 全局变量
-    let dailyChart, weeklyTrendChart, weeklyAccuracyChart, monthlyChart;
-    let monthlyAccuracyChart, monthlyTimeChart, monthlyCategoryChart;
-
-    // 模拟数据
-    const mockDailyData = {
-        words: 25,
-        correct: 22,
-        wrong: 3,
-        accuracy: 88,
-        hourlyData: [
-            { hour: '08:00', count: 5 },
-            { hour: '09:00', count: 10 },
-            { hour: '10:00', count: 3 },
-            { hour: '14:00', count: 4 },
-            { hour: '15:00', count: 3 }
-        ],
-        errors: [
-            { word: '踌躇', count: 2 },
-            { word: '璀璨', count: 1 }
-        ]
-    };
-
-    const mockWeeklyData = {
-        batches: 8,
-        words: 120,
-        avgAccuracy: 85,
-        studyDays: 5,
-        dailyData: [
-            { day: '周一', words: 15, correct: 13, accuracy: 87 },
-            { day: '周二', words: 20, correct: 18, accuracy: 90 },
-            { day: '周三', words: 0, correct: 0, accuracy: 0 },
-            { day: '周四', words: 25, correct: 22, accuracy: 88 },
-            { day: '周五', words: 18, correct: 15, accuracy: 83 },
-            { day: '周六', words: 30, correct: 28, accuracy: 93 },
-            { day: '周日', words: 12, correct: 10, accuracy: 83 }
-        ],
-        errors: [
-            { word: '踌躇', count: 5 },
-            { word: '踉跄', count: 4 },
-            { word: '蹒跚', count: 3 },
-            { word: '璀璨', count: 3 },
-            { word: '蜿蜒', count: 2 },
-            { word: '巍峨', count: 2 },
-            { word: '涟漪', count: 2 },
-            { word: '憧憬', count: 1 },
-            { word: '徜徉', count: 1 },
-            { word: '婀娜', count: 1 }
-        ]
-    };
-
-    const mockMonthlyData = {
-        batches: 35,
-        words: 500,
-        avgAccuracy: 86,
-        studyDays: 20,
-        dailyWords: generateMonthData(),
-        timeDistribution: [
-            { name: '上午', value: 40 },
-            { name: '下午', value: 35 },
-            { name: '晚上', value: 25 }
-        ],
-        categoryDistribution: [
-            { name: '词语', value: 60 },
-            { name: '成语', value: 20 },
-            { name: '古诗', value: 15 },
-            { name: '句子', value: 5 }
-        ]
-    };
-
-    // 生成月度每日数据
-    function generateMonthData() {
-        const data = [];
-        for (let i = 1; i <= 30; i++) {
-            const day = i + '日';
-            const words = Math.floor(Math.random() * 30) + 5;
-            const accuracy = Math.floor(Math.random() * 20) + 75;
-            data.push({ day: day, words: words, accuracy: accuracy });
-        }
-        return data;
-    }
+    let allTasks = [];
+    let weeklyTrendChart, monthlyChart;
 
     // 页面加载
     document.addEventListener('DOMContentLoaded', function() {
-        loadDailyReport();
-        loadWeeklyReport();
-        loadMonthlyReport();
+        loadTasks();
 
         // 监听标签切换
         document.getElementById('weekly-tab').addEventListener('shown.bs.tab', function() {
-            resizeCharts();
+            if (weeklyTrendChart) weeklyTrendChart.resize();
         });
         document.getElementById('monthly-tab').addEventListener('shown.bs.tab', function() {
-            resizeCharts();
+            if (monthlyChart) monthlyChart.resize();
         });
     });
 
-    // 调整图表大小
-    function resizeCharts() {
-        if (dailyChart) dailyChart.resize();
-        if (weeklyTrendChart) weeklyTrendChart.resize();
-        if (weeklyAccuracyChart) weeklyAccuracyChart.resize();
-        if (monthlyChart) monthlyChart.resize();
-        if (monthlyAccuracyChart) monthlyAccuracyChart.resize();
-        if (monthlyTimeChart) monthlyTimeChart.resize();
-        if (monthlyCategoryChart) monthlyCategoryChart.resize();
-    }
-
-    // 加载日报表
-    async function loadDailyReport() {
+    // 加载所有已完成任务
+    async function loadTasks() {
         try {
-            const response = await fetch('/api/reports/daily');
-            if (response.ok) {
-                const data = await response.json();
-                renderDailyReport(data);
-            } else {
-                renderDailyReport(mockDailyData);
+            const response = await fetch('/api/tasks/status/COMPLETED');
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                allTasks = result.data;
+                renderAllStats();
+                renderDailyReport();
+                renderWeeklyReport();
+                renderMonthlyReport();
             }
         } catch (error) {
-            console.error('加载日报表失败:', error);
-            renderDailyReport(mockDailyData);
+            console.error('加载任务数据失败:', error);
         }
     }
 
-    // 渲染日报表
-    function renderDailyReport(data) {
-        // 更新统计
-        document.getElementById('dailyWords').textContent = data.words;
-        document.getElementById('dailyCorrect').textContent = data.correct;
-        document.getElementById('dailyWrong').textContent = data.wrong;
-        document.getElementById('dailyAccuracy').textContent = data.accuracy + '%';
+    // 渲染总体统计
+    function renderAllStats() {
+        let totalCorrect = 0;
+        let totalWrong = 0;
 
-        // 绘制时段分布图
-        dailyChart = echarts.init(document.getElementById('dailyChart'));
-        dailyChart.setOption({
-            tooltip: { trigger: 'axis' },
-            xAxis: {
-                type: 'category',
-                data: data.hourlyData.map(function(d) { return d.hour; }),
-                axisLabel: { fontSize: 14 }
-            },
-            yAxis: {
-                type: 'value',
-                axisLabel: { fontSize: 14 }
-            },
-            series: [{
-                data: data.hourlyData.map(function(d) { return d.count; }),
-                type: 'bar',
-                itemStyle: {
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: '#FF6B6B' },
-                        { offset: 1, color: '#4ECDC4' }
-                    ])
-                },
-                barWidth: '40%'
-            }],
-            grid: { left: '10%', right: '10%', bottom: '15%', top: '10%' }
+        allTasks.forEach(task => {
+            totalCorrect += task.correctCount || 0;
+            totalWrong += task.wrongCount || 0;
         });
 
-        // 渲染错误词语表格
-        const tbody = document.getElementById('dailyErrorsTable');
+        const totalWords = totalCorrect + totalWrong;
+        const avgAccuracy = totalWords > 0 ? Math.round(totalCorrect / totalWords * 100) : 0;
+
+        document.getElementById('totalTasks').textContent = allTasks.length;
+        document.getElementById('totalWords').textContent = totalWords;
+        document.getElementById('totalCorrect').textContent = totalCorrect;
+        document.getElementById('avgAccuracy').textContent = avgAccuracy + '%';
+    }
+
+    // 渲染日报表
+    function renderDailyReport() {
+        const today = new Date().toLocaleDateString('zh-CN');
+        const todayTasks = allTasks.filter(task => {
+            const taskDate = new Date(task.createdAt).toLocaleDateString('zh-CN');
+            return taskDate === today;
+        });
+
+        let dailyCorrect = 0;
+        let dailyWrong = 0;
+
+        todayTasks.forEach(task => {
+            dailyCorrect += task.correctCount || 0;
+            dailyWrong += task.wrongCount || 0;
+        });
+
+        document.getElementById('dailyTasks').textContent = todayTasks.length;
+        document.getElementById('dailyCorrect').textContent = dailyCorrect;
+        document.getElementById('dailyWrong').textContent = dailyWrong;
+
+        // 渲染今日任务表格
+        const tbody = document.getElementById('dailyTasksTable');
         tbody.innerHTML = '';
-        if (data.errors.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">今日没有错误词语，继续保持！</td></tr>';
+
+        if (todayTasks.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">今日暂无完成的任务</td></tr>';
         } else {
-            data.errors.forEach(function(e) {
-                tbody.innerHTML += '<tr>' +
-                    '<td><strong>' + e.word + '</strong></td>' +
-                    '<td><span class="badge bg-danger">' + e.count + '</span></td>' +
-                    '<td><button class="btn btn-sm btn-outline-primary" onclick="speakWord(\'' + e.word + '\')"><i class="bi bi-volume-up"></i></button></td>' +
-                    '</tr>';
+            todayTasks.forEach(task => {
+                const accuracy = task.wordCount > 0 ? Math.round((task.correctCount / task.wordCount) * 100) : 0;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${task.taskName}</strong></td>
+                        <td>${task.dictator || '未知'}</td>
+                        <td>${task.wordCount}</td>
+                        <td><span class="badge bg-success">${task.correctCount}</span></td>
+                        <td><span class="badge bg-danger">${task.wrongCount}</span></td>
+                        <td>
+                            <div class="progress" style="height: 20px; width: 100px;">
+                                <div class="progress-bar bg-success" style="width: ${accuracy}%">${accuracy}%</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             });
         }
     }
 
-    // 加载周报表
-    async function loadWeeklyReport() {
-        try {
-            const response = await fetch('/api/reports/weekly');
-            if (response.ok) {
-                const data = await response.json();
-                renderWeeklyReport(data);
-            } else {
-                renderWeeklyReport(mockWeeklyData);
-            }
-        } catch (error) {
-            console.error('加载周报表失败:', error);
-            renderWeeklyReport(mockWeeklyData);
-        }
-    }
-
     // 渲染周报表
-    function renderWeeklyReport(data) {
-        // 更新统计
-        document.getElementById('weeklyBatches').textContent = data.batches;
-        document.getElementById('weeklyWords').textContent = data.words;
-        document.getElementById('weeklyAvgAccuracy').textContent = data.avgAccuracy + '%';
-        document.getElementById('weeklyStudyDays').textContent = data.studyDays;
+    function renderWeeklyReport() {
+        const now = new Date();
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay() + 1); // 周一
+        weekStart.setHours(0, 0, 0, 0);
+
+        const weekTasks = allTasks.filter(task => {
+            const taskDate = new Date(task.createdAt);
+            return taskDate >= weekStart;
+        });
+
+        let weeklyCorrect = 0;
+        let weeklyWrong = 0;
+        const studyDays = new Set();
+
+        weekTasks.forEach(task => {
+            weeklyCorrect += task.correctCount || 0;
+            weeklyWrong += task.wrongCount || 0;
+            studyDays.add(new Date(task.createdAt).toLocaleDateString('zh-CN'));
+        });
+
+        const weeklyWords = weeklyCorrect + weeklyWrong;
+        const weeklyAvgAccuracy = weeklyWords > 0 ? Math.round(weeklyCorrect / weeklyWords * 100) : 0;
+
+        document.getElementById('weeklyTasks').textContent = weekTasks.length;
+        document.getElementById('weeklyWords').textContent = weeklyWords;
+        document.getElementById('weeklyAvgAccuracy').textContent = weeklyAvgAccuracy + '%';
+        document.getElementById('weeklyStudyDays').textContent = studyDays.size;
 
         // 绘制每日趋势图
+        const dailyData = [];
+        const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+        for (let i = 0; i < 7; i++) {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(weekStart.getDate() + i);
+            const dayStr = dayDate.toLocaleDateString('zh-CN');
+
+            const dayTasks = weekTasks.filter(task => {
+                return new Date(task.createdAt).toLocaleDateString('zh-CN') === dayStr;
+            });
+
+            let dayCorrect = 0;
+            let dayWrong = 0;
+            dayTasks.forEach(task => {
+                dayCorrect += task.correctCount || 0;
+                dayWrong += task.wrongCount || 0;
+            });
+
+            dailyData.push({
+                day: dayNames[i],
+                words: dayCorrect + dayWrong,
+                correct: dayCorrect
+            });
+        }
+
         weeklyTrendChart = echarts.init(document.getElementById('weeklyTrendChart'));
         weeklyTrendChart.setOption({
             tooltip: { trigger: 'axis' },
             legend: { data: ['听写词语', '正确词语'], textStyle: { fontSize: 14 } },
             xAxis: {
                 type: 'category',
-                data: data.dailyData.map(function(d) { return d.day; }),
+                data: dailyData.map(d => d.day),
                 axisLabel: { fontSize: 14 }
             },
             yAxis: {
@@ -442,94 +393,78 @@
                 {
                     name: '听写词语',
                     type: 'bar',
-                    data: data.dailyData.map(function(d) { return d.words; }),
+                    data: dailyData.map(d => d.words),
                     itemStyle: { color: '#FF6B6B' }
                 },
                 {
                     name: '正确词语',
                     type: 'bar',
-                    data: data.dailyData.map(function(d) { return d.correct; }),
+                    data: dailyData.map(d => d.correct),
                     itemStyle: { color: '#4ECDC4' }
                 }
             ],
             grid: { left: '10%', right: '10%', bottom: '15%', top: '20%' }
         });
-
-        // 绘制正确率趋势图
-        weeklyAccuracyChart = echarts.init(document.getElementById('weeklyAccuracyChart'));
-        weeklyAccuracyChart.setOption({
-            tooltip: { trigger: 'axis', formatter: '{b}: {c}%' },
-            xAxis: {
-                type: 'category',
-                data: data.dailyData.map(function(d) { return d.day; }),
-                axisLabel: { fontSize: 14 }
-            },
-            yAxis: {
-                type: 'value',
-                min: 0,
-                max: 100,
-                axisLabel: { formatter: '{value}%', fontSize: 14 }
-            },
-            series: [{
-                data: data.dailyData.map(function(d) { return d.accuracy; }),
-                type: 'line',
-                smooth: true,
-                itemStyle: { color: '#FFE66D' },
-                areaStyle: {
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: 'rgba(255, 230, 109, 0.5)' },
-                        { offset: 1, color: 'rgba(255, 230, 109, 0.1)' }
-                    ])
-                }
-            }],
-            grid: { left: '10%', right: '10%', bottom: '15%', top: '10%' }
-        });
-
-        // 渲染易错词语表格
-        const tbody = document.getElementById('weeklyErrorsTable');
-        tbody.innerHTML = '';
-        data.errors.forEach(function(e, index) {
-            const rankBadge = index < 3 ? 'bg-danger' : 'bg-warning';
-            tbody.innerHTML += '<tr>' +
-                '<td><span class="badge ' + rankBadge + '">' + (index + 1) + '</span></td>' +
-                '<td><strong>' + e.word + '</strong></td>' +
-                '<td><span class="badge bg-danger">' + e.count + '</span></td>' +
-                '<td><button class="btn btn-sm btn-outline-primary" onclick="speakWord(\'' + e.word + '\')"><i class="bi bi-volume-up"></i></button></td>' +
-                '</tr>';
-        });
-    }
-
-    // 加载月报表
-    async function loadMonthlyReport() {
-        try {
-            const response = await fetch('/api/reports/monthly');
-            if (response.ok) {
-                const data = await response.json();
-                renderMonthlyReport(data);
-            } else {
-                renderMonthlyReport(mockMonthlyData);
-            }
-        } catch (error) {
-            console.error('加载月报表失败:', error);
-            renderMonthlyReport(mockMonthlyData);
-        }
     }
 
     // 渲染月报表
-    function renderMonthlyReport(data) {
-        // 更新统计
-        document.getElementById('monthlyBatches').textContent = data.batches;
-        document.getElementById('monthlyWords').textContent = data.words;
-        document.getElementById('monthlyAvgAccuracy').textContent = data.avgAccuracy + '%';
-        document.getElementById('monthlyStudyDays').textContent = data.studyDays;
+    function renderMonthlyReport() {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        monthStart.setHours(0, 0, 0, 0);
+
+        const monthTasks = allTasks.filter(task => {
+            const taskDate = new Date(task.createdAt);
+            return taskDate >= monthStart;
+        });
+
+        let monthlyCorrect = 0;
+        let monthlyWrong = 0;
+        const studyDays = new Set();
+
+        monthTasks.forEach(task => {
+            monthlyCorrect += task.correctCount || 0;
+            monthlyWrong += task.wrongCount || 0;
+            studyDays.add(new Date(task.createdAt).toLocaleDateString('zh-CN'));
+        });
+
+        const monthlyWords = monthlyCorrect + monthlyWrong;
+        const monthlyAvgAccuracy = monthlyWords > 0 ? Math.round(monthlyCorrect / monthlyWords * 100) : 0;
+
+        document.getElementById('monthlyTasks').textContent = monthTasks.length;
+        document.getElementById('monthlyWords').textContent = monthlyWords;
+        document.getElementById('monthlyAvgAccuracy').textContent = monthlyAvgAccuracy + '%';
+        document.getElementById('monthlyStudyDays').textContent = studyDays.size;
 
         // 绘制每日听写数量图
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const dailyWords = [];
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dayDate = new Date(now.getFullYear(), now.getMonth(), i);
+            const dayStr = dayDate.toLocaleDateString('zh-CN');
+
+            const dayTasks = monthTasks.filter(task => {
+                return new Date(task.createdAt).toLocaleDateString('zh-CN') === dayStr;
+            });
+
+            let dayWords = 0;
+            dayTasks.forEach(task => {
+                dayWords += task.wordCount || 0;
+            });
+
+            dailyWords.push({
+                day: i + '日',
+                words: dayWords
+            });
+        }
+
         monthlyChart = echarts.init(document.getElementById('monthlyChart'));
         monthlyChart.setOption({
             tooltip: { trigger: 'axis' },
             xAxis: {
                 type: 'category',
-                data: data.dailyWords.map(function(d) { return d.day; }),
+                data: dailyWords.map(d => d.day),
                 axisLabel: {
                     fontSize: 12,
                     interval: 2,
@@ -541,7 +476,7 @@
                 axisLabel: { fontSize: 14 }
             },
             series: [{
-                data: data.dailyWords.map(function(d) { return d.words; }),
+                data: dailyWords.map(d => d.words),
                 type: 'bar',
                 itemStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -556,101 +491,47 @@
             ]
         });
 
-        // 绘制正确率趋势图
-        monthlyAccuracyChart = echarts.init(document.getElementById('monthlyAccuracyChart'));
-        monthlyAccuracyChart.setOption({
-            tooltip: { trigger: 'axis', formatter: '{b}: {c}%' },
-            xAxis: {
-                type: 'category',
-                data: data.dailyWords.map(function(d) { return d.day; }),
-                axisLabel: {
-                    fontSize: 12,
-                    interval: 2,
-                    rotate: 30
-                }
-            },
-            yAxis: {
-                type: 'value',
-                min: 50,
-                max: 100,
-                axisLabel: { formatter: '{value}%', fontSize: 14 }
-            },
-            series: [{
-                data: data.dailyWords.map(function(d) { return d.accuracy; }),
-                type: 'line',
-                smooth: true,
-                itemStyle: { color: '#4ECDC4' },
-                markLine: {
-                    data: [{ type: 'average', name: '平均值' }],
-                    label: { formatter: '平均: {c}%' }
-                }
-            }],
-            grid: { left: '10%', right: '5%', bottom: '20%', top: '10%' }
+        // 渲染听写人统计
+        const dictatorStats = {};
+        monthTasks.forEach(task => {
+            const dictator = task.dictator || '未知';
+            if (!dictatorStats[dictator]) {
+                dictatorStats[dictator] = { tasks: 0, words: 0, correct: 0, wrong: 0 };
+            }
+            dictatorStats[dictator].tasks++;
+            dictatorStats[dictator].words += task.wordCount || 0;
+            dictatorStats[dictator].correct += task.correctCount || 0;
+            dictatorStats[dictator].wrong += task.wrongCount || 0;
         });
 
-        // 绘制学习时长分布饼图
-        monthlyTimeChart = echarts.init(document.getElementById('monthlyTimeChart'));
-        monthlyTimeChart.setOption({
-            tooltip: { trigger: 'item', formatter: '{b}: {c}% ({d}%)' },
-            legend: {
-                orient: 'vertical',
-                left: 'left',
-                textStyle: { fontSize: 14 }
-            },
-            series: [{
-                type: 'pie',
-                radius: ['40%', '70%'],
-                avoidLabelOverlap: false,
-                itemStyle: {
-                    borderRadius: 10,
-                    borderColor: '#fff',
-                    borderWidth: 2
-                },
-                label: { show: true, fontSize: 14 },
-                data: data.timeDistribution.map(function(d, i) {
-                    const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D'];
-                    return { value: d.value, name: d.name, itemStyle: { color: colors[i] } };
-                })
-            }]
-        });
+        const tbody = document.getElementById('dictatorStatsTable');
+        tbody.innerHTML = '';
 
-        // 绘制词语类型分布饼图
-        monthlyCategoryChart = echarts.init(document.getElementById('monthlyCategoryChart'));
-        monthlyCategoryChart.setOption({
-            tooltip: { trigger: 'item', formatter: '{b}: {c}% ({d}%)' },
-            legend: {
-                orient: 'vertical',
-                left: 'left',
-                textStyle: { fontSize: 14 }
-            },
-            series: [{
-                type: 'pie',
-                radius: '70%',
-                itemStyle: {
-                    borderRadius: 10,
-                    borderColor: '#fff',
-                    borderWidth: 2
-                },
-                label: { show: true, fontSize: 14 },
-                data: data.categoryDistribution.map(function(d, i) {
-                    const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3'];
-                    return { value: d.value, name: d.name, itemStyle: { color: colors[i] } };
-                })
-            }]
+        Object.keys(dictatorStats).forEach(dictator => {
+            const stat = dictatorStats[dictator];
+            const accuracy = stat.words > 0 ? Math.round(stat.correct / stat.words * 100) : 0;
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${dictator}</strong></td>
+                    <td>${stat.tasks}</td>
+                    <td>${stat.words}</td>
+                    <td><span class="badge bg-success">${stat.correct}</span></td>
+                    <td><span class="badge bg-danger">${stat.wrong}</span></td>
+                    <td>
+                        <div class="progress" style="height: 20px; width: 100px;">
+                            <div class="progress-bar bg-success" style="width: ${accuracy}%">${accuracy}%</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
         });
-    }
-
-    // 朗读词语
-    function speakWord(word) {
-        const synth = window.speechSynthesis;
-        const utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = 'zh-CN';
-        utterance.rate = 0.8;
-        synth.speak(utterance);
     }
 
     // 窗口大小变化时调整图表
-    window.addEventListener('resize', resizeCharts);
+    window.addEventListener('resize', function() {
+        if (weeklyTrendChart) weeklyTrendChart.resize();
+        if (monthlyChart) monthlyChart.resize();
+    });
 </script>
 </body>
 </html>

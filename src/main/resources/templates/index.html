@@ -31,7 +31,7 @@
                                 <i class="bi bi-arrow-repeat"></i>
                             </button>
                         </div>
-                        <small class="text-muted">提示：选择任务后可开始听写，已完成任务需重置后才能再次听写</small>
+                        <small class="text-muted">提示：选择未完成的任务开始听写，已完成任务可在历史记录查看</small>
                     </div>
 
                     <!-- 显示选中任务的词语 -->
@@ -744,10 +744,10 @@
         refreshTasks();
     });
 
-    // 刷新听写任务列表（加载所有任务）
+    // 刷新听写任务列表（只加载未完成的任务）
     async function refreshTasks() {
         try {
-            const response = await fetch('/api/tasks');
+            const response = await fetch('/api/tasks/uncompleted');
             const result = await response.json();
 
             if (result.success && result.data) {
@@ -757,7 +757,6 @@
                 // 按状态分组
                 const notStartedTasks = result.data.filter(t => t.status === 'NOT_STARTED');
                 const inProgressTasks = result.data.filter(t => t.status === 'IN_PROGRESS');
-                const completedTasks = result.data.filter(t => t.status === 'COMPLETED');
 
                 // 未开始任务
                 if (notStartedTasks.length > 0) {
@@ -785,21 +784,15 @@
                     select.appendChild(group);
                 }
 
-                // 已完成任务
-                if (completedTasks.length > 0) {
-                    const group = document.createElement('optgroup');
-                    group.label = '已完成';
-                    completedTasks.forEach(task => {
-                        const option = document.createElement('option');
-                        option.value = task.id;
-                        option.textContent = `${task.taskName} (${task.correctCount}/${task.wordCount}正确)`;
-                        group.appendChild(option);
-                    });
-                    select.appendChild(group);
+                if (notStartedTasks.length === 0 && inProgressTasks.length === 0) {
+                    select.innerHTML = '<option value="">-- 暂无未完成任务 --</option>';
                 }
+            } else {
+                showToast('加载任务失败: ' + (result.message || '未知错误'), 'warning');
             }
         } catch (error) {
             console.error('加载听写任务失败:', error);
+            showToast('加载失败，请检查网络', 'warning');
         }
     }
 
@@ -838,23 +831,7 @@
                 document.getElementById('dictatorInput').value = task.dictator || '凡凡';
 
                 // 根据任务状态显示不同的按钮和提示
-                if (task.status === 'COMPLETED') {
-                    // 已完成任务
-                    document.getElementById('progressInfo').style.display = 'block';
-                    document.getElementById('savedCorrectCount').textContent = task.correctCount || 0;
-                    document.getElementById('savedWrongCount').textContent = task.wrongCount || 0;
-                    document.getElementById('savedProgress').textContent = task.wordCount;
-                    document.getElementById('savedTotal').textContent = task.wordCount;
-
-                    // 隐藏开始和继续按钮，只显示重置按钮
-                    document.getElementById('startBtn').style.display = 'none';
-                    document.getElementById('continueBtn').style.display = 'none';
-                    document.getElementById('resetProgressBtn').style.display = 'inline-block';
-                    document.getElementById('resetProgressBtn').textContent = '重置并开始听写';
-                    document.getElementById('startDictationSection').style.display = 'grid';
-
-                    showToast(`任务已完成：${task.taskName}，点击"重置并开始听写"可重新听写`, 'info');
-                } else if (task.status === 'IN_PROGRESS' || task.currentIndex > 0) {
+                if (task.status === 'IN_PROGRESS' || task.currentIndex > 0) {
                     // 进行中任务
                     document.getElementById('progressInfo').style.display = 'block';
                     document.getElementById('savedCorrectCount').textContent = task.correctCount || 0;
@@ -866,7 +843,6 @@
                     document.getElementById('startBtn').style.display = 'inline-block';
                     document.getElementById('continueBtn').style.display = 'inline-block';
                     document.getElementById('resetProgressBtn').style.display = 'inline-block';
-                    document.getElementById('resetProgressBtn').textContent = '重新开始';
                     document.getElementById('startDictationSection').style.display = 'grid';
 
                     showToast(`已加载：${task.taskName}（进行中）`, 'success');
@@ -881,7 +857,7 @@
                     showToast(`已加载：${task.taskName}（未开始）`, 'success');
                 }
             } else {
-                showToast('加载任务失败', 'warning');
+                showToast('加载任务失败: ' + (result.message || '未知错误'), 'warning');
                 selectedTaskId = null;
             }
         } catch (error) {
