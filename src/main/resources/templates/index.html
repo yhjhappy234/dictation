@@ -63,6 +63,17 @@
                         </div>
                     </div>
 
+                    <!-- 听写人选择 -->
+                    <div class="mb-3" id="dictatorSection" style="display: none;">
+                        <label class="form-label fw-bold">听写人：</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control" id="dictatorInput" value="凡凡" placeholder="输入听写人姓名">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="showDictatorManager()" title="管理听写人">
+                                <i class="bi bi-people"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- 开始听写按钮 -->
                     <div class="d-grid gap-2 mb-4" id="startDictationSection" style="display: none;">
                         <button class="btn btn-primary btn-action" id="startBtn" onclick="startDictation()">
@@ -232,6 +243,9 @@
             return;
         }
 
+        // 获取听写人
+        const dictator = document.getElementById('dictatorInput').value.trim() || '凡凡';
+
         // 解析词语
         words = input.split('\n')
             .map(w => w.trim())
@@ -262,16 +276,89 @@
         document.getElementById('wrongWordsSection').style.display = 'none';
         document.getElementById('startBtn').disabled = true;
 
+        // 高亮第一个词语
+        highlightCurrentWord(0);
+
         // 开始第一个词语
         showCurrentWord();
 
-        // 通过API开始听写（更新任务状态为进行中）
-        startDictationFromTask(selectedTaskId);
+        // 通过API开始听写（更新任务状态为进行中，保存听写人）
+        startDictationFromTask(selectedTaskId, dictator);
+    }
+
+    // 继续听写（从上次进度继续）
+    function continueDictation() {
+        if (!selectedTaskId) {
+            showToast('请先选择任务', 'warning');
+            return;
+        }
+
+        isDictating = true;
+
+        // 获取保存的进度
+        fetch(`/api/tasks/${selectedTaskId}`).then(response => response.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    const task = result.data;
+                    currentIndex = task.currentIndex || 0;
+                    correctCount = task.correctCount || 0;
+                    wrongCount = task.wrongCount || 0;
+
+                    // 显示听写区域
+                    document.getElementById('progressContainer').style.display = 'block';
+                    document.getElementById('statusArea').style.display = 'block';
+                    document.getElementById('controlButtons').style.display = 'flex';
+                    document.getElementById('answerArea').style.display = 'block';
+                    document.getElementById('resultButtons').style.display = 'flex';
+                    document.getElementById('completeArea').style.display = 'none';
+                    document.getElementById('startBtn').disabled = true;
+
+                    // 高亮当前词语
+                    highlightCurrentWord(currentIndex);
+
+                    updateStats();
+                    showCurrentWord();
+
+                    showToast(`继续听写，从第${currentIndex + 1}个词语开始`, 'success');
+                }
+            });
+    }
+
+    // 重置任务进度
+    async function resetTaskProgress() {
+        if (!selectedTaskId) return;
+
+        if (!confirm('确定要重新开始吗？之前的进度将被清除。')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/tasks/${selectedTaskId}/reset-progress`, {
+                method: 'POST'
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('进度已重置', 'success');
+                loadTask();  // 重新加载任务信息
+            } else {
+                showToast(result.message || '重置失败', 'warning');
+            }
+        } catch (error) {
+            console.error('重置进度失败:', error);
+            showToast('操作失败', 'warning');
+        }
     }
 
     // 从任务开始听写（调用API）
-    async function startDictationFromTask(taskId) {
+    async function startDictationFromTask(taskId, dictator) {
         try {
+            // 先保存听写人
+            await fetch(`/api/tasks/${taskId}/dictator?dictator=${encodeURIComponent(dictator)}`, {
+                method: 'POST'
+            });
+
+            // 开始听写
             const response = await fetch(`/api/tasks/${taskId}/dictation`, {
                 method: 'POST'
             });
@@ -306,6 +393,9 @@
 
         document.getElementById('currentIndex').textContent = currentIndex + 1;
         document.getElementById('wordDisplay').innerHTML = '<i class="bi bi-volume-up-fill text-primary" style="font-size: 3rem;"></i>';
+
+        // 高亮当前词语
+        highlightCurrentWord(currentIndex);
 
         // 重置答案按钮为"显示答案"状态
         const answerBtn = document.getElementById('answerBtn');
@@ -685,6 +775,8 @@
             selectedTaskId = null;
             document.getElementById('selectedTaskWords').style.display = 'none';
             document.getElementById('selectedTaskName').style.display = 'none';
+            document.getElementById('progressInfo').style.display = 'none';
+            document.getElementById('dictatorSection').style.display = 'none';
             document.getElementById('startDictationSection').style.display = 'none';
             return;
         }
@@ -700,9 +792,34 @@
                 document.getElementById('wordInput').value = task.words.join('\n');
                 document.getElementById('batchName').value = task.taskName;
 
+                // 显示词语列表
+                renderWordList(task.words);
+
                 // 显示任务详情区域
                 document.getElementById('selectedTaskWords').style.display = 'block';
                 document.getElementById('selectedTaskName').style.display = 'block';
+                document.getElementById('dictatorSection').style.display = 'block';
+
+                // 设置听写人（如果有保存的话，否则默认为凡凡）
+                document.getElementById('dictatorInput').value = task.dictator || '凡凡';
+
+                // 显示进度信息
+                if (task.currentIndex > 0 || task.status === 'IN_PROGRESS') {
+                    document.getElementById('progressInfo').style.display = 'block';
+                    document.getElementById('savedCorrectCount').textContent = task.correctCount || 0;
+                    document.getElementById('savedWrongCount').textContent = task.wrongCount || 0;
+                    document.getElementById('savedProgress').textContent = task.currentIndex || 0;
+                    document.getElementById('savedTotal').textContent = task.wordCount;
+
+                    // 显示继续/重新开始按钮
+                    document.getElementById('continueBtn').style.display = 'inline-block';
+                    document.getElementById('resetProgressBtn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('progressInfo').style.display = 'none';
+                    document.getElementById('continueBtn').style.display = 'none';
+                    document.getElementById('resetProgressBtn').style.display = 'none';
+                }
+
                 document.getElementById('startDictationSection').style.display = 'grid';
 
                 // 根据状态更新显示
@@ -717,6 +834,40 @@
             showToast('加载失败，请检查网络', 'warning');
             selectedTaskId = null;
         }
+    }
+
+    // 渲染词语列表
+    function renderWordList(words) {
+        const container = document.getElementById('wordListContainer');
+        container.innerHTML = '';
+
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.className = 'badge bg-light text-dark word-badge';
+            span.textContent = word;
+            span.id = `word-${index}`;
+            span.style.margin = '2px';
+            container.appendChild(span);
+        });
+    }
+
+    // 高亮当前词语
+    function highlightCurrentWord(index) {
+        // 移除所有高亮
+        document.querySelectorAll('.word-badge').forEach(badge => {
+            badge.className = 'badge bg-light text-dark word-badge';
+        });
+
+        // 高亮当前词语
+        const currentBadge = document.getElementById(`word-${index}`);
+        if (currentBadge) {
+            currentBadge.className = 'badge bg-primary word-badge';
+        }
+    }
+
+    // 显示听写人管理页面
+    function showDictatorManager() {
+        window.location.href = '/dictators';
     }
 </script>
 </body>

@@ -29,6 +29,9 @@ public class TaskRecord {
     @Column(name = "error_count")
     private Integer errorCount;
 
+    @Column(name = "dictator")
+    private String dictator;  // 听写人
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

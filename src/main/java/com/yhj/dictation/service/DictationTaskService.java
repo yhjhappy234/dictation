@@ -187,6 +187,7 @@ public class DictationTaskService {
         dto.setCurrentIndex(task.getCurrentIndex());
         dto.setCorrectCount(task.getCorrectCount());
         dto.setWrongCount(task.getWrongCount());
+        dto.setDictator(task.getDictator());
         return dto;
     }
 
@@ -271,6 +272,23 @@ public class DictationTaskService {
 
         task = taskRepository.save(task);
         log.info("Reset progress for task: {}", id);
+        return task;
+    }
+
+    /**
+     * 设置听写人
+     */
+    @Transactional
+    public DictationTask setDictator(Long id, String dictator) {
+        Optional<DictationTask> taskOpt = taskRepository.findById(id);
+        if (taskOpt.isEmpty()) {
+            throw new IllegalArgumentException("Task not found: " + id);
+        }
+
+        DictationTask task = taskOpt.get();
+        task.setDictator(dictator);
+        task = taskRepository.save(task);
+        log.info("Set dictator for task {} to: {}", id, dictator);
         return task;
     }
 

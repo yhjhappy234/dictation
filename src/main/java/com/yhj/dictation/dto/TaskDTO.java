@@ -19,4 +19,5 @@ public class TaskDTO {
     private Integer currentIndex;  // 当前进度
     private Integer correctCount;  // 正确数
     private Integer wrongCount;  // 错误数
+    private String dictator;  // 听写人
 }

@@ -191,6 +191,22 @@ public class DictationTaskController {
     }
 
     /**
+     * 设置听写人
+     */
+    @PostMapping("/{id}/dictator")
+    public ApiResponse<TaskDTO> setDictator(@PathVariable Long id, @RequestParam String dictator) {
+        try {
+            DictationTask task = taskService.setDictator(id, dictator);
+            return ApiResponse.success("听写人已设置", taskService.toTaskDTO(task));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to set dictator for task: {}", id, e);
+            return ApiResponse.error("设置听写人失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 重置任务（状态改为未开始）
      */
     @PostMapping("/{id}/reset")

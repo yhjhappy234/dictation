@@ -45,6 +45,9 @@ public class DictationTask {
     @Column(name = "wrong_count")
     private Integer wrongCount = 0;
 
+    @Column(name = "dictator")
+    private String dictator;  // 听写人
+
     /**
      * 任务状态枚举
      */
