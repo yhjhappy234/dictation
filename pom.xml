@@ -14,7 +14,7 @@
     <groupId>com.yhj.dictation</groupId>
     <artifactId>dictation</artifactId>
     <version>1.0.0</version>
-    <name>dictation-backend</name>
+    <name>dictation</name>
     <description>小学生听写助手后端服务</description>
 
     <properties>

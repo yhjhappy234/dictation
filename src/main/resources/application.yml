@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: dictation-backend
+    name: dictation
 
   datasource:
     url: jdbc:sqlite:src/main/resources/dictation.db
@@ -25,7 +25,7 @@ spring:
 # 日志配置
 logging:
   level:
-    com.dictation: DEBUG
+    com.yhj.dictation: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
