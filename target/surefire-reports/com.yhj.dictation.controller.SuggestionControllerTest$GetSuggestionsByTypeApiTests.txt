@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.yhj.dictation.controller.SuggestionControllerTest$GetSuggestionsByTypeApiTests
--------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.079 s -- in com.yhj.dictation.controller.SuggestionControllerTest$GetSuggestionsByTypeApiTests
