@@ -739,18 +739,37 @@
                 const select = document.getElementById('taskSelect');
                 select.innerHTML = '<option value="">-- 请选择听写任务 --</option>';
 
-                result.data.forEach(task => {
-                    const option = document.createElement('option');
-                    option.value = task.id;
-                    let statusText = '';
-                    if (task.status === 'IN_PROGRESS') {
-                        statusText = `【进行中 ${task.currentIndex}/${task.wordCount}】`;
-                    }
-                    option.textContent = `${statusText}${task.taskName} (${task.wordCount}个词)`;
-                    select.appendChild(option);
-                });
+                // 按状态分组，进行中在前，未开始在后
+                const inProgressTasks = result.data.filter(t => t.status === 'IN_PROGRESS');
+                const notStartedTasks = result.data.filter(t => t.status === 'NOT_STARTED');
 
-                if (result.data.length === 0) {
+                // 进行中任务（排在前面）
+                if (inProgressTasks.length > 0) {
+                    const group = document.createElement('optgroup');
+                    group.label = '进行中';
+                    inProgressTasks.forEach(task => {
+                        const option = document.createElement('option');
+                        option.value = task.id;
+                        option.textContent = `${task.taskName} (进度${task.currentIndex}/${task.wordCount})`;
+                        group.appendChild(option);
+                    });
+                    select.appendChild(group);
+                }
+
+                // 未开始任务（排在后面）
+                if (notStartedTasks.length > 0) {
+                    const group = document.createElement('optgroup');
+                    group.label = '未开始';
+                    notStartedTasks.forEach(task => {
+                        const option = document.createElement('option');
+                        option.value = task.id;
+                        option.textContent = `${task.taskName} (${task.wordCount}个词)`;
+                        group.appendChild(option);
+                    });
+                    select.appendChild(group);
+                }
+
+                if (inProgressTasks.length === 0 && notStartedTasks.length === 0) {
                     select.innerHTML = '<option value="">-- 暂无未完成任务 --</option>';
                 }
             } else {
