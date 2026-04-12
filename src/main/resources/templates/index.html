@@ -596,13 +596,13 @@
     }
 
     // 下一个词语（默认正确，与markCorrect相同）
-    function nextWord() {
+    async function nextWord() {
         if (!checkTaskAndDictator()) return;
         if (currentIndex < words.length) {
             const word = words[currentIndex];
-            // 完成当前词语听写（默认正确）
+            // 完成当前词语听写（默认正确）- 等待请求完成后再继续
             if (selectedTaskId) {
-                completeWordRecord(selectedTaskId, word, true);
+                await completeWordRecord(selectedTaskId, word, true);
             }
             currentIndex++;
             correctCount++;
@@ -647,12 +647,12 @@
     }
 
     // 标记正确（与下一个按钮功能相同）
-    function markCorrect() {
-        nextWord();
+    async function markCorrect() {
+        await nextWord();
     }
 
     // 标记错误
-    function markWrong() {
+    async function markWrong() {
         if (!checkTaskAndDictator()) return;
         const word = words[currentIndex];
         wrongCount++;
@@ -665,9 +665,9 @@
             wrongWords.push({ word: word, count: 1 });
         }
 
-        // 完成词语听写（错误）
+        // 完成词语听写（错误）- 等待请求完成后再继续
         if (selectedTaskId) {
-            completeWordRecord(selectedTaskId, word, false);
+            await completeWordRecord(selectedTaskId, word, false);
         }
 
         currentIndex++;
@@ -681,13 +681,13 @@
     }
 
     // 完成听写
-    function finishDictation() {
+    async function finishDictation() {
         isDictating = false;
 
         // 完成最后一个词语的听写记录（如果还未完成）
         if (currentIndex < words.length && selectedTaskId) {
             const lastWord = words[currentIndex];
-            completeWordRecord(selectedTaskId, lastWord, true);
+            await completeWordRecord(selectedTaskId, lastWord, true);
             correctCount++;
         }
 
