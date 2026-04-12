@@ -88,13 +88,6 @@ public class DifficultWordService {
     }
 
     /**
-     * 根据词语ID获取生词（兼容旧方法）
-     */
-    public Optional<DifficultWord> getDifficultWordByWordId(Long wordId) {
-        return difficultWordRepository.findByWordId(wordId);
-    }
-
-    /**
      * 获取所有生词（按错误次数降序）
      */
     public List<DifficultWord> getAllDifficultWords() {

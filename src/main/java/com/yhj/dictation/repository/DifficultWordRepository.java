@@ -13,8 +13,6 @@ public interface DifficultWordRepository extends JpaRepository<DifficultWord, Lo
 
     Optional<DifficultWord> findByWordText(String wordText);
 
-    Optional<DifficultWord> findByWordId(Long wordId);
-
     List<DifficultWord> findByMasteryLevelLessThanOrderByErrorCountDesc(Integer masteryLevel);
 
     List<DifficultWord> findAllByOrderByErrorCountDesc();
