@@ -128,6 +128,8 @@
                                 <tr>
                                     <th>任务名称</th>
                                     <th>词语数量</th>
+                                    <th>正确/错误</th>
+                                    <th>正确率</th>
                                     <th>状态</th>
                                     <th>创建时间</th>
                                     <th>收藏</th>
@@ -235,7 +237,7 @@
         tbody.innerHTML = '';
 
         if (tasks.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">暂无任务</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">暂无任务</td></tr>';
             return;
         }
 
@@ -244,10 +246,26 @@
             const favoriteIcon = task.isFavorite ? 'bi-star-fill text-warning' : 'bi-star text-muted';
             const favoriteBtn = task.isFavorite ? '取消收藏' : '添加收藏';
 
+            // 计算正确率
+            const accuracy = task.wordCount > 0 ? Math.round((task.correctCount / task.wordCount) * 100) : 0;
+            const correctWrongDisplay = task.status === 'COMPLETED'
+                ? `<span class="text-success">${task.correctCount || 0}</span>/<span class="text-danger">${task.wrongCount || 0}</span>`
+                : '-';
+
+            // 正确率显示（只有已完成任务才显示）
+            const accuracyDisplay = task.status === 'COMPLETED'
+                ? `<div class="progress" style="height: 20px; width: 80px;">
+                       <div class="progress-bar ${accuracy >= 80 ? 'bg-success' : accuracy >= 60 ? 'bg-warning' : 'bg-danger'}"
+                            style="width: ${accuracy}%">${accuracy}%</div>
+                   </div>`
+                : '-';
+
             tbody.innerHTML += `
                 <tr>
                     <td><strong>${task.taskName}</strong></td>
                     <td>${task.wordCount}个词</td>
+                    <td>${correctWrongDisplay}</td>
+                    <td>${accuracyDisplay}</td>
                     <td>${statusBadge}</td>
                     <td>${formatDate(task.createdAt)}</td>
                     <td>

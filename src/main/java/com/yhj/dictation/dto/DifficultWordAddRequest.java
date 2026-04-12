@@ -7,5 +7,7 @@ import lombok.Data;
  */
 @Data
 public class DifficultWordAddRequest {
-    private Long wordId;
+    private Long wordId;       // 兼容旧字段
+    private String wordText;   // 词语文本
+    private String dictator;   // 听写人
 }

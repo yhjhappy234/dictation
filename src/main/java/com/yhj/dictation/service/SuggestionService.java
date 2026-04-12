@@ -227,14 +227,27 @@ public class SuggestionService {
             }
         }
 
-        // 检查生词本
+        // 检查生词本 - 使用 wordText 字段
         List<DifficultWord> difficultWords = difficultWordRepository.findByMasteryLevelLessThanOrderByErrorCountDesc(3);
         for (DifficultWord dw : difficultWords) {
-            Word word = wordRepository.findById(dw.getWordId()).orElse(null);
-            if (word == null) continue;
+            String wordText = dw.getWordText();
+            if (wordText == null) continue;
 
-            createHighDifficultySuggestion(dw.getWordId(),
-                    "词语 \"" + word.getWordText() + "\" 错误次数:" + dw.getErrorCount() + "，掌握度:" + dw.getMasteryLevel() + "/5，建议重点复习");
+            // 直接使用词语文本创建建议，暂不关联 wordId
+            // 通过 Batch 中的 Word 查找第一个匹配的词语
+            List<Word> matchingWords = wordRepository.findAll().stream()
+                    .filter(w -> w.getWordText().equals(wordText))
+                    .limit(1)
+                    .toList();
+
+            if (!matchingWords.isEmpty()) {
+                Word word = matchingWords.get(0);
+                createHighDifficultySuggestion(word.getId(),
+                        "词语 \"" + wordText + "\" 错误次数:" + dw.getErrorCount() + "，掌握度:" + dw.getMasteryLevel() + "/5，建议重点复习");
+            } else {
+                // 如果找不到对应的 Word 实体，记录日志但不创建建议
+                log.info("DifficultWord '{}' not found in Word table", wordText);
+            }
         }
 
         log.info("Generated suggestions for batch: {}", batchId);

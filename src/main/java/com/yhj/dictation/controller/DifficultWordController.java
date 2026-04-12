@@ -29,6 +29,15 @@ public class DifficultWordController {
         return ApiResponse.success(words);
     }
 
+    @GetMapping("/dictator/{dictator}")
+    public ApiResponse<List<DifficultWordDTO>> getDifficultWordsByDictator(@PathVariable String dictator) {
+        List<DifficultWordDTO> words = difficultWordService.getDifficultWordsByDictator(dictator)
+                .stream()
+                .map(this::toDifficultWordDTO)
+                .collect(Collectors.toList());
+        return ApiResponse.success(words);
+    }
+
     @GetMapping("/difficult")
     public ApiResponse<List<DifficultWordDTO>> getDifficultWords(
             @RequestParam(defaultValue = "3") Integer maxMasteryLevel) {
@@ -53,11 +62,28 @@ public class DifficultWordController {
     @PostMapping
     public ApiResponse<DifficultWordDTO> addDifficultWord(@RequestBody DifficultWordAddRequest request) {
         try {
-            DifficultWordDTO dto = difficultWordService.addDifficultWordDTO(request.getWordId());
+            DifficultWordDTO dto = difficultWordService.addDifficultWordDTO(
+                    request.getWordText(), request.getDictator());
             return ApiResponse.success("已添加到生词本", dto);
         } catch (Exception e) {
             log.error("Failed to add difficult word", e);
             return ApiResponse.error("添加生词失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/batch")
+    public ApiResponse<List<DifficultWordDTO>> addDifficultWordsBatch(
+            @RequestBody List<DifficultWordDTO> words,
+            @RequestParam(required = false) String dictator) {
+        try {
+            List<DifficultWord> result = difficultWordService.addDifficultWordsBatch(words, dictator);
+            List<DifficultWordDTO> dtos = result.stream()
+                    .map(this::toDifficultWordDTO)
+                    .collect(Collectors.toList());
+            return ApiResponse.success("已批量添加到生词本", dtos);
+        } catch (Exception e) {
+            log.error("Failed to add difficult words batch", e);
+            return ApiResponse.error("批量添加生词失败: " + e.getMessage());
         }
     }
 
@@ -68,8 +94,8 @@ public class DifficultWordController {
         try {
             return difficultWordService.getDifficultWordById(id)
                     .map(dw -> {
-                        difficultWordService.updateMasteryLevel(dw.getWordId(), level);
-                        return difficultWordService.getDifficultWordByWordId(dw.getWordId())
+                        difficultWordService.updateMasteryLevelByText(dw.getWordText(), level);
+                        return difficultWordService.getDifficultWordByText(dw.getWordText())
                                 .map(this::toDifficultWordDTO)
                                 .map(dto -> ApiResponse.success("掌握级别已更新", dto))
                                 .orElse(ApiResponse.error("更新失败"));
@@ -81,10 +107,10 @@ public class DifficultWordController {
         }
     }
 
-    @PostMapping("/{wordId}/success")
-    public ApiResponse<Void> practiceSuccess(@PathVariable Long wordId) {
+    @PostMapping("/text/{wordText}/success")
+    public ApiResponse<Void> practiceSuccessByText(@PathVariable String wordText) {
         try {
-            difficultWordService.handlePracticeSuccess(wordId);
+            difficultWordService.handlePracticeSuccessByText(wordText);
             return ApiResponse.success("练习成功", null);
         } catch (Exception e) {
             log.error("Failed to handle practice success", e);
@@ -92,10 +118,12 @@ public class DifficultWordController {
         }
     }
 
-    @PostMapping("/{wordId}/failure")
-    public ApiResponse<Void> practiceFailure(@PathVariable Long wordId) {
+    @PostMapping("/text/{wordText}/failure")
+    public ApiResponse<Void> practiceFailureByText(
+            @PathVariable String wordText,
+            @RequestParam(required = false) String dictator) {
         try {
-            difficultWordService.handlePracticeFailure(wordId);
+            difficultWordService.handlePracticeFailureByText(wordText, dictator);
             return ApiResponse.success("已记录失败", null);
         } catch (Exception e) {
             log.error("Failed to handle practice failure", e);
@@ -117,7 +145,8 @@ public class DifficultWordController {
     private DifficultWordDTO toDifficultWordDTO(DifficultWord dw) {
         DifficultWordDTO dto = new DifficultWordDTO();
         dto.setId(dw.getId());
-        dto.setWordId(dw.getWordId());
+        dto.setWordText(dw.getWordText());
+        dto.setDictator(dw.getDictator());
         dto.setErrorCount(dw.getErrorCount());
         dto.setAvgDurationSeconds(dw.getAvgDurationSeconds());
         dto.setLastPracticeDate(dw.getLastPracticeDate());

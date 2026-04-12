@@ -12,6 +12,7 @@ public class DifficultWordDTO {
     private Long wordId;
     private String wordText;
     private String pinyin;
+    private String dictator;  // 听写人
     private Integer errorCount;
     private Integer avgDurationSeconds;
     private LocalDateTime lastPracticeDate;

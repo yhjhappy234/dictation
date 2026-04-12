@@ -5,9 +5,11 @@ import com.yhj.dictation.dto.CompleteRequest;
 import com.yhj.dictation.dto.DictationResponse;
 import com.yhj.dictation.dto.ReportDTO;
 import com.yhj.dictation.entity.DictationRecord;
+import com.yhj.dictation.entity.Word;
 import com.yhj.dictation.service.DictationRecordService;
 import com.yhj.dictation.service.DifficultWordService;
 import com.yhj.dictation.service.SuggestionService;
+import com.yhj.dictation.service.WordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -31,6 +33,7 @@ public class DictationRecordController {
     private final DictationRecordService recordService;
     private final DifficultWordService difficultWordService;
     private final SuggestionService suggestionService;
+    private final WordService wordService;
 
     /**
      * 开始听写记录
@@ -53,10 +56,10 @@ public class DictationRecordController {
     public ApiResponse<DictationResponse> completeRecord(@PathVariable Long id) {
         try {
             DictationRecord record = recordService.completeRecord(id);
-
-            // 更新生词本
-            difficultWordService.handlePracticeSuccess(record.getWordId());
-
+            Word word = wordService.getWordById(record.getWordId()).orElse(null);
+            if (word != null) {
+                difficultWordService.handlePracticeSuccessByText(word.getWordText());
+            }
             return ApiResponse.success("听写完成", toDictationResponse(record));
         } catch (IllegalArgumentException e) {
             return ApiResponse.error("记录不存在: " + id);
@@ -74,8 +77,10 @@ public class DictationRecordController {
             Integer duration = request != null ? request.getDuration() : null;
             DictationRecord record = recordService.completeByWordId(wordId, duration);
 
-            // 更新生词本
-            difficultWordService.handlePracticeSuccess(wordId);
+            Word word = wordService.getWordById(wordId).orElse(null);
+            if (word != null) {
+                difficultWordService.handlePracticeSuccessByText(word.getWordText());
+            }
 
             return ApiResponse.success("听写完成", toDictationResponse(record));
         } catch (IllegalArgumentException e) {
@@ -105,8 +110,10 @@ public class DictationRecordController {
         try {
             DictationRecord record = recordService.skipRecord(id);
 
-            // 更新生词本
-            difficultWordService.handlePracticeFailure(record.getWordId());
+            Word word = wordService.getWordById(record.getWordId()).orElse(null);
+            if (word != null) {
+                difficultWordService.handlePracticeFailureByText(word.getWordText(), null);
+            }
 
             return ApiResponse.success("已跳过", toDictationResponse(record));
         } catch (IllegalArgumentException e) {

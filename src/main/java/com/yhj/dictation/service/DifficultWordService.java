@@ -2,11 +2,7 @@ package com.yhj.dictation.service;
 
 import com.yhj.dictation.dto.DifficultWordDTO;
 import com.yhj.dictation.entity.DifficultWord;
-import com.yhj.dictation.entity.DictationRecord;
-import com.yhj.dictation.entity.Word;
 import com.yhj.dictation.repository.DifficultWordRepository;
-import com.yhj.dictation.repository.DictationRecordRepository;
-import com.yhj.dictation.repository.WordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,26 +22,21 @@ import java.util.stream.Collectors;
 public class DifficultWordService {
 
     private final DifficultWordRepository difficultWordRepository;
-    private final DictationRecordRepository recordRepository;
-    private final WordRepository wordRepository;
 
     /**
-     * 添加或更新生词
+     * 添加或更新生词（基于词语文本）
      */
     @Transactional
-    public DifficultWord addOrUpdateDifficultWord(Long wordId) {
-        Optional<DifficultWord> existingOpt = difficultWordRepository.findByWordId(wordId);
+    public DifficultWord addOrUpdateDifficultWordByText(String wordText, String dictator) {
+        Optional<DifficultWord> existingOpt = difficultWordRepository.findByWordText(wordText);
 
         DifficultWord difficultWord;
         if (existingOpt.isPresent()) {
             difficultWord = existingOpt.get();
             difficultWord.setErrorCount(difficultWord.getErrorCount() + 1);
             difficultWord.setUpdatedAt(LocalDateTime.now());
-
-            // 更新平均时长
-            Double avgDuration = recordRepository.findAvgDurationByWordId(wordId);
-            if (avgDuration != null) {
-                difficultWord.setAvgDurationSeconds(avgDuration.intValue());
+            if (dictator != null && !dictator.isEmpty()) {
+                difficultWord.setDictator(dictator);
             }
 
             // 降低掌握级别
@@ -54,23 +45,39 @@ public class DifficultWordService {
             }
         } else {
             difficultWord = new DifficultWord();
-            difficultWord.setWordId(wordId);
+            difficultWord.setWordText(wordText);
+            difficultWord.setDictator(dictator);
             difficultWord.setErrorCount(1);
             difficultWord.setMasteryLevel(0);
             difficultWord.setCreatedAt(LocalDateTime.now());
             difficultWord.setUpdatedAt(LocalDateTime.now());
-
-            Double avgDuration = recordRepository.findAvgDurationByWordId(wordId);
-            if (avgDuration != null) {
-                difficultWord.setAvgDurationSeconds(avgDuration.intValue());
-            }
         }
 
         difficultWord.setLastPracticeDate(LocalDateTime.now());
         difficultWord = difficultWordRepository.save(difficultWord);
 
-        log.info("Added/Updated difficult word: {} with error count: {}", wordId, difficultWord.getErrorCount());
+        log.info("Added/Updated difficult word: {} with error count: {}", wordText, difficultWord.getErrorCount());
         return difficultWord;
+    }
+
+    /**
+     * 批量添加生词
+     */
+    @Transactional
+    public List<DifficultWord> addDifficultWordsBatch(List<DifficultWordDTO> words, String dictator) {
+        List<DifficultWord> result = new java.util.ArrayList<>();
+        for (DifficultWordDTO wordDTO : words) {
+            DifficultWord dw = addOrUpdateDifficultWordByText(wordDTO.getWordText(), dictator);
+            result.add(dw);
+        }
+        return result;
+    }
+
+    /**
+     * 根据词语文本获取生词
+     */
+    public Optional<DifficultWord> getDifficultWordByText(String wordText) {
+        return difficultWordRepository.findByWordText(wordText);
     }
 
     /**
@@ -81,7 +88,7 @@ public class DifficultWordService {
     }
 
     /**
-     * 根据词语ID获取生词
+     * 根据词语ID获取生词（兼容旧方法）
      */
     public Optional<DifficultWord> getDifficultWordByWordId(Long wordId) {
         return difficultWordRepository.findByWordId(wordId);
@@ -92,6 +99,13 @@ public class DifficultWordService {
      */
     public List<DifficultWord> getAllDifficultWords() {
         return difficultWordRepository.findAllByOrderByErrorCountDesc();
+    }
+
+    /**
+     * 根据听写人获取生词
+     */
+    public List<DifficultWord> getDifficultWordsByDictator(String dictator) {
+        return difficultWordRepository.findByDictatorOrderByErrorCountDesc(dictator);
     }
 
     /**
@@ -109,13 +123,13 @@ public class DifficultWordService {
     }
 
     /**
-     * 更新掌握级别
+     * 更新掌握级别（基于词语文本）
      */
     @Transactional
-    public DifficultWord updateMasteryLevel(Long wordId, Integer masteryLevel) {
-        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordId(wordId);
+    public DifficultWord updateMasteryLevelByText(String wordText, Integer masteryLevel) {
+        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordText(wordText);
         if (difficultWordOpt.isEmpty()) {
-            throw new IllegalArgumentException("Difficult word not found for word: " + wordId);
+            throw new IllegalArgumentException("Difficult word not found: " + wordText);
         }
 
         DifficultWord difficultWord = difficultWordOpt.get();
@@ -123,7 +137,7 @@ public class DifficultWordService {
         difficultWord.setUpdatedAt(LocalDateTime.now());
 
         difficultWord = difficultWordRepository.save(difficultWord);
-        log.info("Updated mastery level for word: {} to {}", wordId, masteryLevel);
+        log.info("Updated mastery level for word: {} to {}", wordText, masteryLevel);
         return difficultWord;
     }
 
@@ -131,10 +145,9 @@ public class DifficultWordService {
      * 增加掌握级别（练习成功后）
      */
     @Transactional
-    public DifficultWord increaseMasteryLevel(Long wordId) {
-        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordId(wordId);
+    public DifficultWord increaseMasteryLevelByText(String wordText) {
+        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordText(wordText);
         if (difficultWordOpt.isEmpty()) {
-            // 如果不存在，说明已经掌握得很好，不需要记录
             return null;
         }
 
@@ -145,7 +158,7 @@ public class DifficultWordService {
         difficultWord.setUpdatedAt(LocalDateTime.now());
 
         difficultWord = difficultWordRepository.save(difficultWord);
-        log.info("Increased mastery level for word: {} to {}", wordId, newLevel);
+        log.info("Increased mastery level for word: {} to {}", wordText, newLevel);
         return difficultWord;
     }
 
@@ -153,11 +166,10 @@ public class DifficultWordService {
      * 减少掌握级别（练习失败后）
      */
     @Transactional
-    public DifficultWord decreaseMasteryLevel(Long wordId) {
-        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordId(wordId);
+    public DifficultWord decreaseMasteryLevelByText(String wordText, String dictator) {
+        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordText(wordText);
         if (difficultWordOpt.isEmpty()) {
-            // 如果不存在，创建一个新的
-            return addOrUpdateDifficultWord(wordId);
+            return addOrUpdateDifficultWordByText(wordText, dictator);
         }
 
         DifficultWord difficultWord = difficultWordOpt.get();
@@ -166,9 +178,12 @@ public class DifficultWordService {
         difficultWord.setErrorCount(difficultWord.getErrorCount() + 1);
         difficultWord.setLastPracticeDate(LocalDateTime.now());
         difficultWord.setUpdatedAt(LocalDateTime.now());
+        if (dictator != null && !dictator.isEmpty()) {
+            difficultWord.setDictator(dictator);
+        }
 
         difficultWord = difficultWordRepository.save(difficultWord);
-        log.info("Decreased mastery level for word: {} to {}", wordId, newLevel);
+        log.info("Decreased mastery level for word: {} to {}", wordText, newLevel);
         return difficultWord;
     }
 
@@ -182,23 +197,23 @@ public class DifficultWordService {
     }
 
     /**
-     * 根据词语ID删除生词记录
+     * 根据词语文本删除生词记录
      */
     @Transactional
-    public void deleteDifficultWordByWordId(Long wordId) {
-        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordId(wordId);
+    public void deleteDifficultWordByText(String wordText) {
+        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordText(wordText);
         if (difficultWordOpt.isPresent()) {
             difficultWordRepository.delete(difficultWordOpt.get());
-            log.info("Deleted difficult word for word: {}", wordId);
+            log.info("Deleted difficult word: {}", wordText);
         }
     }
 
     /**
-     * 练习成功处理
+     * 练习成功处理（基于词语文本）
      */
     @Transactional
-    public void handlePracticeSuccess(Long wordId) {
-        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordId(wordId);
+    public void handlePracticeSuccessByText(String wordText) {
+        Optional<DifficultWord> difficultWordOpt = difficultWordRepository.findByWordText(wordText);
         if (difficultWordOpt.isPresent()) {
             DifficultWord difficultWord = difficultWordOpt.get();
             int newLevel = Math.min(5, difficultWord.getMasteryLevel() + 1);
@@ -206,16 +221,16 @@ public class DifficultWordService {
             difficultWord.setLastPracticeDate(LocalDateTime.now());
             difficultWord.setUpdatedAt(LocalDateTime.now());
             difficultWordRepository.save(difficultWord);
-            log.info("Practice success - mastery level increased for word: {} to {}", wordId, newLevel);
+            log.info("Practice success - mastery level increased for word: {} to {}", wordText, newLevel);
         }
     }
 
     /**
-     * 练习失败处理
+     * 练习失败处理（基于词语文本）
      */
     @Transactional
-    public void handlePracticeFailure(Long wordId) {
-        addOrUpdateDifficultWord(wordId);
+    public void handlePracticeFailureByText(String wordText, String dictator) {
+        addOrUpdateDifficultWordByText(wordText, dictator);
     }
 
     /**
@@ -232,8 +247,8 @@ public class DifficultWordService {
      * 添加生词（返回DTO）
      */
     @Transactional
-    public DifficultWordDTO addDifficultWordDTO(Long wordId) {
-        DifficultWord difficultWord = addOrUpdateDifficultWord(wordId);
+    public DifficultWordDTO addDifficultWordDTO(String wordText, String dictator) {
+        DifficultWord difficultWord = addOrUpdateDifficultWordByText(wordText, dictator);
         return toDifficultWordDTO(difficultWord);
     }
 
@@ -254,18 +269,12 @@ public class DifficultWordService {
     private DifficultWordDTO toDifficultWordDTO(DifficultWord difficultWord) {
         DifficultWordDTO dto = new DifficultWordDTO();
         dto.setId(difficultWord.getId());
-        dto.setWordId(difficultWord.getWordId());
+        dto.setWordText(difficultWord.getWordText());
+        dto.setDictator(difficultWord.getDictator());
         dto.setErrorCount(difficultWord.getErrorCount());
         dto.setAvgDurationSeconds(difficultWord.getAvgDurationSeconds());
         dto.setLastPracticeDate(difficultWord.getLastPracticeDate());
         dto.setMasteryLevel(difficultWord.getMasteryLevel());
-
-        // 获取词语信息
-        wordRepository.findById(difficultWord.getWordId()).ifPresent(word -> {
-            dto.setWordText(word.getWordText());
-            dto.setPinyin(word.getPinyin());
-        });
-
         return dto;
     }
 }

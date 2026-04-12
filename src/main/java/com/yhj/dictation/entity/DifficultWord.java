@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "difficult_word", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"word_id"})
+    @UniqueConstraint(columnNames = {"word_text"})
 })
 public class DifficultWord {
 
@@ -18,11 +18,14 @@ public class DifficultWord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "word_id", nullable = false, unique = true)
-    private Long wordId;
+    @Column(name = "word_text", nullable = false, unique = true)
+    private String wordText;  // 词语文本
 
     @Column(name = "error_count", nullable = false)
     private Integer errorCount = 0;
+
+    @Column(name = "dictator")
+    private String dictator;  // 听写人
 
     @Column(name = "avg_duration_seconds")
     private Integer avgDurationSeconds;
@@ -38,4 +41,22 @@ public class DifficultWord {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    /**
+     * 预构造方法
+     */
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

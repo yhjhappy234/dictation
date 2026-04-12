@@ -1,6 +1,6 @@
 package com.yhj.dictation.controller;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yhj.dictation.dto.ApiResponse;
 import com.yhj.dictation.dto.BatchCreateRequest;
 import com.yhj.dictation.dto.BatchResponse;
