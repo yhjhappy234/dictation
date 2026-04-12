@@ -126,11 +126,29 @@ public class DictationTaskService {
     }
 
     /**
-     * 完成任务（状态改为已完成）
+     * 完成任务（状态改为已完成，同时更新统计数据）
      */
     @Transactional
     public DictationTask completeTask(Long id) {
-        return updateStatus(id, TaskStatus.COMPLETED);
+        Optional<DictationTask> taskOpt = taskRepository.findById(id);
+        if (taskOpt.isEmpty()) {
+            throw new IllegalArgumentException("Task not found: " + id);
+        }
+
+        DictationTask task = taskOpt.get();
+        task.setStatus(TaskStatus.COMPLETED);
+
+        // 确保统计数据正确（如果为0则保持前端传递的值）
+        if (task.getCorrectCount() == null) {
+            task.setCorrectCount(0);
+        }
+        if (task.getWrongCount() == null) {
+            task.setWrongCount(0);
+        }
+
+        task = taskRepository.save(task);
+        log.info("Completed task {} with correct={}, wrong={}", id, task.getCorrectCount(), task.getWrongCount());
+        return task;
     }
 
     /**

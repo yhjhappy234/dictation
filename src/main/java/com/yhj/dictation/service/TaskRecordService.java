@@ -139,6 +139,7 @@ public class TaskRecordService {
 
     /**
      * 完成听写词语（设置结束时间和结果）
+     * 同时更新任务的正确/错误统计
      */
     @Transactional
     public TaskRecord completeWord(Long taskId, String word, Boolean isCorrect) {
@@ -157,8 +158,33 @@ public class TaskRecordService {
         record.setIsCorrect(isCorrect);
 
         record = recordRepository.save(record);
+
+        // 更新任务的正确/错误统计
+        updateTaskStatistics(taskId);
+
         log.info("Completed word: {} for task: {}, correct: {}", word, taskId, isCorrect);
         return record;
+    }
+
+    /**
+     * 更新任务的正确/错误统计（从TaskRecord重新计算）
+     */
+    @Transactional
+    public void updateTaskStatistics(Long taskId) {
+        Optional<DictationTask> taskOpt = taskRepository.findById(taskId);
+        if (taskOpt.isEmpty()) {
+            return;
+        }
+
+        DictationTask task = taskOpt.get();
+        Long correctCount = recordRepository.countByTaskIdAndIsCorrectTrue(taskId);
+        Long wrongCount = recordRepository.countByTaskIdAndIsCorrectFalse(taskId);
+
+        task.setCorrectCount(correctCount != null ? correctCount.intValue() : 0);
+        task.setWrongCount(wrongCount != null ? wrongCount.intValue() : 0);
+
+        taskRepository.save(task);
+        log.info("Updated task {} statistics: correct={}, wrong={}", taskId, correctCount, wrongCount);
     }
 
     /**
