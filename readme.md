@@ -46,11 +46,12 @@ dictation/
 ## 技术架构
 
 ### 后端技术栈
-- **框架**: Spring Boot 3.4.4
+- **框架**: Spring Boot 4.0.5
 - **Java版本**: JDK 21
 - **数据库**: SQLite 3
-- **ORM**: Spring Data JPA (Hibernate 6.6)
+- **ORM**: Spring Data JPA (Hibernate 7.0)
 - **模板引擎**: Thymeleaf 3.1
+- **JSON处理**: Jackson 3.1 (tools.jackson)
 - **构建工具**: Maven 3.11+
 
 ### 前端技术栈
@@ -322,6 +323,14 @@ java --enable-preview -jar target/dictation-1.0.0.jar
   - 新增预设内容导入功能（常用词/成语/古诗/古文）
   - 修复听写记录数据持久化问题
   - 数据库文件移至resources目录
+
+- v1.2.0 (2026-04-12): 框架升级
+  - Spring Boot升级至4.0.5（最新稳定版）
+  - Jackson升级至3.1（包名迁移至tools.jackson）
+  - Hibernate升级至7.0.6
+  - 测试框架适配Spring Boot 4.0（移除@WebMvcTest/@MockBean）
+  - 230个单元测试全部通过
+  - 从git中移除编译产物（target/目录）
 
 ## 许可证
 

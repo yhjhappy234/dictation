@@ -195,13 +195,14 @@ CREATE TABLE suggestion (
 ```
 
 ### 3.2 技术栈要求
-- **后端**：Spring Boot 3.2.x (最新稳定版)
+- **后端**：Spring Boot 4.0.5 (最新稳定版)
 - **JDK**：JDK 21
 - **模板引擎**：Thymeleaf 3.1
 - **前端交互**：原生 JavaScript (ES6+)
 - **数据库**：SQLite 3
 - **构建工具**：Maven
 - **语音API**：Web Speech API (浏览器原生支持)
+- **JSON处理**：Jackson 3.1 (tools.jackson)
 
 ### 3.3 单体架构设计说明
 
@@ -536,6 +537,6 @@ recognition.onresult = (event) => {
 
 ---
 
-**文档版本**：v1.0
+**文档版本**：v1.1
 **创建日期**：2026-04-06
-**最后更新**：2026-04-06
+**最后更新**：2026-04-12
