@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 任务听写记录Repository
@@ -41,4 +42,9 @@ public interface TaskRecordRepository extends JpaRepository<TaskRecord, Long> {
      * 删除任务的所有记录
      */
     void deleteByTaskId(Long taskId);
+
+    /**
+     * 获取任务的最新一条记录
+     */
+    Optional<TaskRecord> findFirstByTaskIdOrderByCreatedAtDesc(Long taskId);
 }

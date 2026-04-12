@@ -111,7 +111,9 @@
                             <tr>
                                 <th>词语</th>
                                 <th>状态</th>
+                                <th>朗读次数</th>
                                 <th>听写时间</th>
+                                <th>耗时</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -249,13 +251,19 @@
                             '<span class="badge bg-success">正确</span>' :
                             '<span class="badge bg-danger">错误</span>';
 
-                        const recordTime = record.createdAt ? formatDateTime(record.createdAt) : '-';
+                        const readCount = record.readCount || 1;
+                        const recordTime = record.startTime ? formatDateTime(record.startTime) : '-';
+
+                        // 计算耗时
+                        const duration = calculateDuration(record.startTime, record.endTime);
 
                         wordListBody.innerHTML += `
                             <tr>
                                 <td><strong>${record.word}</strong></td>
                                 <td>${statusBadge}</td>
+                                <td><span class="badge bg-info">${readCount}次</span></td>
                                 <td><small class="text-muted">${recordTime}</small></td>
+                                <td><small class="text-muted">${duration}</small></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="speakWord('${record.word}')">
                                         <i class="bi bi-volume-up"></i>
@@ -271,6 +279,8 @@
                             <tr>
                                 <td><strong>${word}</strong></td>
                                 <td><span class="badge bg-success">正确</span></td>
+                                <td><span class="badge bg-info">-</span></td>
+                                <td><small class="text-muted">-</small></td>
                                 <td><small class="text-muted">-</small></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="speakWord('${word}')">
@@ -311,6 +321,27 @@
             minute: '2-digit',
             second: '2-digit'
         });
+    }
+
+    // 计算耗时
+    function calculateDuration(startTime, endTime) {
+        if (!startTime || !endTime) return '-';
+
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const diffMs = end - start;
+
+        if (diffMs < 0) return '-';
+
+        const seconds = Math.floor(diffMs / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+
+        if (minutes > 0) {
+            return `${minutes}分${remainingSeconds}秒`;
+        } else {
+            return `${seconds}秒`;
+        }
     }
 
     // 朗读词语

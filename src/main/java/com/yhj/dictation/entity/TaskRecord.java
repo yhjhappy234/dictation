@@ -29,8 +29,17 @@ public class TaskRecord {
     @Column(name = "error_count")
     private Integer errorCount;
 
+    @Column(name = "read_count")
+    private Integer readCount;      // 朗读次数
+
     @Column(name = "dictator")
     private String dictator;  // 听写人
+
+    @Column(name = "start_time")
+    private LocalDateTime startTime;  // 开始听写时间
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;    // 完成听写时间
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -45,6 +54,9 @@ public class TaskRecord {
         }
         if (errorCount == null) {
             errorCount = 0;
+        }
+        if (readCount == null) {
+            readCount = 0;
         }
     }
 }

@@ -373,4 +373,49 @@ public class DictationTaskController {
             return ApiResponse.error("获取听写人列表失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 开始听写词语（记录开始时间）
+     */
+    @PostMapping("/{id}/start-word")
+    public ApiResponse<TaskRecord> startWord(@PathVariable Long id, @RequestParam String word) {
+        try {
+            TaskRecord record = taskRecordService.startWord(id, word);
+            return ApiResponse.success("开始听写词语", record);
+        } catch (Exception e) {
+            log.error("Failed to start word for task: {}", id, e);
+            return ApiResponse.error("开始听写词语失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 增加词语朗读次数
+     */
+    @PostMapping("/{id}/read-word")
+    public ApiResponse<TaskRecord> incrementReadCount(@PathVariable Long id, @RequestParam String word) {
+        try {
+            TaskRecord record = taskRecordService.incrementReadCountByWord(id, word);
+            if (record == null) {
+                return ApiResponse.error("未找到词语记录");
+            }
+            return ApiResponse.success("朗读次数已更新", record);
+        } catch (Exception e) {
+            log.error("Failed to increment read count for task: {}", id, e);
+            return ApiResponse.error("更新朗读次数失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 完成听写词语（记录结束时间和结果）
+     */
+    @PostMapping("/{id}/complete-word")
+    public ApiResponse<TaskRecord> completeWord(@PathVariable Long id, @RequestParam String word, @RequestParam boolean isCorrect) {
+        try {
+            TaskRecord record = taskRecordService.completeWord(id, word, isCorrect);
+            return ApiResponse.success("词语听写完成", record);
+        } catch (Exception e) {
+            log.error("Failed to complete word for task: {}", id, e);
+            return ApiResponse.error("完成词语听写失败: " + e.getMessage());
+        }
+    }
 }

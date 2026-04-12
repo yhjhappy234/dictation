@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 任务听写记录服务
@@ -58,7 +59,110 @@ public class TaskRecordService {
     }
 
     /**
-     * 记录单个词语的听写结果
+     * 开始听写词语（创建记录并设置开始时间）
+     * 如果词语已有记录则覆盖开始时间和朗读次数
+     */
+    @Transactional
+    public TaskRecord startWord(Long taskId, String word) {
+        // 查找该词语是否已有记录
+        List<TaskRecord> existingRecords = recordRepository.findByTaskIdOrderByCreatedAtAsc(taskId);
+        Optional<TaskRecord> existingRecord = existingRecords.stream()
+                .filter(r -> r.getWord().equals(word))
+                .findFirst();
+
+        if (existingRecord.isPresent()) {
+            // 已有记录，覆盖开始时间和朗读次数
+            TaskRecord record = existingRecord.get();
+            record.setStartTime(LocalDateTime.now());
+            record.setEndTime(null);  // 清除结束时间
+            record.setReadCount(1);   // 重置朗读次数
+            record.setCreatedAt(LocalDateTime.now());
+
+            record = recordRepository.save(record);
+            log.info("Restarted word: {} for task: {}", word, taskId);
+            return record;
+        }
+
+        // 新记录
+        TaskRecord record = new TaskRecord();
+        record.setTaskId(taskId);
+        record.setWord(word);
+        record.setIsCorrect(true);  // 默认正确，完成时可修改
+        record.setErrorCount(0);
+        record.setReadCount(1);     // 第一次朗读
+        record.setStartTime(LocalDateTime.now());
+        record.setCreatedAt(LocalDateTime.now());
+
+        record = recordRepository.save(record);
+        log.info("Started word: {} for task: {}", word, taskId);
+        return record;
+    }
+
+    /**
+     * 增加朗读次数（根据词语查找最新记录）
+     */
+    @Transactional
+    public TaskRecord incrementReadCountByWord(Long taskId, String word) {
+        List<TaskRecord> records = recordRepository.findByTaskIdOrderByCreatedAtAsc(taskId);
+        Optional<TaskRecord> recordOpt = records.stream()
+                .filter(r -> r.getWord().equals(word))
+                .findFirst();
+
+        if (recordOpt.isEmpty()) {
+            log.warn("No record found for task: {}, word: {}", taskId, word);
+            return null;
+        }
+
+        TaskRecord record = recordOpt.get();
+        record.setReadCount(record.getReadCount() != null ? record.getReadCount() + 1 : 1);
+        record = recordRepository.save(record);
+        log.info("Incremented read count for task: {}, word: {}, count: {}", taskId, word, record.getReadCount());
+        return record;
+    }
+
+    /**
+     * 增加朗读次数
+     */
+    @Transactional
+    public TaskRecord incrementReadCount(Long recordId) {
+        Optional<TaskRecord> recordOpt = recordRepository.findById(recordId);
+        if (recordOpt.isEmpty()) {
+            throw new IllegalArgumentException("Record not found: " + recordId);
+        }
+
+        TaskRecord record = recordOpt.get();
+        record.setReadCount(record.getReadCount() != null ? record.getReadCount() + 1 : 1);
+        record = recordRepository.save(record);
+        log.info("Incremented read count for record: {}, word: {}, count: {}", recordId, record.getWord(), record.getReadCount());
+        return record;
+    }
+
+    /**
+     * 完成听写词语（设置结束时间和结果）
+     */
+    @Transactional
+    public TaskRecord completeWord(Long taskId, String word, Boolean isCorrect) {
+        List<TaskRecord> records = recordRepository.findByTaskIdOrderByCreatedAtAsc(taskId);
+        Optional<TaskRecord> recordOpt = records.stream()
+                .filter(r -> r.getWord().equals(word))
+                .findFirst();
+
+        if (recordOpt.isEmpty()) {
+            // 如果没有记录，创建一个新的（兼容旧逻辑）
+            return recordWord(taskId, word, isCorrect, 0);
+        }
+
+        TaskRecord record = recordOpt.get();
+        record.setEndTime(LocalDateTime.now());
+        record.setIsCorrect(isCorrect);
+
+        record = recordRepository.save(record);
+        log.info("Completed word: {} for task: {}, correct: {}", word, taskId, isCorrect);
+        return record;
+    }
+
+    /**
+     * 记录单个词语的听写结果（兼容旧方法）
      */
     @Transactional
     public TaskRecord recordWord(Long taskId, String word, Boolean isCorrect, Integer errorCount) {
@@ -67,6 +171,9 @@ public class TaskRecordService {
         record.setWord(word);
         record.setIsCorrect(isCorrect);
         record.setErrorCount(errorCount != null ? errorCount : 0);
+        record.setReadCount(1);
+        record.setStartTime(LocalDateTime.now());
+        record.setEndTime(LocalDateTime.now());
         record.setCreatedAt(LocalDateTime.now());
 
         record = recordRepository.save(record);

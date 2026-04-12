@@ -100,13 +100,16 @@
         <!-- 右侧：听写区域 -->
         <div class="col-lg-7 mb-4">
             <div class="card h-100">
-                <div class="card-header">
-                    <i class="bi bi-megaphone me-2"></i>听写区域
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-megaphone me-2"></i>听写区域</span>
+                    <button class="btn btn-sm btn-outline-light" onclick="showSettingsModal()" title="朗读设置">
+                        <i class="bi bi-gear-fill"></i>
+                    </button>
                 </div>
                 <div class="card-body d-flex flex-column">
                     <!-- 词语显示区 -->
                     <div class="word-display mb-4" id="wordDisplay">
-                        <span class="text-muted">请先录入词语并点击"开始听写"</span>
+                        <span class="text-muted">请先选择听写任务</span>
                     </div>
 
                     <!-- 当前状态 -->
@@ -200,6 +203,63 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 朗读设置弹窗 -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-gear-fill me-2"></i>朗读设置
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 语速设置 -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">语速：</label>
+                    <input type="range" class="form-range" id="speechRate" min="0.5" max="1.5" step="0.1" value="0.8">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">慢</small>
+                        <small class="fw-bold" id="rateValue">0.8</small>
+                        <small class="text-muted">快</small>
+                    </div>
+                </div>
+
+                <!-- 音量设置 -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">音量：</label>
+                    <input type="range" class="form-range" id="speechVolume" min="0" max="1" step="0.1" value="1">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">低</small>
+                        <small class="fw-bold" id="volumeValue">100%</small>
+                        <small class="text-muted">高</small>
+                    </div>
+                </div>
+
+                <!-- 音色设置 -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">音色：</label>
+                    <select class="form-select" id="speechVoice">
+                        <option value="">默认音色</option>
+                    </select>
+                    <small class="text-muted">选择不同的朗读声音（取决于系统支持）</small>
+                </div>
+
+                <!-- 测试朗读 -->
+                <div class="text-center">
+                    <button class="btn btn-outline-primary" onclick="testSpeech()">
+                        <i class="bi bi-volume-up me-2"></i>测试朗读
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="saveSettings()">保存设置</button>
             </div>
         </div>
     </div>
@@ -376,6 +436,7 @@
             return;
         }
 
+        const word = words[currentIndex];
         document.getElementById('currentIndex').textContent = currentIndex + 1;
         document.getElementById('wordDisplay').innerHTML = '<i class="bi bi-volume-up-fill text-primary" style="font-size: 3rem;"></i>';
 
@@ -399,8 +460,24 @@
             nextBtn.onclick = nextWord;
         }
 
+        // 开始听写词语（记录开始时间）
+        if (selectedTaskId) {
+            startWordRecord(selectedTaskId, word);
+        }
+
         // 自动朗读
-        readWord(words[currentIndex]);
+        readWord(word);
+    }
+
+    // 开始听写词语（调用API）
+    async function startWordRecord(taskId, word) {
+        try {
+            await fetch(`/api/tasks/${taskId}/start-word?word=${encodeURIComponent(word)}`, {
+                method: 'POST'
+            });
+        } catch (error) {
+            console.error('开始听写词语失败:', error);
+        }
     }
 
     // 朗读词语
@@ -410,15 +487,39 @@
         }
         currentUtterance = new SpeechSynthesisUtterance(word);
         currentUtterance.lang = 'zh-CN';
-        currentUtterance.rate = 0.8;
+        currentUtterance.rate = speechRate;
         currentUtterance.pitch = 1;
+        currentUtterance.volume = speechVolume;
+
+        const voices = synth.getVoices();
+        if (selectedVoice && voices[selectedVoice]) {
+            currentUtterance.voice = voices[selectedVoice];
+        }
+
         synth.speak(currentUtterance);
     }
 
-    // 再次朗读
+    // 再次朗读（增加朗读次数）
     function readAgain() {
         if (currentIndex < words.length) {
-            readWord(words[currentIndex]);
+            const word = words[currentIndex];
+            readWord(word);
+
+            // 增加朗读次数
+            if (selectedTaskId) {
+                incrementReadCount(selectedTaskId, word);
+            }
+        }
+    }
+
+    // 增加朗读次数（调用API）
+    async function incrementReadCount(taskId, word) {
+        try {
+            await fetch(`/api/tasks/${taskId}/read-word?word=${encodeURIComponent(word)}`, {
+                method: 'POST'
+            });
+        } catch (error) {
+            console.error('增加朗读次数失败:', error);
         }
     }
 
@@ -431,12 +532,34 @@
         }
     }
 
-    // 下一个词语
+    // 下一个词语（默认正确，与markCorrect相同）
     function nextWord() {
-        if (currentIndex < words.length - 1) {
+        if (currentIndex < words.length) {
+            const word = words[currentIndex];
+            // 完成当前词语听写（默认正确）
+            if (selectedTaskId) {
+                completeWordRecord(selectedTaskId, word, true);
+            }
             currentIndex++;
-            updateStats();
-            showCurrentWord();
+            correctCount++;
+
+            if (currentIndex >= words.length) {
+                finishDictation();
+            } else {
+                updateStats();
+                showCurrentWord();
+            }
+        }
+    }
+
+    // 完成词语听写（调用API）
+    async function completeWordRecord(taskId, word, isCorrect) {
+        try {
+            await fetch(`/api/tasks/${taskId}/complete-word?word=${encodeURIComponent(word)}&isCorrect=${isCorrect}`, {
+                method: 'POST'
+            });
+        } catch (error) {
+            console.error('完成词语听写失败:', error);
         }
     }
 
@@ -459,23 +582,9 @@
         }
     }
 
-    // 标记正确
+    // 标记正确（与下一个按钮功能相同）
     function markCorrect() {
-        const word = words[currentIndex];
-        correctCount++;
-        currentIndex++;
-
-        // 记录正确结果到后端
-        if (selectedTaskId) {
-            recordWordResult(selectedTaskId, word, true);
-        }
-
-        if (currentIndex >= words.length) {
-            finishDictation();
-        } else {
-            updateStats();
-            showCurrentWord();
-        }
+        nextWord();
     }
 
     // 标记错误
@@ -491,12 +600,12 @@
             wrongWords.push({ word: word, count: 1 });
         }
 
-        currentIndex++;
-
-        // 记录错误结果到后端
+        // 完成词语听写（错误）
         if (selectedTaskId) {
-            recordWordResult(selectedTaskId, word, false);
+            completeWordRecord(selectedTaskId, word, false);
         }
+
+        currentIndex++;
 
         if (currentIndex >= words.length) {
             finishDictation();
@@ -506,20 +615,16 @@
         }
     }
 
-    // 记录词语结果到后端
-    async function recordWordResult(taskId, word, isCorrect) {
-        try {
-            await fetch(`/api/tasks/${taskId}/record?word=${encodeURIComponent(word)}&isCorrect=${isCorrect}`, {
-                method: 'POST'
-            });
-        } catch (error) {
-            console.error('记录听写结果失败:', error);
-        }
-    }
-
     // 完成听写
     function finishDictation() {
         isDictating = false;
+
+        // 完成最后一个词语的听写记录（如果还未完成）
+        if (currentIndex < words.length && selectedTaskId) {
+            const lastWord = words[currentIndex];
+            completeWordRecord(selectedTaskId, lastWord, true);
+            correctCount++;
+        }
 
         // 设置进度条为100%
         const progressBar = document.getElementById('progressBar');
@@ -716,12 +821,6 @@
         setTimeout(() => container.remove(), 5000);
     }
 
-    // 页面加载完成
-    document.addEventListener('DOMContentLoaded', function() {
-        // 加载听写任务列表
-        refreshTasks();
-    });
-
     // 刷新听写任务列表（只加载未完成的任务）
     async function refreshTasks() {
         try {
@@ -879,6 +978,113 @@
     // 显示听写人管理页面
     function showDictatorManager() {
         window.location.href = '/dictators';
+    }
+
+    // 朗读设置相关
+    let speechRate = 0.8;
+    let speechVolume = 1;
+    let selectedVoice = '';
+
+    // 页面加载时初始化设置
+    document.addEventListener('DOMContentLoaded', function() {
+        // 加载保存的设置
+        loadSettings();
+        // 加载听写任务列表
+        refreshTasks();
+        // 加载可用音色
+        loadVoices();
+    });
+
+    // 加载可用音色
+    function loadVoices() {
+        const voiceSelect = document.getElementById('speechVoice');
+
+        // 等待语音合成加载完成
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = function() {
+                const voices = speechSynthesis.getVoices();
+                voiceSelect.innerHTML = '<option value="">默认音色</option>';
+
+                // 只显示中文音色
+                voices.forEach((voice, index) => {
+                    if (voice.lang.includes('zh') || voice.lang.includes('CN')) {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = voice.name + ' (' + voice.lang + ')';
+                        voiceSelect.appendChild(option);
+                    }
+                });
+            };
+        }
+    }
+
+    // 加载保存的设置
+    function loadSettings() {
+        const savedRate = localStorage.getItem('speechRate');
+        const savedVolume = localStorage.getItem('speechVolume');
+        const savedVoice = localStorage.getItem('speechVoice');
+
+        if (savedRate) {
+            speechRate = parseFloat(savedRate);
+            document.getElementById('speechRate').value = speechRate;
+            document.getElementById('rateValue').textContent = speechRate;
+        }
+
+        if (savedVolume) {
+            speechVolume = parseFloat(savedVolume);
+            document.getElementById('speechVolume').value = speechVolume;
+            document.getElementById('volumeValue').textContent = Math.round(speechVolume * 100) + '%';
+        }
+
+        if (savedVoice) {
+            selectedVoice = savedVoice;
+            document.getElementById('speechVoice').value = selectedVoice;
+        }
+    }
+
+    // 显示设置弹窗
+    function showSettingsModal() {
+        // 加载音色列表
+        loadVoices();
+        // 更新当前值显示
+        document.getElementById('rateValue').textContent = speechRate;
+        document.getElementById('volumeValue').textContent = Math.round(speechVolume * 100) + '%';
+
+        const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+        modal.show();
+    }
+
+    // 保存设置
+    function saveSettings() {
+        speechRate = parseFloat(document.getElementById('speechRate').value);
+        speechVolume = parseFloat(document.getElementById('speechVolume').value);
+        selectedVoice = document.getElementById('speechVoice').value;
+
+        localStorage.setItem('speechRate', speechRate);
+        localStorage.setItem('speechVolume', speechVolume);
+        localStorage.setItem('speechVoice', selectedVoice);
+
+        showToast('设置已保存', 'success');
+
+        bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+    }
+
+    // 测试朗读
+    function testSpeech() {
+        const testText = '听写测试';
+        const utterance = new SpeechSynthesisUtterance(testText);
+        utterance.lang = 'zh-CN';
+        utterance.rate = parseFloat(document.getElementById('speechRate').value);
+        utterance.volume = parseFloat(document.getElementById('speechVolume').value);
+
+        const voices = speechSynthesis.getVoices();
+        const voiceIndex = document.getElementById('speechVoice').value;
+        if (voiceIndex && voices[voiceIndex]) {
+            utterance.voice = voices[voiceIndex];
+        }
+
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
     }
 </script>
 </body>
