@@ -352,6 +352,18 @@
         document.getElementById('answerText').style.display = 'none';
         document.getElementById('correctWord').textContent = '';
 
+        // 检查是否是最后一个词语，改变"下一个"按钮
+        const nextBtn = document.getElementById('nextBtn');
+        if (currentIndex === words.length - 1) {
+            nextBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>完成听写';
+            nextBtn.className = 'btn btn-success btn-action';
+            nextBtn.onclick = finishDictation;
+        } else {
+            nextBtn.innerHTML = '<i class="bi bi-arrow-right-circle me-2"></i>下一个';
+            nextBtn.className = 'btn btn-info btn-action';
+            nextBtn.onclick = nextWord;
+        }
+
         // 自动朗读
         readWord(words[currentIndex]);
     }
