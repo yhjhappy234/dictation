@@ -1,13 +1,15 @@
 package com.yhj.dictation.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -16,12 +18,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * PageController 单元测试
  */
-@WebMvcTest(PageController.class)
 @ExtendWith(MockitoExtension.class)
 class PageControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
+
+    @InjectMocks
+    private PageController pageController;
+
+    @BeforeEach
+    void setUp() {
+        // 配置视图解析器以避免循环视图路径问题
+        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+        viewResolver.setPrefix("/templates/");
+        viewResolver.setSuffix(".html");
+
+        mockMvc = MockMvcBuilders.standaloneSetup(pageController)
+                .setViewResolvers(viewResolver)
+                .build();
+    }
 
     @Nested
     @DisplayName("页面路由测试")

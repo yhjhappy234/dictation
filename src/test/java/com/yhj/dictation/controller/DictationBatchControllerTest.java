@@ -1,6 +1,6 @@
 package com.yhj.dictation.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.yhj.dictation.dto.ApiResponse;
 import com.yhj.dictation.dto.BatchCreateRequest;
 import com.yhj.dictation.dto.BatchResponse;
@@ -13,12 +13,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -35,27 +35,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * DictationBatchController 单元测试
  */
-@WebMvcTest(DictationBatchController.class)
 @ExtendWith(MockitoExtension.class)
 class DictationBatchControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private DictationBatchService batchService;
 
-    @MockBean
+    @Mock
     private WordService wordService;
 
+    @InjectMocks
+    private DictationBatchController batchController;
+
+    private ObjectMapper objectMapper;
     private BatchResponse testBatchResponse;
     private DictationBatch testBatch;
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(batchController).build();
+        objectMapper = new ObjectMapper();
+
         testBatchResponse = new BatchResponse();
         testBatchResponse.setId(1L);
         testBatchResponse.setBatchName("Test Batch");

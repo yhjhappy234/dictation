@@ -1,6 +1,6 @@
 package com.yhj.dictation.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.yhj.dictation.dto.StatusUpdateRequest;
 import com.yhj.dictation.dto.WordAddRequest;
 import com.yhj.dictation.dto.WordDTO;
@@ -11,12 +11,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -30,24 +30,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * WordController 单元测试
  */
-@WebMvcTest(WordController.class)
 @ExtendWith(MockitoExtension.class)
 class WordControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private WordService wordService;
 
+    @InjectMocks
+    private WordController wordController;
+
+    private ObjectMapper objectMapper;
     private Word testWord;
     private WordDTO testWordDTO;
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(wordController).build();
+        objectMapper = new ObjectMapper();
+
         testWord = new Word();
         testWord.setId(1L);
         testWord.setWordText("测试");

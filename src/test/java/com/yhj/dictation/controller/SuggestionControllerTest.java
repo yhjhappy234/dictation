@@ -1,6 +1,6 @@
 package com.yhj.dictation.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.yhj.dictation.dto.SuggestionDTO;
 import com.yhj.dictation.entity.Suggestion;
 import com.yhj.dictation.service.SuggestionService;
@@ -9,11 +9,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -29,24 +29,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * SuggestionController 单元测试
  */
-@WebMvcTest(SuggestionController.class)
 @ExtendWith(MockitoExtension.class)
 class SuggestionControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private SuggestionService suggestionService;
 
+    @InjectMocks
+    private SuggestionController suggestionController;
+
+    private ObjectMapper objectMapper;
     private Suggestion testSuggestion;
     private SuggestionDTO testDTO;
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(suggestionController).build();
+        objectMapper = new ObjectMapper();
+
         testSuggestion = new Suggestion();
         testSuggestion.setId(1L);
         testSuggestion.setWordId(1L);

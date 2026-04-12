@@ -1,6 +1,6 @@
 package com.yhj.dictation.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.yhj.dictation.dto.DictationResponse;
 import com.yhj.dictation.entity.DictationRecord;
 import com.yhj.dictation.entity.Word;
@@ -12,12 +12,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,30 +34,32 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * DictationRecordController 单元测试
  */
-@WebMvcTest(DictationRecordController.class)
 @ExtendWith(MockitoExtension.class)
 class DictationRecordControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private DictationRecordService recordService;
 
-    @MockBean
+    @Mock
     private DifficultWordService difficultWordService;
 
-    @MockBean
+    @Mock
     private SuggestionService suggestionService;
 
+    @InjectMocks
+    private DictationRecordController recordController;
+
+    private ObjectMapper objectMapper;
     private DictationRecord testRecord;
     private DictationResponse testResponse;
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(recordController).build();
+        objectMapper = new ObjectMapper();
+
         testRecord = new DictationRecord();
         testRecord.setId(1L);
         testRecord.setWordId(1L);
