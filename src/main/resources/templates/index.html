@@ -386,8 +386,14 @@
 
     // 标记正确
     function markCorrect() {
+        const word = words[currentIndex];
         correctCount++;
         currentIndex++;
+
+        // 记录正确结果到后端
+        if (selectedTaskId) {
+            recordWordResult(selectedTaskId, word, true);
+        }
 
         if (currentIndex >= words.length) {
             finishDictation();
@@ -412,11 +418,27 @@
 
         currentIndex++;
 
+        // 记录错误结果到后端
+        if (selectedTaskId) {
+            recordWordResult(selectedTaskId, word, false);
+        }
+
         if (currentIndex >= words.length) {
             finishDictation();
         } else {
             updateStats();
             showCurrentWord();
+        }
+    }
+
+    // 记录词语结果到后端
+    async function recordWordResult(taskId, word, isCorrect) {
+        try {
+            await fetch(`/api/tasks/${taskId}/record?word=${encodeURIComponent(word)}&isCorrect=${isCorrect}`, {
+                method: 'POST'
+            });
+        } catch (error) {
+            console.error('记录听写结果失败:', error);
         }
     }
 
