@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DictationBatchService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dictation-backend</a> &gt; <a href="index.source.html" class="el_package">com.yhj.dictation.service</a> &gt; <span class="el_source">DictationBatchService.java</span></div><h1>DictationBatchService.java</h1><pre class="source lang-java linenums">package com.yhj.dictation.service;
+
+import com.yhj.dictation.dto.BatchCreateRequest;
+import com.yhj.dictation.dto.BatchResponse;
+import com.yhj.dictation.entity.DictationBatch;
+import com.yhj.dictation.entity.Word;
+import com.yhj.dictation.repository.DictationBatchRepository;
+import com.yhj.dictation.repository.WordRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * 听写批次服务
+ */
+<span class="fc" id="L21">@Slf4j</span>
+@Service
+<span class="fc" id="L23">@RequiredArgsConstructor</span>
+public class DictationBatchService {
+
+    private final DictationBatchRepository batchRepository;
+    private final WordRepository wordRepository;
+
+    /**
+     * 创建新的听写批次
+     */
+    @Transactional
+    public DictationBatch createBatch(BatchCreateRequest request) {
+<span class="fc" id="L34">        DictationBatch batch = new DictationBatch();</span>
+<span class="fc" id="L35">        batch.setBatchName(request.getBatchName());</span>
+<span class="fc" id="L36">        batch.setCreatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L37">        batch.setStatus(DictationBatch.BatchStatus.CREATED);</span>
+<span class="fc" id="L38">        batch.setTotalWords(0);</span>
+<span class="fc" id="L39">        batch.setCompletedWords(0);</span>
+
+<span class="fc" id="L41">        batch = batchRepository.save(batch);</span>
+
+        // 解析词语并创建Word记录
+<span class="fc bfc" id="L44" title="All 4 branches covered.">        if (request.getWords() != null &amp;&amp; !request.getWords().trim().isEmpty()) {</span>
+<span class="fc" id="L45">            String[] wordArray = request.getWords().split(&quot;\\s+&quot;);</span>
+<span class="fc" id="L46">            int sortOrder = 1;</span>
+
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            for (String wordText : wordArray) {</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">                if (!wordText.trim().isEmpty()) {</span>
+<span class="fc" id="L50">                    Word word = new Word();</span>
+<span class="fc" id="L51">                    word.setWordText(wordText.trim());</span>
+<span class="fc" id="L52">                    word.setBatchId(batch.getId());</span>
+<span class="fc" id="L53">                    word.setSortOrder(sortOrder++);</span>
+<span class="fc" id="L54">                    word.setStatus(Word.WordStatus.PENDING);</span>
+<span class="fc" id="L55">                    word.setCreatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L56">                    wordRepository.save(word);</span>
+                }
+            }
+
+<span class="fc" id="L60">            batch.setTotalWords(sortOrder - 1);</span>
+<span class="fc" id="L61">            batch = batchRepository.save(batch);</span>
+        }
+
+<span class="fc" id="L64">        log.info(&quot;Created batch: {} with {} words&quot;, batch.getId(), batch.getTotalWords());</span>
+<span class="fc" id="L65">        return batch;</span>
+    }
+
+    /**
+     * 获取所有批次
+     */
+    public List&lt;DictationBatch&gt; getAllBatches() {
+<span class="fc" id="L72">        return batchRepository.findAllByOrderByCreatedAtDesc();</span>
+    }
+
+    /**
+     * 根据ID获取批次
+     */
+    public Optional&lt;DictationBatch&gt; getBatchById(Long id) {
+<span class="fc" id="L79">        return batchRepository.findById(id);</span>
+    }
+
+    /**
+     * 获取批次响应DTO
+     */
+    public BatchResponse toBatchResponse(DictationBatch batch) {
+<span class="fc" id="L86">        BatchResponse response = new BatchResponse();</span>
+<span class="fc" id="L87">        response.setId(batch.getId());</span>
+<span class="fc" id="L88">        response.setBatchName(batch.getBatchName());</span>
+<span class="fc" id="L89">        response.setCreatedAt(batch.getCreatedAt());</span>
+<span class="fc" id="L90">        response.setTotalWords(batch.getTotalWords());</span>
+<span class="fc" id="L91">        response.setCompletedWords(batch.getCompletedWords());</span>
+<span class="fc" id="L92">        response.setStatus(batch.getStatus().name());</span>
+
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (batch.getTotalWords() &gt; 0) {</span>
+<span class="fc" id="L95">            response.setProgress((double) batch.getCompletedWords() / batch.getTotalWords() * 100);</span>
+        } else {
+<span class="fc" id="L97">            response.setProgress(0.0);</span>
+        }
+
+<span class="fc" id="L100">        return response;</span>
+    }
+
+    /**
+     * 开始听写批次
+     */
+    @Transactional
+    public DictationBatch startBatch(Long batchId) {
+<span class="fc" id="L108">        Optional&lt;DictationBatch&gt; batchOpt = batchRepository.findById(batchId);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (batchOpt.isEmpty()) {</span>
+<span class="fc" id="L110">            throw new IllegalArgumentException(&quot;Batch not found: &quot; + batchId);</span>
+        }
+
+<span class="fc" id="L113">        DictationBatch batch = batchOpt.get();</span>
+<span class="fc" id="L114">        batch.setStatus(DictationBatch.BatchStatus.IN_PROGRESS);</span>
+<span class="fc" id="L115">        batch = batchRepository.save(batch);</span>
+
+<span class="fc" id="L117">        log.info(&quot;Started batch: {}&quot;, batchId);</span>
+<span class="fc" id="L118">        return batch;</span>
+    }
+
+    /**
+     * 完成听写批次
+     */
+    @Transactional
+    public DictationBatch completeBatch(Long batchId) {
+<span class="fc" id="L126">        Optional&lt;DictationBatch&gt; batchOpt = batchRepository.findById(batchId);</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (batchOpt.isEmpty()) {</span>
+<span class="fc" id="L128">            throw new IllegalArgumentException(&quot;Batch not found: &quot; + batchId);</span>
+        }
+
+<span class="fc" id="L131">        DictationBatch batch = batchOpt.get();</span>
+<span class="fc" id="L132">        batch.setStatus(DictationBatch.BatchStatus.COMPLETED);</span>
+<span class="fc" id="L133">        batch = batchRepository.save(batch);</span>
+
+<span class="fc" id="L135">        log.info(&quot;Completed batch: {}&quot;, batchId);</span>
+<span class="fc" id="L136">        return batch;</span>
+    }
+
+    /**
+     * 取消听写批次
+     */
+    @Transactional
+    public DictationBatch cancelBatch(Long batchId) {
+<span class="fc" id="L144">        Optional&lt;DictationBatch&gt; batchOpt = batchRepository.findById(batchId);</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (batchOpt.isEmpty()) {</span>
+<span class="fc" id="L146">            throw new IllegalArgumentException(&quot;Batch not found: &quot; + batchId);</span>
+        }
+
+<span class="fc" id="L149">        DictationBatch batch = batchOpt.get();</span>
+<span class="fc" id="L150">        batch.setStatus(DictationBatch.BatchStatus.CANCELLED);</span>
+<span class="fc" id="L151">        batch = batchRepository.save(batch);</span>
+
+<span class="fc" id="L153">        log.info(&quot;Cancelled batch: {}&quot;, batchId);</span>
+<span class="fc" id="L154">        return batch;</span>
+    }
+
+    /**
+     * 删除批次
+     */
+    @Transactional
+    public void deleteBatch(Long batchId) {
+        // 先删除批次中的所有词语
+<span class="fc" id="L163">        List&lt;Word&gt; words = wordRepository.findByBatchIdOrderBySortOrder(batchId);</span>
+<span class="fc" id="L164">        wordRepository.deleteAll(words);</span>
+
+        // 再删除批次
+<span class="fc" id="L167">        batchRepository.deleteById(batchId);</span>
+
+<span class="fc" id="L169">        log.info(&quot;Deleted batch: {}&quot;, batchId);</span>
+<span class="fc" id="L170">    }</span>
+
+    /**
+     * 根据状态获取批次列表
+     */
+    public List&lt;DictationBatch&gt; getBatchesByStatus(DictationBatch.BatchStatus status) {
+<span class="fc" id="L176">        return batchRepository.findByStatusOrderByCreatedAtDesc(status);</span>
+    }
+
+    /**
+     * 获取指定日期范围内的批次
+     */
+    public List&lt;DictationBatch&gt; getBatchesByDateRange(LocalDateTime start, LocalDateTime end) {
+<span class="fc" id="L183">        return batchRepository.findByCreatedAtBetweenOrderByCreatedAtDesc(start, end);</span>
+    }
+
+    /**
+     * 更新批次完成数量
+     */
+    @Transactional
+    public void updateCompletedWords(Long batchId) {
+<span class="fc" id="L191">        Optional&lt;DictationBatch&gt; batchOpt = batchRepository.findById(batchId);</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        if (batchOpt.isPresent()) {</span>
+<span class="fc" id="L193">            DictationBatch batch = batchOpt.get();</span>
+<span class="fc" id="L194">            long completedCount = wordRepository.countByBatchIdAndStatus(batchId, Word.WordStatus.COMPLETED);</span>
+<span class="fc" id="L195">            batch.setCompletedWords((int) completedCount);</span>
+<span class="fc" id="L196">            batchRepository.save(batch);</span>
+        }
+<span class="fc" id="L198">    }</span>
+
+    /**
+     * 获取所有批次响应DTO列表
+     */
+    public List&lt;BatchResponse&gt; getAllBatchResponses() {
+<span class="fc" id="L204">        return getAllBatches().stream()</span>
+<span class="fc" id="L205">                .map(this::toBatchResponse)</span>
+<span class="fc" id="L206">                .collect(java.util.stream.Collectors.toList());</span>
+    }
+
+    /**
+     * 根据ID获取批次响应DTO
+     */
+    public BatchResponse getBatchResponseById(Long id) {
+<span class="fc" id="L213">        Optional&lt;DictationBatch&gt; batchOpt = getBatchById(id);</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (batchOpt.isEmpty()) {</span>
+<span class="fc" id="L215">            throw new IllegalArgumentException(&quot;Batch not found: &quot; + id);</span>
+        }
+<span class="fc" id="L217">        return toBatchResponse(batchOpt.get());</span>
+    }
+
+    /**
+     * 创建批次并返回响应DTO
+     */
+    @Transactional
+    public BatchResponse createBatchResponse(BatchCreateRequest request) {
+<span class="fc" id="L225">        DictationBatch batch = createBatch(request);</span>
+<span class="fc" id="L226">        return toBatchResponse(batch);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

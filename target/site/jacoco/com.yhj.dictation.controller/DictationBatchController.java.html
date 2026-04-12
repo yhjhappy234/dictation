@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DictationBatchController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dictation-backend</a> &gt; <a href="index.source.html" class="el_package">com.yhj.dictation.controller</a> &gt; <span class="el_source">DictationBatchController.java</span></div><h1>DictationBatchController.java</h1><pre class="source lang-java linenums">package com.yhj.dictation.controller;
+
+import com.yhj.dictation.dto.ApiResponse;
+import com.yhj.dictation.dto.BatchCreateRequest;
+import com.yhj.dictation.dto.BatchResponse;
+import com.yhj.dictation.entity.DictationBatch;
+import com.yhj.dictation.entity.Word;
+import com.yhj.dictation.service.DictationBatchService;
+import com.yhj.dictation.service.WordService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * 听写批次控制器
+ */
+<span class="fc" id="L20">@Slf4j</span>
+@RestController
+@RequestMapping(&quot;/api/batches&quot;)
+<span class="fc" id="L23">@RequiredArgsConstructor</span>
+public class DictationBatchController {
+
+    private final DictationBatchService batchService;
+    private final WordService wordService;
+
+    /**
+     * 创建新批次
+     */
+    @PostMapping
+    public ApiResponse&lt;BatchResponse&gt; createBatch(@RequestBody BatchCreateRequest request) {
+        try {
+<span class="fc" id="L35">            BatchResponse response = batchService.createBatchResponse(request);</span>
+<span class="fc" id="L36">            return ApiResponse.success(&quot;批次创建成功&quot;, response);</span>
+<span class="fc" id="L37">        } catch (Exception e) {</span>
+<span class="fc" id="L38">            log.error(&quot;Failed to create batch&quot;, e);</span>
+<span class="fc" id="L39">            return ApiResponse.error(&quot;创建批次失败: &quot; + e.getMessage());</span>
+        }
+    }
+
+    /**
+     * 获取所有批次
+     */
+    @GetMapping
+    public ApiResponse&lt;List&lt;BatchResponse&gt;&gt; getAllBatches() {
+<span class="fc" id="L48">        List&lt;BatchResponse&gt; batches = batchService.getAllBatchResponses();</span>
+<span class="fc" id="L49">        return ApiResponse.success(batches);</span>
+    }
+
+    /**
+     * 获取批次详情
+     */
+    @GetMapping(&quot;/{id}&quot;)
+    public ApiResponse&lt;BatchResponse&gt; getBatchById(@PathVariable Long id) {
+        try {
+<span class="fc" id="L58">            BatchResponse response = batchService.getBatchResponseById(id);</span>
+<span class="fc" id="L59">            return ApiResponse.success(response);</span>
+<span class="fc" id="L60">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L61">            return ApiResponse.error(&quot;批次不存在: &quot; + id);</span>
+        }
+    }
+
+    /**
+     * 开始批次听写
+     */
+    @PostMapping(&quot;/{id}/start&quot;)
+    public ApiResponse&lt;BatchResponse&gt; startBatch(@PathVariable Long id) {
+        try {
+<span class="fc" id="L71">            DictationBatch batch = batchService.startBatch(id);</span>
+<span class="fc" id="L72">            return ApiResponse.success(&quot;批次开始成功&quot;, batchService.toBatchResponse(batch));</span>
+<span class="fc" id="L73">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L74">            return ApiResponse.error(&quot;批次不存在: &quot; + id);</span>
+        }
+    }
+
+    /**
+     * 完成批次听写
+     */
+    @PostMapping(&quot;/{id}/complete&quot;)
+    public ApiResponse&lt;BatchResponse&gt; completeBatch(@PathVariable Long id) {
+        try {
+<span class="fc" id="L84">            DictationBatch batch = batchService.completeBatch(id);</span>
+<span class="fc" id="L85">            return ApiResponse.success(&quot;批次完成&quot;, batchService.toBatchResponse(batch));</span>
+<span class="fc" id="L86">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L87">            return ApiResponse.error(&quot;批次不存在: &quot; + id);</span>
+        }
+    }
+
+    /**
+     * 取消批次
+     */
+    @PostMapping(&quot;/{id}/cancel&quot;)
+    public ApiResponse&lt;BatchResponse&gt; cancelBatch(@PathVariable Long id) {
+        try {
+<span class="fc" id="L97">            DictationBatch batch = batchService.cancelBatch(id);</span>
+<span class="fc" id="L98">            return ApiResponse.success(&quot;批次已取消&quot;, batchService.toBatchResponse(batch));</span>
+<span class="fc" id="L99">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L100">            return ApiResponse.error(&quot;批次不存在: &quot; + id);</span>
+        }
+    }
+
+    /**
+     * 删除批次
+     */
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ApiResponse&lt;Void&gt; deleteBatch(@PathVariable Long id) {
+        try {
+<span class="fc" id="L110">            batchService.deleteBatch(id);</span>
+<span class="fc" id="L111">            return ApiResponse.success(&quot;批次删除成功&quot;, null);</span>
+<span class="fc" id="L112">        } catch (Exception e) {</span>
+<span class="fc" id="L113">            log.error(&quot;Failed to delete batch&quot;, e);</span>
+<span class="fc" id="L114">            return ApiResponse.error(&quot;删除批次失败: &quot; + e.getMessage());</span>
+        }
+    }
+
+    /**
+     * 获取批次中的所有词语
+     */
+    @GetMapping(&quot;/{id}/words&quot;)
+    public ApiResponse&lt;List&lt;Word&gt;&gt; getBatchWords(@PathVariable Long id) {
+<span class="fc" id="L123">        List&lt;Word&gt; words = wordService.getWordsByBatchId(id);</span>
+<span class="fc" id="L124">        return ApiResponse.success(words);</span>
+    }
+
+    /**
+     * 重置批次词语状态
+     */
+    @PostMapping(&quot;/{id}/reset&quot;)
+    public ApiResponse&lt;Void&gt; resetBatchWords(@PathVariable Long id) {
+        try {
+<span class="fc" id="L133">            wordService.resetBatchWords(id);</span>
+<span class="fc" id="L134">            return ApiResponse.success(&quot;词语状态已重置&quot;, null);</span>
+<span class="fc" id="L135">        } catch (Exception e) {</span>
+<span class="fc" id="L136">            log.error(&quot;Failed to reset batch words&quot;, e);</span>
+<span class="fc" id="L137">            return ApiResponse.error(&quot;重置失败: &quot; + e.getMessage());</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DifficultWordController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dictation-backend</a> &gt; <a href="index.source.html" class="el_package">com.yhj.dictation.controller</a> &gt; <span class="el_source">DifficultWordController.java</span></div><h1>DifficultWordController.java</h1><pre class="source lang-java linenums">package com.yhj.dictation.controller;
+
+import com.yhj.dictation.dto.ApiResponse;
+import com.yhj.dictation.dto.DifficultWordAddRequest;
+import com.yhj.dictation.dto.DifficultWordDTO;
+import com.yhj.dictation.entity.DifficultWord;
+import com.yhj.dictation.service.DifficultWordService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * 生词本控制器
+ */
+<span class="fc" id="L18">@Slf4j</span>
+@RestController
+@RequestMapping(&quot;/api/difficult-words&quot;)
+<span class="fc" id="L21">@RequiredArgsConstructor</span>
+public class DifficultWordController {
+
+    private final DifficultWordService difficultWordService;
+
+    @GetMapping
+    public ApiResponse&lt;List&lt;DifficultWordDTO&gt;&gt; getAllDifficultWords() {
+<span class="fc" id="L28">        List&lt;DifficultWordDTO&gt; words = difficultWordService.getDifficultWords();</span>
+<span class="fc" id="L29">        return ApiResponse.success(words);</span>
+    }
+
+    @GetMapping(&quot;/difficult&quot;)
+    public ApiResponse&lt;List&lt;DifficultWordDTO&gt;&gt; getDifficultWords(
+            @RequestParam(defaultValue = &quot;3&quot;) Integer maxMasteryLevel) {
+<span class="fc" id="L35">        List&lt;DifficultWordDTO&gt; words = difficultWordService.getDifficultWordsByMasteryLevel(maxMasteryLevel)</span>
+<span class="fc" id="L36">                .stream()</span>
+<span class="fc" id="L37">                .map(this::toDifficultWordDTO)</span>
+<span class="fc" id="L38">                .collect(Collectors.toList());</span>
+<span class="fc" id="L39">        return ApiResponse.success(words);</span>
+    }
+
+    @GetMapping(&quot;/recommended&quot;)
+    public ApiResponse&lt;List&lt;DifficultWordDTO&gt;&gt; getRecommendedWords(
+            @RequestParam(defaultValue = &quot;3&quot;) Integer minErrors,
+            @RequestParam(defaultValue = &quot;10&quot;) Integer minDuration) {
+<span class="fc" id="L46">        List&lt;DifficultWordDTO&gt; words = difficultWordService.getRecommendedDifficultWords(minErrors, minDuration)</span>
+<span class="fc" id="L47">                .stream()</span>
+<span class="fc" id="L48">                .map(this::toDifficultWordDTO)</span>
+<span class="fc" id="L49">                .collect(Collectors.toList());</span>
+<span class="fc" id="L50">        return ApiResponse.success(words);</span>
+    }
+
+    @PostMapping
+    public ApiResponse&lt;DifficultWordDTO&gt; addDifficultWord(@RequestBody DifficultWordAddRequest request) {
+        try {
+<span class="fc" id="L56">            DifficultWordDTO dto = difficultWordService.addDifficultWordDTO(request.getWordId());</span>
+<span class="fc" id="L57">            return ApiResponse.success(&quot;已添加到生词本&quot;, dto);</span>
+<span class="fc" id="L58">        } catch (Exception e) {</span>
+<span class="fc" id="L59">            log.error(&quot;Failed to add difficult word&quot;, e);</span>
+<span class="fc" id="L60">            return ApiResponse.error(&quot;添加生词失败: &quot; + e.getMessage());</span>
+        }
+    }
+
+    @PutMapping(&quot;/{id}/mastery&quot;)
+    public ApiResponse&lt;DifficultWordDTO&gt; updateMasteryLevel(
+            @PathVariable Long id,
+            @RequestParam Integer level) {
+        try {
+<span class="fc" id="L69">            return difficultWordService.getDifficultWordById(id)</span>
+<span class="fc" id="L70">                    .map(dw -&gt; {</span>
+<span class="fc" id="L71">                        difficultWordService.updateMasteryLevel(dw.getWordId(), level);</span>
+<span class="fc" id="L72">                        return difficultWordService.getDifficultWordByWordId(dw.getWordId())</span>
+<span class="fc" id="L73">                                .map(this::toDifficultWordDTO)</span>
+<span class="fc" id="L74">                                .map(dto -&gt; ApiResponse.success(&quot;掌握级别已更新&quot;, dto))</span>
+<span class="fc" id="L75">                                .orElse(ApiResponse.error(&quot;更新失败&quot;));</span>
+                    })
+<span class="fc" id="L77">                    .orElse(ApiResponse.error(&quot;生词不存在: &quot; + id));</span>
+<span class="fc" id="L78">        } catch (Exception e) {</span>
+<span class="fc" id="L79">            log.error(&quot;Failed to update mastery level&quot;, e);</span>
+<span class="fc" id="L80">            return ApiResponse.error(&quot;更新掌握级别失败: &quot; + e.getMessage());</span>
+        }
+    }
+
+    @PostMapping(&quot;/{wordId}/success&quot;)
+    public ApiResponse&lt;Void&gt; practiceSuccess(@PathVariable Long wordId) {
+        try {
+<span class="fc" id="L87">            difficultWordService.handlePracticeSuccess(wordId);</span>
+<span class="fc" id="L88">            return ApiResponse.success(&quot;练习成功&quot;, null);</span>
+<span class="fc" id="L89">        } catch (Exception e) {</span>
+<span class="fc" id="L90">            log.error(&quot;Failed to handle practice success&quot;, e);</span>
+<span class="fc" id="L91">            return ApiResponse.error(&quot;处理失败: &quot; + e.getMessage());</span>
+        }
+    }
+
+    @PostMapping(&quot;/{wordId}/failure&quot;)
+    public ApiResponse&lt;Void&gt; practiceFailure(@PathVariable Long wordId) {
+        try {
+<span class="fc" id="L98">            difficultWordService.handlePracticeFailure(wordId);</span>
+<span class="fc" id="L99">            return ApiResponse.success(&quot;已记录失败&quot;, null);</span>
+<span class="fc" id="L100">        } catch (Exception e) {</span>
+<span class="fc" id="L101">            log.error(&quot;Failed to handle practice failure&quot;, e);</span>
+<span class="fc" id="L102">            return ApiResponse.error(&quot;处理失败: &quot; + e.getMessage());</span>
+        }
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ApiResponse&lt;Void&gt; removeDifficultWord(@PathVariable Long id) {
+        try {
+<span class="fc" id="L109">            difficultWordService.removeDifficultWord(id);</span>
+<span class="fc" id="L110">            return ApiResponse.success(&quot;已从生词本移除&quot;, null);</span>
+<span class="fc" id="L111">        } catch (Exception e) {</span>
+<span class="fc" id="L112">            log.error(&quot;Failed to remove difficult word&quot;, e);</span>
+<span class="fc" id="L113">            return ApiResponse.error(&quot;移除失败: &quot; + e.getMessage());</span>
+        }
+    }
+
+    private DifficultWordDTO toDifficultWordDTO(DifficultWord dw) {
+<span class="fc" id="L118">        DifficultWordDTO dto = new DifficultWordDTO();</span>
+<span class="fc" id="L119">        dto.setId(dw.getId());</span>
+<span class="fc" id="L120">        dto.setWordId(dw.getWordId());</span>
+<span class="fc" id="L121">        dto.setErrorCount(dw.getErrorCount());</span>
+<span class="fc" id="L122">        dto.setAvgDurationSeconds(dw.getAvgDurationSeconds());</span>
+<span class="fc" id="L123">        dto.setLastPracticeDate(dw.getLastPracticeDate());</span>
+<span class="fc" id="L124">        dto.setMasteryLevel(dw.getMasteryLevel());</span>
+<span class="fc" id="L125">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

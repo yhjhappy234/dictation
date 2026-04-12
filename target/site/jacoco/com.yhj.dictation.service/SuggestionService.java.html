@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SuggestionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dictation-backend</a> &gt; <a href="index.source.html" class="el_package">com.yhj.dictation.service</a> &gt; <span class="el_source">SuggestionService.java</span></div><h1>SuggestionService.java</h1><pre class="source lang-java linenums">package com.yhj.dictation.service;
+
+import com.yhj.dictation.dto.SuggestionDTO;
+import com.yhj.dictation.entity.DifficultWord;
+import com.yhj.dictation.entity.DictationRecord;
+import com.yhj.dictation.entity.Suggestion;
+import com.yhj.dictation.entity.Word;
+import com.yhj.dictation.repository.DifficultWordRepository;
+import com.yhj.dictation.repository.DictationRecordRepository;
+import com.yhj.dictation.repository.SuggestionRepository;
+import com.yhj.dictation.repository.WordRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * 建议服务
+ */
+<span class="fc" id="L25">@Slf4j</span>
+@Service
+<span class="fc" id="L27">@RequiredArgsConstructor</span>
+public class SuggestionService {
+
+    private final SuggestionRepository suggestionRepository;
+    private final DifficultWordRepository difficultWordRepository;
+    private final DictationRecordRepository recordRepository;
+    private final WordRepository wordRepository;
+
+    /**
+     * 创建建议
+     */
+    @Transactional
+    public Suggestion createSuggestion(Long wordId, Suggestion.SuggestionType suggestionType,
+                                       Integer priority, String message) {
+<span class="fc" id="L41">        Suggestion suggestion = new Suggestion();</span>
+<span class="fc" id="L42">        suggestion.setWordId(wordId);</span>
+<span class="fc" id="L43">        suggestion.setSuggestionType(suggestionType);</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        suggestion.setPriority(priority != null ? priority : 1);</span>
+<span class="fc" id="L45">        suggestion.setMessage(message);</span>
+<span class="fc" id="L46">        suggestion.setCreatedAt(LocalDateTime.now());</span>
+
+<span class="fc" id="L48">        suggestion = suggestionRepository.save(suggestion);</span>
+<span class="fc" id="L49">        log.info(&quot;Created suggestion: {} for word: {}&quot;, suggestion.getId(), wordId);</span>
+<span class="fc" id="L50">        return suggestion;</span>
+    }
+
+    /**
+     * 根据ID获取建议
+     */
+    public Optional&lt;Suggestion&gt; getSuggestionById(Long id) {
+<span class="fc" id="L57">        return suggestionRepository.findById(id);</span>
+    }
+
+    /**
+     * 获取词语的所有建议
+     */
+    public List&lt;Suggestion&gt; getSuggestionsByWordId(Long wordId) {
+<span class="fc" id="L64">        return suggestionRepository.findByWordId(wordId);</span>
+    }
+
+    /**
+     * 获取指定类型的建议（按优先级降序）
+     */
+    public List&lt;Suggestion&gt; getSuggestionsByType(Suggestion.SuggestionType suggestionType) {
+<span class="fc" id="L71">        return suggestionRepository.findBySuggestionTypeOrderByPriorityDesc(suggestionType);</span>
+    }
+
+    /**
+     * 获取所有建议（按优先级和创建时间降序）
+     */
+    public List&lt;Suggestion&gt; getAllSuggestions() {
+<span class="fc" id="L78">        return suggestionRepository.findAllByOrderByPriorityDescCreatedAtDesc();</span>
+    }
+
+    /**
+     * 更新建议优先级
+     */
+    @Transactional
+    public Suggestion updatePriority(Long suggestionId, Integer priority) {
+<span class="fc" id="L86">        Optional&lt;Suggestion&gt; suggestionOpt = suggestionRepository.findById(suggestionId);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (suggestionOpt.isEmpty()) {</span>
+<span class="fc" id="L88">            throw new IllegalArgumentException(&quot;Suggestion not found: &quot; + suggestionId);</span>
+        }
+
+<span class="fc" id="L91">        Suggestion suggestion = suggestionOpt.get();</span>
+<span class="fc" id="L92">        suggestion.setPriority(Math.max(1, Math.min(5, priority)));</span>
+<span class="fc" id="L93">        suggestion = suggestionRepository.save(suggestion);</span>
+
+<span class="fc" id="L95">        log.info(&quot;Updated suggestion {} priority to {}&quot;, suggestionId, priority);</span>
+<span class="fc" id="L96">        return suggestion;</span>
+    }
+
+    /**
+     * 更新建议消息
+     */
+    @Transactional
+    public Suggestion updateMessage(Long suggestionId, String message) {
+<span class="fc" id="L104">        Optional&lt;Suggestion&gt; suggestionOpt = suggestionRepository.findById(suggestionId);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (suggestionOpt.isEmpty()) {</span>
+<span class="fc" id="L106">            throw new IllegalArgumentException(&quot;Suggestion not found: &quot; + suggestionId);</span>
+        }
+
+<span class="fc" id="L109">        Suggestion suggestion = suggestionOpt.get();</span>
+<span class="fc" id="L110">        suggestion.setMessage(message);</span>
+<span class="fc" id="L111">        suggestion = suggestionRepository.save(suggestion);</span>
+
+<span class="fc" id="L113">        log.info(&quot;Updated suggestion {} message&quot;, suggestionId);</span>
+<span class="fc" id="L114">        return suggestion;</span>
+    }
+
+    /**
+     * 删除建议
+     */
+    @Transactional
+    public void deleteSuggestion(Long suggestionId) {
+<span class="fc" id="L122">        suggestionRepository.deleteById(suggestionId);</span>
+<span class="fc" id="L123">        log.info(&quot;Deleted suggestion: {}&quot;, suggestionId);</span>
+<span class="fc" id="L124">    }</span>
+
+    /**
+     * 删除词语的所有建议
+     */
+    @Transactional
+    public void deleteSuggestionsByWordId(Long wordId) {
+<span class="fc" id="L131">        List&lt;Suggestion&gt; suggestions = suggestionRepository.findByWordId(wordId);</span>
+<span class="fc" id="L132">        suggestionRepository.deleteAll(suggestions);</span>
+<span class="fc" id="L133">        log.info(&quot;Deleted {} suggestions for word: {}&quot;, suggestions.size(), wordId);</span>
+<span class="fc" id="L134">    }</span>
+
+    /**
+     * 创建复习建议
+     */
+    @Transactional
+    public Suggestion createReviewSuggestion(Long wordId, String message) {
+<span class="fc" id="L141">        return createSuggestion(wordId, Suggestion.SuggestionType.REVIEW_NEEDED, 3, message);</span>
+    }
+
+    /**
+     * 创建高难度建议
+     */
+    @Transactional
+    public Suggestion createHighDifficultySuggestion(Long wordId, String message) {
+<span class="fc" id="L149">        return createSuggestion(wordId, Suggestion.SuggestionType.HIGH_DIFFICULTY, 4, message);</span>
+    }
+
+    /**
+     * 创建常错词建议
+     */
+    @Transactional
+    public Suggestion createFrequentErrorSuggestion(Long wordId, String message) {
+<span class="fc" id="L157">        return createSuggestion(wordId, Suggestion.SuggestionType.FREQUENT_ERROR, 5, message);</span>
+    }
+
+    /**
+     * 创建反应时间长建议
+     */
+    @Transactional
+    public Suggestion createLongDurationSuggestion(Long wordId, String message) {
+<span class="fc" id="L165">        return createSuggestion(wordId, Suggestion.SuggestionType.LONG_DURATION, 3, message);</span>
+    }
+
+    /**
+     * 创建新词建议
+     */
+    @Transactional
+    public Suggestion createNewWordSuggestion(Long wordId, String message) {
+<span class="fc" id="L173">        return createSuggestion(wordId, Suggestion.SuggestionType.NEW_WORD, 2, message);</span>
+    }
+
+    /**
+     * 获取需要复习的词语建议
+     */
+    public List&lt;Suggestion&gt; getReviewNeededSuggestions() {
+<span class="fc" id="L180">        return getSuggestionsByType(Suggestion.SuggestionType.REVIEW_NEEDED);</span>
+    }
+
+    /**
+     * 获取高难度词语建议
+     */
+    public List&lt;Suggestion&gt; getHighDifficultySuggestions() {
+<span class="fc" id="L187">        return getSuggestionsByType(Suggestion.SuggestionType.HIGH_DIFFICULTY);</span>
+    }
+
+    /**
+     * 获取常错词建议
+     */
+    public List&lt;Suggestion&gt; getFrequentErrorSuggestions() {
+<span class="fc" id="L194">        return getSuggestionsByType(Suggestion.SuggestionType.FREQUENT_ERROR);</span>
+    }
+
+    /**
+     * 获取所有建议（返回DTO）
+     */
+    public List&lt;SuggestionDTO&gt; getAllSuggestionDTOs() {
+<span class="fc" id="L201">        return getAllSuggestions().stream()</span>
+<span class="fc" id="L202">                .map(this::toSuggestionDTO)</span>
+<span class="fc" id="L203">                .collect(Collectors.toList());</span>
+    }
+
+    /**
+     * 为批次生成建议
+     */
+    @Transactional
+    public void generateSuggestions(Long batchId) {
+<span class="fc" id="L211">        List&lt;DictationRecord&gt; records = recordRepository.findByBatchId(batchId);</span>
+
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        for (DictationRecord record : records) {</span>
+<span class="fc" id="L214">            Word word = wordRepository.findById(record.getWordId()).orElse(null);</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">            if (word == null) continue;</span>
+
+            // 检查是否需要复习
+<span class="fc bfc" id="L218" title="All 2 branches covered.">            if (record.getRepeatCount() &gt; 2) {</span>
+<span class="fc" id="L219">                createFrequentErrorSuggestion(word.getId(),</span>
+<span class="fc" id="L220">                        &quot;词语 \&quot;&quot; + word.getWordText() + &quot;\&quot; 重复播放次数较多(&quot; + record.getRepeatCount() + &quot;次)，建议加强练习&quot;);</span>
+            }
+
+            // 检查反应时间
+<span class="fc bfc" id="L224" title="All 4 branches covered.">            if (record.getDurationSeconds() != null &amp;&amp; record.getDurationSeconds() &gt; 10) {</span>
+<span class="fc" id="L225">                createLongDurationSuggestion(word.getId(),</span>
+<span class="fc" id="L226">                        &quot;词语 \&quot;&quot; + word.getWordText() + &quot;\&quot; 反应时间较长(&quot; + record.getDurationSeconds() + &quot;秒)，需要熟悉&quot;);</span>
+            }
+<span class="fc" id="L228">        }</span>
+
+        // 检查生词本
+<span class="fc" id="L231">        List&lt;DifficultWord&gt; difficultWords = difficultWordRepository.findByMasteryLevelLessThanOrderByErrorCountDesc(3);</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">        for (DifficultWord dw : difficultWords) {</span>
+<span class="fc" id="L233">            Word word = wordRepository.findById(dw.getWordId()).orElse(null);</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">            if (word == null) continue;</span>
+
+<span class="fc" id="L236">            createHighDifficultySuggestion(dw.getWordId(),</span>
+<span class="fc" id="L237">                    &quot;词语 \&quot;&quot; + word.getWordText() + &quot;\&quot; 错误次数:&quot; + dw.getErrorCount() + &quot;，掌握度:&quot; + dw.getMasteryLevel() + &quot;/5，建议重点复习&quot;);</span>
+<span class="fc" id="L238">        }</span>
+
+<span class="fc" id="L240">        log.info(&quot;Generated suggestions for batch: {}&quot;, batchId);</span>
+<span class="fc" id="L241">    }</span>
+
+    /**
+     * 转换为DTO
+     */
+    private SuggestionDTO toSuggestionDTO(Suggestion suggestion) {
+<span class="fc" id="L247">        SuggestionDTO dto = new SuggestionDTO();</span>
+<span class="fc" id="L248">        dto.setId(suggestion.getId());</span>
+<span class="fc" id="L249">        dto.setWordId(suggestion.getWordId());</span>
+<span class="fc" id="L250">        dto.setSuggestionType(suggestion.getSuggestionType().name());</span>
+<span class="fc" id="L251">        dto.setPriority(suggestion.getPriority());</span>
+<span class="fc" id="L252">        dto.setMessage(suggestion.getMessage());</span>
+<span class="fc" id="L253">        dto.setCreatedAt(suggestion.getCreatedAt());</span>
+
+<span class="fc" id="L255">        wordRepository.findById(suggestion.getWordId()).ifPresent(word -&gt; {</span>
+<span class="fc" id="L256">            dto.setWordText(word.getWordText());</span>
+<span class="fc" id="L257">        });</span>
+
+<span class="fc" id="L259">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

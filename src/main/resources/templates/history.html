@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head th:replace="~{layout :: head('听写小助手 - 历史记录')}"></head>
+<body>
+<!-- 导航栏 -->
+<nav th:replace="~{layout :: navbar('history')}"></nav>
+
+<div class="main-container">
+    <h2 class="mb-4">
+        <i class="bi bi-clock-history me-2"></i>听写历史记录
+    </h2>
+
+    <!-- 筛选区域 -->
+    <div class="filter-section">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">开始日期</label>
+                <input type="date" class="form-control" id="startDate">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">结束日期</label>
+                <input type="date" class="form-control" id="endDate">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">状态</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">全部</option>
+                    <option value="completed">已完成</option>
+                    <option value="incomplete">未完成</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" onclick="applyFilter()">
+                    <i class="bi bi-search me-2"></i>筛选
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计概览 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number" id="totalBatches">0</div>
+                <div class="stat-label">总批次数</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number text-success" id="totalCorrect">0</div>
+                <div class="stat-label">总正确数</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number text-danger" id="totalWrong">0</div>
+                <div class="stat-label">总错误数</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number" id="avgAccuracy">0%</div>
+                <div class="stat-label">平均正确率</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批次列表 -->
+    <div class="row" id="batchList">
+        <!-- 批次卡片将通过JavaScript动态加载 -->
+    </div>
+
+    <!-- 分页 -->
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center" id="pagination">
+        </ul>
+    </nav>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-list-check me-2"></i>批次详情
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <h6 class="text-muted">批次名称</h6>
+                            <h4 id="modalBatchName">-</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <h6 class="text-muted">听写时间</h6>
+                            <h4 id="modalDate">-</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-number" id="modalWordCount">0</div>
+                            <div class="stat-label">词语总数</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-number text-success" id="modalCorrect">0</div>
+                            <div class="stat-label">正确数</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-number text-danger" id="modalWrong">0</div>
+                            <div class="stat-label">错误数</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 正确率进度条 -->
+                <div class="mb-4">
+                    <h6 class="fw-bold">正确率</h6>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-success" id="modalProgress" style="width: 0%">0%</div>
+                    </div>
+                </div>
+                <!-- 词语列表 -->
+                <h6 class="fw-bold">词语详情</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>词语</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalWordList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="replayBatch()">
+                    <i class="bi bi-arrow-repeat me-2"></i>重新听写
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页脚 -->
+<footer th:replace="~{layout :: footer}"></footer>
+
+<!-- 脚本 -->
+<div th:replace="~{layout :: scripts}"></div>
+
+<script>
+    // 全局变量
+    let batches = [];
+    let currentBatchId = null;
+    let currentPage = 1;
+    let totalPages = 1;
+    const pageSize = 12;
+
+    // 页面加载
+    document.addEventListener('DOMContentLoaded', function() {
+        loadBatches();
+        setDefaultDates();
+    });
+
+    // 设置默认日期
+    function setDefaultDates() {
+        const today = new Date();
+        const lastMonth = new Date(today);
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+
+        document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        document.getElementById('startDate').value = lastMonth.toISOString().split('T')[0];
+    }
+
+    // 加载批次列表
+    async function loadBatches(page = 1) {
+        try {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const status = document.getElementById('statusFilter').value;
+
+            const params = new URLSearchParams({
+                page: page,
+                size: pageSize,
+                startDate: startDate,
+                endDate: endDate,
+                status: status
+            });
+
+            const response = await fetch('/api/batches?' + params.toString());
+            if (response.ok) {
+                const data = await response.json();
+                batches = data.content || data;
+                totalPages = data.totalPages || 1;
+                currentPage = page;
+                renderBatches();
+                renderPagination();
+                updateStats(data);
+            } else {
+                // 使用模拟数据
+                loadMockData();
+            }
+        } catch (error) {
+            console.error('加载批次失败:', error);
+            loadMockData();
+        }
+    }
+
+    // 模拟数据
+    function loadMockData() {
+        batches = [
+            {
+                id: 1,
+                name: '第一单元听写',
+                createdAt: '2024-01-15 10:30:00',
+                wordCount: 20,
+                correctCount: 18,
+                wrongCount: 2,
+                status: 'completed',
+                words: [
+                    { word: '苹果', correct: true },
+                    { word: '香蕉', correct: true },
+                    { word: '橙子', correct: false },
+                    { word: '西瓜', correct: true },
+                    { word: '葡萄', correct: true },
+                    { word: '草莓', correct: true },
+                    { word: '樱桃', correct: false },
+                    { word: '芒果', correct: true }
+                ]
+            },
+            {
+                id: 2,
+                name: '第二单元听写',
+                createdAt: '2024-01-14 14:20:00',
+                wordCount: 15,
+                correctCount: 12,
+                wrongCount: 3,
+                status: 'completed',
+                words: [
+                    { word: '春天', correct: true },
+                    { word: '夏天', correct: false },
+                    { word: '秋天', correct: true },
+                    { word: '冬天', correct: true },
+                    { word: '太阳', correct: false },
+                    { word: '月亮', correct: true }
+                ]
+            },
+            {
+                id: 3,
+                name: '古诗听写练习',
+                createdAt: '2024-01-13 09:00:00',
+                wordCount: 10,
+                correctCount: 8,
+                wrongCount: 2,
+                status: 'completed',
+                words: [
+                    { word: '床前明月光', correct: true },
+                    { word: '疑是地上霜', correct: true },
+                    { word: '举头望明月', correct: false },
+                    { word: '低头思故乡', correct: true }
+                ]
+            },
+            {
+                id: 4,
+                name: '成语听写',
+                createdAt: '2024-01-12 16:45:00',
+                wordCount: 12,
+                correctCount: 10,
+                wrongCount: 2,
+                status: 'completed',
+                words: []
+            },
+            {
+                id: 5,
+                name: '第三单元词语',
+                createdAt: '2024-01-11 11:00:00',
+                wordCount: 18,
+                correctCount: 15,
+                wrongCount: 3,
+                status: 'completed',
+                words: []
+            }
+        ];
+        renderBatches();
+        updateStats({ totalBatches: 5, totalCorrect: 63, totalWrong: 12 });
+    }
+
+    // 渲染批次列表
+    function renderBatches() {
+        const container = document.getElementById('batchList');
+        container.innerHTML = '';
+
+        if (batches.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i><p class="mt-3 text-muted fs-5">暂无听写记录</p></div>';
+            return;
+        }
+
+        batches.forEach(function(batch) {
+            const accuracy = batch.wordCount > 0
+                ? Math.round((batch.correctCount / batch.wordCount) * 100)
+                : 0;
+            const statusClass = batch.status === 'completed' ? 'success' : 'warning';
+            const statusText = batch.status === 'completed' ? '已完成' : '进行中';
+
+            const cardHtml = '<div class="col-md-6 col-lg-4 mb-4">' +
+                '<div class="card history-card" onclick="showDetail(' + batch.id + ')">' +
+                '<div class="card-body">' +
+                '<div class="d-flex justify-content-between align-items-start mb-3">' +
+                '<h5 class="card-title mb-0"><i class="bi bi-journal-text me-2 text-primary"></i>' + batch.name + '</h5>' +
+                '<span class="badge bg-' + statusClass + ' badge-status">' + statusText + '</span>' +
+                '</div>' +
+                '<p class="text-muted mb-3"><i class="bi bi-calendar3 me-1"></i>' + batch.createdAt + '</p>' +
+                '<div class="row text-center">' +
+                '<div class="col-4"><div class="fs-4 fw-bold">' + batch.wordCount + '</div><small class="text-muted">总数</small></div>' +
+                '<div class="col-4"><div class="fs-4 fw-bold text-success">' + batch.correctCount + '</div><small class="text-muted">正确</small></div>' +
+                '<div class="col-4"><div class="fs-4 fw-bold text-danger">' + batch.wrongCount + '</div><small class="text-muted">错误</small></div>' +
+                '</div>' +
+                '<div class="mt-3"><div class="progress" style="height: 10px;"><div class="progress-bar bg-success" style="width: ' + accuracy + '%">' + accuracy + '%</div></div></div>' +
+                '</div></div></div>';
+            container.innerHTML += cardHtml;
+        });
+    }
+
+    // 渲染分页
+    function renderPagination() {
+        const container = document.getElementById('pagination');
+        container.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        // 上一页
+        let prevDisabled = currentPage === 1 ? 'disabled' : '';
+        container.innerHTML += '<li class="page-item ' + prevDisabled + '"><a class="page-link" href="#" onclick="loadBatches(' + (currentPage - 1) + '); return false;"><i class="bi bi-chevron-left"></i></a></li>';
+
+        // 页码
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                let activeClass = i === currentPage ? 'active' : '';
+                container.innerHTML += '<li class="page-item ' + activeClass + '"><a class="page-link" href="#" onclick="loadBatches(' + i + '); return false;">' + i + '</a></li>';
+            } else if (i === currentPage - 3 || i === currentPage + 3) {
+                container.innerHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+        }
+
+        // 下一页
+        let nextDisabled = currentPage === totalPages ? 'disabled' : '';
+        container.innerHTML += '<li class="page-item ' + nextDisabled + '"><a class="page-link" href="#" onclick="loadBatches(' + (currentPage + 1) + '); return false;"><i class="bi bi-chevron-right"></i></a></li>';
+    }
+
+    // 更新统计
+    function updateStats(data) {
+        document.getElementById('totalBatches').textContent = data.totalBatches || batches.length;
+        document.getElementById('totalCorrect').textContent = data.totalCorrect || batches.reduce(function(sum, b) { return sum + b.correctCount; }, 0);
+        document.getElementById('totalWrong').textContent = data.totalWrong || batches.reduce(function(sum, b) { return sum + b.wrongCount; }, 0);
+
+        const total = (data.totalCorrect || 0) + (data.totalWrong || 0);
+        const accuracy = total > 0 ? Math.round((data.totalCorrect || 0) / total * 100) : 0;
+        document.getElementById('avgAccuracy').textContent = accuracy + '%';
+    }
+
+    // 应用筛选
+    function applyFilter() {
+        loadBatches(1);
+    }
+
+    // 显示详情
+    function showDetail(batchId) {
+        currentBatchId = batchId;
+        const batch = batches.find(function(b) { return b.id === batchId; });
+        if (!batch) return;
+
+        document.getElementById('modalBatchName').textContent = batch.name;
+        document.getElementById('modalDate').textContent = batch.createdAt;
+        document.getElementById('modalWordCount').textContent = batch.wordCount;
+        document.getElementById('modalCorrect').textContent = batch.correctCount;
+        document.getElementById('modalWrong').textContent = batch.wrongCount;
+
+        const accuracy = batch.wordCount > 0
+            ? Math.round((batch.correctCount / batch.wordCount) * 100)
+            : 0;
+        const progressBar = document.getElementById('modalProgress');
+        progressBar.style.width = accuracy + '%';
+        progressBar.textContent = accuracy + '%';
+
+        // 渲染词语列表
+        const tbody = document.getElementById('modalWordList');
+        tbody.innerHTML = '';
+        if (batch.words && batch.words.length > 0) {
+            batch.words.forEach(function(w) {
+                const badgeClass = w.correct ? 'bg-success' : 'bg-danger';
+                const statusText = w.correct ? '正确' : '错误';
+                tbody.innerHTML += '<tr>' +
+                    '<td><strong>' + w.word + '</strong></td>' +
+                    '<td><span class="badge ' + badgeClass + '">' + statusText + '</span></td>' +
+                    '<td><button class="btn btn-sm btn-outline-primary" onclick="speakWord(\'' + w.word + '\')"><i class="bi bi-volume-up"></i></button></td>' +
+                    '</tr>';
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">暂无详细词语记录</td></tr>';
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+        modal.show();
+    }
+
+    // 朗读词语
+    function speakWord(word) {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'zh-CN';
+        utterance.rate = 0.8;
+        synth.speak(utterance);
+    }
+
+    // 重新听写
+    function replayBatch() {
+        const batch = batches.find(function(b) { return b.id === currentBatchId; });
+        if (!batch || !batch.words || batch.words.length === 0) {
+            alert('无法重新听写：缺少词语数据');
+            return;
+        }
+
+        // 保存词语到本地存储并跳转到首页
+        const words = batch.words.map(function(w) { return w.word; }).join('\n');
+        localStorage.setItem('dictationWords', words);
+        localStorage.setItem('dictationBatchName', batch.name + '（重练）');
+
+        window.location.href = '/';
+    }
+</script>
+</body>
+</html>

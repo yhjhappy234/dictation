@@ -1,0 +1,11 @@
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/service/DictationBatchServiceTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/controller/DictationBatchControllerTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/service/SuggestionServiceTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/controller/PageControllerTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/service/DifficultWordServiceTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/service/DictationRecordServiceTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/controller/WordControllerTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/controller/SuggestionControllerTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/controller/DictationRecordControllerTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/controller/DifficultWordControllerTest.java
+/home/admin/workspace/dictation/src/test/java/com/yhj/dictation/service/WordServiceTest.java

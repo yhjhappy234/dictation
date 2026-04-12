@@ -23,40 +23,22 @@ dictation/
 │   │   │   │   ├── DictationRecordController.java
 │   │   │   │   ├── DifficultWordController.java
 │   │   │   │   ├── SuggestionController.java
+│   │   │   │   ├── PresetContentController.java  # 预设内容导入
 │   │   │   │   └── PageController.java       # 页面控制器
 │   │   │   ├── dto/                         # 数据传输对象
 │   │   │   ├── entity/                      # JPA实体类
-│   │   │   │   ├── DictationBatch.java      # 听写批次
-│   │   │   │   ├── Word.java                # 词语
-│   │   │   │   ├── DictationRecord.java     # 听写记录
-│   │   │   │   ├── DifficultWord.java       # 生词本
-│   │   │   │   └── Suggestion.java          # 学习建议
 │   │   │   ├── repository/                  # JPA Repository接口
-│   │   │   │   ├── DictationBatchRepository.java
-│   │   │   │   ├── WordRepository.java
-│   │   │   │   ├── DictationRecordRepository.java
-│   │   │   │   ├── DifficultWordRepository.java
-│   │   │   │   └── SuggestionRepository.java
 │   │   │   └── service/                     # 业务服务层
-│   │   │       ├── DictationBatchService.java
-│   │   │       ├── WordService.java
-│   │   │       ├── DictationRecordService.java
-│   │   │       ├── DifficultWordService.java
-│   │   │       └── SuggestionService.java
 │   │   └── resources/
 │   │       ├── application.yml              # 应用配置
+│   │       ├── dictation.db                 # SQLite数据库文件
+│   │       ├── preset-content/              # 预设听写内容
+│   │       │   ├── common-words-50.json     # 50个常用词
+│   │       │   ├── common-idioms-50.json    # 50个常用成语
+│   │       │   ├── common-poems-20.json     # 20首古诗
+│   │       │   └── classics-5.json          # 5篇古文
 │   │       ├── templates/                   # Thymeleaf模板
-│   │       │   ├── index.html               # 主页面（听写）
-│   │       │   ├── history.html             # 历史记录页面
-│   │       │   ├── difficult-words.html     # 生词本页面
-│   │       │   └── reports.html             # 学习报表页面
 │   │       └── static/                      # 静态资源
-│   │           ├── css/
-│   │           │   └── style.css            # 样式文件
-│   │           └── js/
-│   │               ├── app.js               # 主应用逻辑
-│   │               ├── speech.js            # 语音播报/识别
-│   │               └── api.js               # API调用封装
 │   └── test/                                # 测试目录
 └── target/                                  # 编译输出目录
 ```
@@ -64,10 +46,10 @@ dictation/
 ## 技术架构
 
 ### 后端技术栈
-- **框架**: Spring Boot 3.2.5
+- **框架**: Spring Boot 3.4.4
 - **Java版本**: JDK 21
 - **数据库**: SQLite 3
-- **ORM**: Spring Data JPA (Hibernate)
+- **ORM**: Spring Data JPA (Hibernate 6.6)
 - **模板引擎**: Thymeleaf 3.1
 - **构建工具**: Maven 3.11+
 
@@ -170,6 +152,14 @@ dictation/
 - 周报表：本周累计、易错词语Top10
 - 月报表：月度趋势图表
 
+### 预设内容导入
+- 一键导入小学常用内容：
+  - 50个最常用单词
+  - 50个最常用成语
+  - 20首最常用古诗
+  - 5篇最常用古文
+- 快速开始试听听写，无需手动输入
+
 ## API接口文档
 
 ### 批次管理
@@ -209,6 +199,13 @@ dictation/
 | GET | `/api/reports/daily` | 日报表 |
 | GET | `/api/reports/weekly` | 周报表 |
 | GET | `/api/reports/monthly` | 月报表 |
+
+### 预设内容导入
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| GET | `/api/preset/list` | 获取预设内容列表 |
+| GET | `/api/preset/{id}` | 获取预设内容详情 |
+| POST | `/api/preset/import/{id}` | 导入预设内容创建批次 |
 
 ### 学习建议
 | 方法 | 路径 | 描述 |
@@ -317,6 +314,14 @@ java --enable-preview -jar target/dictation-1.0.0.jar
   - 语音播报和识别
   - 历史记录和生词本
   - 学习报表
+
+- v1.1.0 (2026-04-12): 功能更新
+  - 项目结构优化，去除backend目录层
+  - Spring Boot升级至3.4.4
+  - Hibernate升级至6.6.11
+  - 新增预设内容导入功能（常用词/成语/古诗/古文）
+  - 修复听写记录数据持久化问题
+  - 数据库文件移至resources目录
 
 ## 许可证
 

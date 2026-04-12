@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WordController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dictation-backend</a> &gt; <a href="index.source.html" class="el_package">com.yhj.dictation.controller</a> &gt; <span class="el_source">WordController.java</span></div><h1>WordController.java</h1><pre class="source lang-java linenums">package com.yhj.dictation.controller;
+
+import com.yhj.dictation.dto.ApiResponse;
+import com.yhj.dictation.dto.StatusUpdateRequest;
+import com.yhj.dictation.dto.WordAddRequest;
+import com.yhj.dictation.dto.WordDTO;
+import com.yhj.dictation.entity.Word;
+import com.yhj.dictation.service.WordService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * 词语控制器
+ */
+<span class="fc" id="L16">@Slf4j</span>
+@RestController
+@RequestMapping(&quot;/api/words&quot;)
+<span class="fc" id="L19">@RequiredArgsConstructor</span>
+public class WordController {
+
+    private final WordService wordService;
+
+    @GetMapping(&quot;/{id}&quot;)
+    public ApiResponse&lt;WordDTO&gt; getWordById(@PathVariable Long id) {
+<span class="fc" id="L26">        return wordService.getWordById(id)</span>
+<span class="fc" id="L27">                .map(this::toWordDTO)</span>
+<span class="fc" id="L28">                .map(ApiResponse::success)</span>
+<span class="fc" id="L29">                .orElse(ApiResponse.error(&quot;词语不存在: &quot; + id));</span>
+    }
+
+    @PutMapping(&quot;/{id}/status&quot;)
+    public ApiResponse&lt;WordDTO&gt; updateWordStatus(@PathVariable Long id, @RequestBody StatusUpdateRequest request) {
+        try {
+<span class="fc" id="L35">            Word.WordStatus status = Word.WordStatus.valueOf(request.getStatus());</span>
+<span class="fc" id="L36">            Word word = wordService.updateWordStatus(id, status);</span>
+<span class="fc" id="L37">            return ApiResponse.success(&quot;状态更新成功&quot;, toWordDTO(word));</span>
+<span class="fc" id="L38">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L39">            return ApiResponse.error(&quot;无效的状态: &quot; + request.getStatus());</span>
+        }
+    }
+
+    @PutMapping(&quot;/{id}/pinyin&quot;)
+    public ApiResponse&lt;WordDTO&gt; updateWordPinyin(@PathVariable Long id, @RequestBody WordAddRequest request) {
+        try {
+<span class="fc" id="L46">            Word word = wordService.updateWordPinyin(id, request.getPinyin());</span>
+<span class="fc" id="L47">            return ApiResponse.success(&quot;拼音更新成功&quot;, toWordDTO(word));</span>
+<span class="fc" id="L48">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L49">            return ApiResponse.error(&quot;词语不存在: &quot; + id);</span>
+        }
+    }
+
+    @PostMapping(&quot;/{id}/complete&quot;)
+    public ApiResponse&lt;WordDTO&gt; markAsCompleted(@PathVariable Long id) {
+        try {
+<span class="fc" id="L56">            Word word = wordService.markAsCompleted(id);</span>
+<span class="fc" id="L57">            return ApiResponse.success(&quot;词语已完成&quot;, toWordDTO(word));</span>
+<span class="fc" id="L58">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L59">            return ApiResponse.error(&quot;词语不存在: &quot; + id);</span>
+        }
+    }
+
+    @PostMapping(&quot;/{id}/skip&quot;)
+    public ApiResponse&lt;WordDTO&gt; markAsSkipped(@PathVariable Long id) {
+        try {
+<span class="fc" id="L66">            Word word = wordService.markAsSkipped(id);</span>
+<span class="fc" id="L67">            return ApiResponse.success(&quot;词语已跳过&quot;, toWordDTO(word));</span>
+<span class="fc" id="L68">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L69">            return ApiResponse.error(&quot;词语不存在: &quot; + id);</span>
+        }
+    }
+
+    @GetMapping(&quot;/batch/{batchId}/next&quot;)
+    public ApiResponse&lt;WordDTO&gt; getNextWord(@PathVariable Long batchId, @RequestParam Integer currentOrder) {
+<span class="fc" id="L75">        return wordService.getNextWord(batchId, currentOrder)</span>
+<span class="fc" id="L76">                .map(this::toWordDTO)</span>
+<span class="fc" id="L77">                .map(ApiResponse::success)</span>
+<span class="fc" id="L78">                .orElse(ApiResponse.error(&quot;没有下一个词语&quot;));</span>
+    }
+
+    @GetMapping(&quot;/batch/{batchId}/previous&quot;)
+    public ApiResponse&lt;WordDTO&gt; getPreviousWord(@PathVariable Long batchId, @RequestParam Integer currentOrder) {
+<span class="fc" id="L83">        return wordService.getPreviousWord(batchId, currentOrder)</span>
+<span class="fc" id="L84">                .map(this::toWordDTO)</span>
+<span class="fc" id="L85">                .map(ApiResponse::success)</span>
+<span class="fc" id="L86">                .orElse(ApiResponse.error(&quot;没有上一个词语&quot;));</span>
+    }
+
+    @GetMapping(&quot;/batch/{batchId}/first&quot;)
+    public ApiResponse&lt;WordDTO&gt; getFirstWord(@PathVariable Long batchId) {
+<span class="fc" id="L91">        return wordService.getFirstWord(batchId)</span>
+<span class="fc" id="L92">                .map(this::toWordDTO)</span>
+<span class="fc" id="L93">                .map(ApiResponse::success)</span>
+<span class="fc" id="L94">                .orElse(ApiResponse.error(&quot;批次中没有词语&quot;));</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ApiResponse&lt;Void&gt; deleteWord(@PathVariable Long id) {
+        try {
+<span class="fc" id="L100">            wordService.deleteWord(id);</span>
+<span class="fc" id="L101">            return ApiResponse.success(&quot;词语删除成功&quot;, null);</span>
+<span class="fc" id="L102">        } catch (Exception e) {</span>
+<span class="fc" id="L103">            log.error(&quot;Failed to delete word&quot;, e);</span>
+<span class="fc" id="L104">            return ApiResponse.error(&quot;删除词语失败: &quot; + e.getMessage());</span>
+        }
+    }
+
+    private WordDTO toWordDTO(Word word) {
+<span class="fc" id="L109">        WordDTO dto = new WordDTO();</span>
+<span class="fc" id="L110">        dto.setId(word.getId());</span>
+<span class="fc" id="L111">        dto.setWordText(word.getWordText());</span>
+<span class="fc" id="L112">        dto.setPinyin(word.getPinyin());</span>
+<span class="fc" id="L113">        dto.setBatchId(word.getBatchId());</span>
+<span class="fc" id="L114">        dto.setSortOrder(word.getSortOrder());</span>
+<span class="fc" id="L115">        dto.setStatus(word.getStatus().name());</span>
+<span class="fc" id="L116">        dto.setCreatedAt(word.getCreatedAt());</span>
+<span class="fc" id="L117">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
