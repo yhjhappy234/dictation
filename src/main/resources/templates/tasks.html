@@ -6,6 +6,66 @@
 <nav th:replace="~{layout :: navbar('tasks')}"></nav>
 
 <div class="main-container">
+    <!-- 创建听写任务按钮 -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <button class="btn btn-success btn-action" onclick="toggleCreatePanel()">
+                <i class="bi bi-plus-circle me-2"></i>创建听写任务
+            </button>
+        </div>
+    </div>
+
+    <!-- 创建听写任务面板（默认隐藏） -->
+    <div class="row mb-4" id="createTaskPanel" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-plus-circle me-2"></i>创建新听写任务
+                </div>
+                <div class="card-body">
+                    <!-- 快速导入预设内容 -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">快速导入预设内容：</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-outline-success btn-sm" onclick="importPreset('common-words-50')">
+                                <i class="bi bi-book me-1"></i>50个常用词
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('common-idioms-50')">
+                                <i class="bi bi-chat-quote me-1"></i>50个成语
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="importPreset('common-poems-20')">
+                                <i class="bi bi-feather me-1"></i>20首古诗
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="importPreset('classics-5')">
+                                <i class="bi bi-scroll me-1"></i>5篇古文
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="createTaskName" class="form-label fw-bold">任务名称 <span class="text-danger">*</span>：</label>
+                        <input type="text" class="form-control" id="createTaskName" placeholder="例如：第一单元听写">
+                    </div>
+                    <div class="mb-3">
+                        <label for="createTaskWords" class="form-label fw-bold">词语（每行一个）：</label>
+                        <textarea class="form-control" id="createTaskWords" rows="6" placeholder="示例：&#10;苹果&#10;香蕉&#10;橙子&#10;西瓜"></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-action" onclick="createTask()">
+                            <i class="bi bi-save me-2"></i>保存任务
+                        </button>
+                        <button class="btn btn-secondary btn-action" onclick="clearCreateForm()">
+                            <i class="bi bi-trash me-2"></i>清空
+                        </button>
+                        <button class="btn btn-outline-secondary btn-action" onclick="toggleCreatePanel()">
+                            <i class="bi bi-x-circle me-2"></i>关闭
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
@@ -382,6 +442,116 @@
         } catch (error) {
             console.error('删除任务失败:', error);
             showToast('删除失败', 'warning');
+        }
+    }
+
+    // 显示/隐藏创建任务面板
+    function toggleCreatePanel() {
+        const panel = document.getElementById('createTaskPanel');
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+        } else {
+            panel.style.display = 'none';
+        }
+    }
+
+    // 创建新任务
+    async function createTask() {
+        const taskName = document.getElementById('createTaskName').value.trim();
+        const words = document.getElementById('createTaskWords').value.trim();
+
+        if (!taskName) {
+            showToast('请输入任务名称', 'warning');
+            return;
+        }
+
+        if (!words) {
+            showToast('请输入词语', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    taskName: taskName,
+                    words: words
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('任务创建成功', 'success');
+                clearCreateForm();
+                loadTasks();
+            } else {
+                showToast(result.message || '创建失败', 'warning');
+            }
+        } catch (error) {
+            console.error('创建任务失败:', error);
+            showToast('创建失败', 'warning');
+        }
+    }
+
+    // 清空创建表单
+    function clearCreateForm() {
+        document.getElementById('createTaskName').value = '';
+        document.getElementById('createTaskWords').value = '';
+    }
+
+    // 导入预设内容
+    async function importPreset(presetId) {
+        try {
+            const response = await fetch(`/api/preset/import/${presetId}`, {
+                method: 'POST'
+            });
+
+            if (!response.ok) {
+                showToast('导入失败，请重试', 'warning');
+                return;
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 获取预设内容详情
+                const detailResponse = await fetch(`/api/preset/${presetId}`);
+                const detailResult = await detailResponse.json();
+
+                if (!detailResult.success || !detailResult.data) {
+                    showToast('获取预设内容详情失败', 'warning');
+                    return;
+                }
+
+                const detailData = detailResult.data;
+
+                // 填充词语到输入框
+                if (detailData.words) {
+                    document.getElementById('createTaskWords').value = detailData.words.join('\n');
+                } else if (detailData.items) {
+                    // 古诗/古文格式
+                    let allContent = [];
+                    detailData.items.forEach(item => {
+                        const parts = item.content.split(/[，。！？、；：]/);
+                        parts.forEach(part => {
+                            if (part.trim()) {
+                                allContent.push(part.trim());
+                            }
+                        });
+                    });
+                    document.getElementById('createTaskWords').value = allContent.join('\n');
+                }
+
+                document.getElementById('createTaskName').value = detailData.name || '';
+                showToast(`成功导入：${detailData.name}`, 'success');
+            } else {
+                showToast(result.message || '导入失败', 'warning');
+            }
+        } catch (error) {
+            console.error('导入预设内容失败:', error);
+            showToast('导入失败，请检查网络连接', 'warning');
         }
     }
 
