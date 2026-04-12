@@ -10,6 +10,23 @@
         <i class="bi bi-graph-up me-2"></i>学习报表
     </h2>
 
+    <!-- 听写人筛选 -->
+    <div class="filter-section mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">听写人筛选：</label>
+                <select class="form-select" id="dictatorFilter" onchange="filterByDictator()">
+                    <option value="">-- 全部听写人 --</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary" onclick="resetFilter()">
+                    <i class="bi bi-refresh me-1"></i>重置
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 总体统计 -->
     <div class="row mb-4">
         <div class="col-md-3">
@@ -180,31 +197,6 @@
                 <h5 class="mb-3">本月每日听写数量</h5>
                 <div id="monthlyChart" style="height: 400px;"></div>
             </div>
-
-            <!-- 听写人统计 -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-people me-2"></i>听写人统计
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>听写人</th>
-                                    <th>完成任务数</th>
-                                    <th>总词语数</th>
-                                    <th>正确数</th>
-                                    <th>错误数</th>
-                                    <th>正确率</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dictatorStatsTable">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -220,11 +212,14 @@
 <script>
     // 全局变量
     let allTasks = [];
+    let filteredTasks = [];
+    let currentDictator = '';
     let weeklyTrendChart, monthlyChart;
 
     // 页面加载
     document.addEventListener('DOMContentLoaded', function() {
         loadTasks();
+        loadDictators();
 
         // 监听标签切换
         document.getElementById('weekly-tab').addEventListener('shown.bs.tab', function() {
@@ -235,6 +230,28 @@
         });
     });
 
+    // 加载听写人列表
+    async function loadDictators() {
+        try {
+            const response = await fetch('/api/tasks/dictators');
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const select = document.getElementById('dictatorFilter');
+                select.innerHTML = '<option value="">-- 全部听写人 --</option>';
+
+                result.data.forEach(dictator => {
+                    const option = document.createElement('option');
+                    option.value = dictator;
+                    option.textContent = dictator;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('加载听写人列表失败:', error);
+        }
+    }
+
     // 加载所有已完成任务
     async function loadTasks() {
         try {
@@ -243,14 +260,41 @@
 
             if (result.success && result.data) {
                 allTasks = result.data;
-                renderAllStats();
-                renderDailyReport();
-                renderWeeklyReport();
-                renderMonthlyReport();
+                filteredTasks = allTasks;
+                renderAllReports();
             }
         } catch (error) {
             console.error('加载任务数据失败:', error);
         }
+    }
+
+    // 按听写人筛选
+    function filterByDictator() {
+        currentDictator = document.getElementById('dictatorFilter').value;
+
+        if (currentDictator) {
+            filteredTasks = allTasks.filter(task => task.dictator === currentDictator);
+        } else {
+            filteredTasks = allTasks;
+        }
+
+        renderAllReports();
+    }
+
+    // 重置筛选
+    function resetFilter() {
+        document.getElementById('dictatorFilter').value = '';
+        currentDictator = '';
+        filteredTasks = allTasks;
+        renderAllReports();
+    }
+
+    // 渲染所有报表
+    function renderAllReports() {
+        renderAllStats();
+        renderDailyReport();
+        renderWeeklyReport();
+        renderMonthlyReport();
     }
 
     // 渲染总体统计
@@ -258,7 +302,7 @@
         let totalCorrect = 0;
         let totalWrong = 0;
 
-        allTasks.forEach(task => {
+        filteredTasks.forEach(task => {
             totalCorrect += task.correctCount || 0;
             totalWrong += task.wrongCount || 0;
         });
@@ -266,7 +310,7 @@
         const totalWords = totalCorrect + totalWrong;
         const avgAccuracy = totalWords > 0 ? Math.round(totalCorrect / totalWords * 100) : 0;
 
-        document.getElementById('totalTasks').textContent = allTasks.length;
+        document.getElementById('totalTasks').textContent = filteredTasks.length;
         document.getElementById('totalWords').textContent = totalWords;
         document.getElementById('totalCorrect').textContent = totalCorrect;
         document.getElementById('avgAccuracy').textContent = avgAccuracy + '%';
@@ -275,7 +319,7 @@
     // 渲染日报表
     function renderDailyReport() {
         const today = new Date().toLocaleDateString('zh-CN');
-        const todayTasks = allTasks.filter(task => {
+        const todayTasks = filteredTasks.filter(task => {
             const taskDate = new Date(task.createdAt).toLocaleDateString('zh-CN');
             return taskDate === today;
         });
@@ -326,7 +370,7 @@
         weekStart.setDate(now.getDate() - now.getDay() + 1); // 周一
         weekStart.setHours(0, 0, 0, 0);
 
-        const weekTasks = allTasks.filter(task => {
+        const weekTasks = filteredTasks.filter(task => {
             const taskDate = new Date(task.createdAt);
             return taskDate >= weekStart;
         });
@@ -413,7 +457,7 @@
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         monthStart.setHours(0, 0, 0, 0);
 
-        const monthTasks = allTasks.filter(task => {
+        const monthTasks = filteredTasks.filter(task => {
             const taskDate = new Date(task.createdAt);
             return taskDate >= monthStart;
         });
@@ -489,41 +533,6 @@
             dataZoom: [
                 { type: 'inside', start: 0, end: 100 }
             ]
-        });
-
-        // 渲染听写人统计
-        const dictatorStats = {};
-        monthTasks.forEach(task => {
-            const dictator = task.dictator || '未知';
-            if (!dictatorStats[dictator]) {
-                dictatorStats[dictator] = { tasks: 0, words: 0, correct: 0, wrong: 0 };
-            }
-            dictatorStats[dictator].tasks++;
-            dictatorStats[dictator].words += task.wordCount || 0;
-            dictatorStats[dictator].correct += task.correctCount || 0;
-            dictatorStats[dictator].wrong += task.wrongCount || 0;
-        });
-
-        const tbody = document.getElementById('dictatorStatsTable');
-        tbody.innerHTML = '';
-
-        Object.keys(dictatorStats).forEach(dictator => {
-            const stat = dictatorStats[dictator];
-            const accuracy = stat.words > 0 ? Math.round(stat.correct / stat.words * 100) : 0;
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>${dictator}</strong></td>
-                    <td>${stat.tasks}</td>
-                    <td>${stat.words}</td>
-                    <td><span class="badge bg-success">${stat.correct}</span></td>
-                    <td><span class="badge bg-danger">${stat.wrong}</span></td>
-                    <td>
-                        <div class="progress" style="height: 20px; width: 100px;">
-                            <div class="progress-bar bg-success" style="width: ${accuracy}%">${accuracy}%</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
         });
     }
 
