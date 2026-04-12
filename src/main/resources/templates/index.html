@@ -1037,22 +1037,54 @@
     function loadVoices() {
         const voiceSelect = document.getElementById('speechVoice');
 
-        // 等待语音合成加载完成
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = function() {
-                const voices = speechSynthesis.getVoices();
-                voiceSelect.innerHTML = '<option value="">默认音色</option>';
+        // 立即尝试加载音色
+        const voices = synth.getVoices();
+        if (voices.length > 0) {
+            populateVoiceSelect(voices, voiceSelect);
+        }
 
-                // 只显示中文音色
-                voices.forEach((voice, index) => {
-                    if (voice.lang.includes('zh') || voice.lang.includes('CN')) {
-                        const option = document.createElement('option');
-                        option.value = index;
-                        option.textContent = voice.name + ' (' + voice.lang + ')';
-                        voiceSelect.appendChild(option);
-                    }
-                });
-            };
+        // 同时监听音色变化事件
+        synth.onvoiceschanged = function() {
+            const voices = synth.getVoices();
+            populateVoiceSelect(voices, voiceSelect);
+        };
+    }
+
+    // 填充音色选择列表
+    function populateVoiceSelect(voices, voiceSelect) {
+        voiceSelect.innerHTML = '<option value="">默认音色</option>';
+
+        // 显示所有音色（优先中文）
+        const zhVoices = [];
+        const otherVoices = [];
+
+        voices.forEach((voice, index) => {
+            if (voice.lang.includes('zh') || voice.lang.includes('CN')) {
+                zhVoices.push({ voice, index });
+            } else {
+                otherVoices.push({ voice, index });
+            }
+        });
+
+        // 先添加中文音色
+        zhVoices.forEach(({ voice, index }) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = '🇨🇳 ' + voice.name;
+            voiceSelect.appendChild(option);
+        });
+
+        // 再添加其他音色
+        otherVoices.slice(0, 10).forEach(({ voice, index }) => {  // 只显示前10个
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = voice.name + ' (' + voice.lang + ')';
+            voiceSelect.appendChild(option);
+        });
+
+        // 恢复之前选择的音色
+        if (selectedVoice) {
+            voiceSelect.value = selectedVoice;
         }
     }
 
@@ -1085,8 +1117,19 @@
         // 加载音色列表
         loadVoices();
         // 更新当前值显示
+        document.getElementById('speechRate').value = speechRate;
         document.getElementById('rateValue').textContent = speechRate;
+        document.getElementById('speechVolume').value = speechVolume;
         document.getElementById('volumeValue').textContent = Math.round(speechVolume * 100) + '%';
+        document.getElementById('speechVoice').value = selectedVoice;
+
+        // 添加滑块实时更新监听
+        document.getElementById('speechRate').oninput = function() {
+            document.getElementById('rateValue').textContent = this.value;
+        };
+        document.getElementById('speechVolume').oninput = function() {
+            document.getElementById('volumeValue').textContent = Math.round(this.value * 100) + '%';
+        };
 
         const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
         modal.show();
@@ -1110,19 +1153,23 @@
     // 测试朗读
     function testSpeech() {
         const testText = '听写测试';
+        if (synth.speaking) {
+            synth.cancel();
+        }
+
         const utterance = new SpeechSynthesisUtterance(testText);
         utterance.lang = 'zh-CN';
         utterance.rate = parseFloat(document.getElementById('speechRate').value);
         utterance.volume = parseFloat(document.getElementById('speechVolume').value);
+        utterance.pitch = 1;
 
-        const voices = speechSynthesis.getVoices();
+        const voices = synth.getVoices();
         const voiceIndex = document.getElementById('speechVoice').value;
-        if (voiceIndex && voices[voiceIndex]) {
+        if (voiceIndex !== '' && voices[voiceIndex]) {
             utterance.voice = voices[voiceIndex];
         }
 
-        speechSynthesis.cancel();
-        speechSynthesis.speak(utterance);
+        synth.speak(utterance);
     }
 </script>
 </body>
