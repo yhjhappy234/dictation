@@ -7,7 +7,7 @@
 
 <div class="main-container">
     <!-- 统计面板 -->
-    <div class="row mb-3">
+    <div class="row mb-2">
         <div class="col-md-4">
             <div class="stat-card stat-card-sm">
                 <div class="stat-number stat-number-sm" id="totalCount">0</div>
@@ -323,13 +323,14 @@
 
     // 更新统计信息
     function updateStats() {
+        const completed = correctCount + wrongCount;
         document.getElementById('totalCount').textContent = words.length;
-        document.getElementById('completedCount').textContent = correctCount + wrongCount;
-        document.getElementById('remainingCount').textContent = words.length - currentIndex;
+        document.getElementById('completedCount').textContent = completed;
+        document.getElementById('remainingCount').textContent = words.length - completed;
         document.getElementById('totalWords').textContent = words.length;
 
         // 更新进度条
-        const progress = words.length > 0 ? ((currentIndex) / words.length * 100) : 0;
+        const progress = words.length > 0 ? (completed / words.length * 100) : 0;
         const progressBar = document.getElementById('progressBar');
         progressBar.style.width = progress + '%';
         progressBar.textContent = Math.round(progress) + '%';
