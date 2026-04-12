@@ -42,6 +42,19 @@
                     <i class="bi bi-pencil-square me-2"></i>词语录入
                 </div>
                 <div class="card-body">
+                    <!-- 选择已有任务模板 -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">选择已有任务模板：</label>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" id="taskSelect" onchange="loadTask()">
+                                <option value="">-- 请选择任务模板 --</option>
+                            </select>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="refreshTasks()" title="刷新任务列表">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- 快速导入预设内容 -->
                     <div class="mb-3">
                         <label class="form-label fw-bold">快速导入预设内容：</label>
@@ -72,6 +85,9 @@
                     <div class="d-grid gap-2">
                         <button class="btn btn-primary btn-action" id="startBtn" onclick="startDictation()">
                             <i class="bi bi-play-circle me-2"></i>开始听写
+                        </button>
+                        <button class="btn btn-success btn-action" onclick="saveAsTask()">
+                            <i class="bi bi-save me-2"></i>保存为任务模板
                         </button>
                         <button class="btn btn-secondary btn-action" onclick="clearAll()">
                             <i class="bi bi-trash me-2"></i>清空重来
@@ -538,6 +554,9 @@
 
     // 页面加载完成
     document.addEventListener('DOMContentLoaded', function() {
+        // 加载任务模板列表
+        refreshTasks();
+
         // 可以从本地存储恢复之前的听写状态
         const savedWords = localStorage.getItem('dictationWords');
         if (savedWords) {
@@ -549,6 +568,91 @@
             localStorage.setItem('dictationWords', this.value);
         });
     });
+
+    // 刷新任务模板列表
+    async function refreshTasks() {
+        try {
+            const response = await fetch('/api/tasks');
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const select = document.getElementById('taskSelect');
+                select.innerHTML = '<option value="">-- 请选择任务模板 --</option>';
+
+                result.data.forEach(task => {
+                    const option = document.createElement('option');
+                    option.value = task.id;
+                    option.textContent = `${task.taskName} (${task.wordCount}个词)`;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('加载任务模板失败:', error);
+        }
+    }
+
+    // 加载选中的任务模板
+    async function loadTask() {
+        const taskId = document.getElementById('taskSelect').value;
+        if (!taskId) return;
+
+        try {
+            const response = await fetch(`/api/tasks/${taskId}`);
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const task = result.data;
+                document.getElementById('wordInput').value = task.words.join('\n');
+                document.getElementById('batchName').value = task.taskName;
+                localStorage.setItem('dictationWords', task.words.join('\n'));
+                showToast(`已加载：${task.taskName}`, 'success');
+            } else {
+                showToast('加载任务失败', 'warning');
+            }
+        } catch (error) {
+            console.error('加载任务模板失败:', error);
+            showToast('加载失败，请检查网络', 'warning');
+        }
+    }
+
+    // 保存为任务模板
+    async function saveAsTask() {
+        const words = document.getElementById('wordInput').value.trim();
+        const batchName = document.getElementById('batchName').value.trim();
+
+        if (!words) {
+            showToast('请先输入词语', 'warning');
+            return;
+        }
+
+        if (!batchName) {
+            showToast('请输入任务名称', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    taskName: batchName,
+                    words: words
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(`任务模板已保存：${batchName}`, 'success');
+                refreshTasks();
+            } else {
+                showToast(result.message || '保存失败', 'warning');
+            }
+        } catch (error) {
+            console.error('保存任务模板失败:', error);
+            showToast('保存失败，请检查网络', 'warning');
+        }
+    }
 
     // 导入预设内容
     async function importPreset(presetId) {

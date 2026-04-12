@@ -1,0 +1,34 @@
+package com.yhj.dictation.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import java.time.LocalDateTime;
+
+/**
+ * 听写任务模板实体
+ * 用于保存可重复使用的听写任务模板
+ */
+@Data
+@Entity
+@Table(name = "dictation_task")
+public class DictationTask {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "task_name", nullable = false)
+    private String taskName;
+
+    @Column(name = "words", nullable = false)
+    private String words;
+
+    @Column(name = "word_count", nullable = false)
+    private Integer wordCount = 0;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "is_favorite")
+    private Boolean isFavorite = false;
+}
