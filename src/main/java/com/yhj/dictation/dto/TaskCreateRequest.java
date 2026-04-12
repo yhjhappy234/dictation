@@ -3,7 +3,7 @@ package com.yhj.dictation.dto;
 import lombok.Data;
 
 /**
- * 任务模板创建请求DTO
+ * 听写任务创建请求DTO
  */
 @Data
 public class TaskCreateRequest {

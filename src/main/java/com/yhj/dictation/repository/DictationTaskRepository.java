@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * 听写任务模板Repository
+ * 听写任务Repository
  */
 @Repository
 public interface DictationTaskRepository extends JpaRepository<DictationTask, Long> {

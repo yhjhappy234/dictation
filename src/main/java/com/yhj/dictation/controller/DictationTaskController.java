@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 听写任务模板控制器
+ * 听写任务控制器
  */
 @Slf4j
 @RestController
@@ -41,10 +41,10 @@ public class DictationTaskController {
             }
 
             DictationTask task = taskService.createTask(request);
-            return ApiResponse.success("任务模板创建成功", taskService.toTaskDTO(task));
+            return ApiResponse.success("听写任务创建成功", taskService.toTaskDTO(task));
         } catch (Exception e) {
             log.error("Failed to create task", e);
-            return ApiResponse.error("创建任务模板失败: " + e.getMessage());
+            return ApiResponse.error("创建听写任务失败: " + e.getMessage());
         }
     }
 
@@ -70,7 +70,7 @@ public class DictationTaskController {
         try {
             Optional<DictationTask> taskOpt = taskService.getTaskById(id);
             if (taskOpt.isEmpty()) {
-                return ApiResponse.error("任务模板不存在: " + id);
+                return ApiResponse.error("听写任务不存在: " + id);
             }
             return ApiResponse.success(taskService.toTaskDTO(taskOpt.get()));
         } catch (Exception e) {
@@ -86,12 +86,12 @@ public class DictationTaskController {
     public ApiResponse<TaskDTO> updateTask(@PathVariable Long id, @RequestBody TaskCreateRequest request) {
         try {
             DictationTask task = taskService.updateTask(id, request);
-            return ApiResponse.success("任务模板更新成功", taskService.toTaskDTO(task));
+            return ApiResponse.success("听写任务更新成功", taskService.toTaskDTO(task));
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
             log.error("Failed to update task: {}", id, e);
-            return ApiResponse.error("更新任务模板失败: " + e.getMessage());
+            return ApiResponse.error("更新听写任务失败: " + e.getMessage());
         }
     }
 
@@ -102,10 +102,10 @@ public class DictationTaskController {
     public ApiResponse<Void> deleteTask(@PathVariable Long id) {
         try {
             taskService.deleteTask(id);
-            return ApiResponse.success("任务模板删除成功", null);
+            return ApiResponse.success("听写任务删除成功", null);
         } catch (Exception e) {
             log.error("Failed to delete task: {}", id, e);
-            return ApiResponse.error("删除任务模板失败: " + e.getMessage());
+            return ApiResponse.error("删除听写任务失败: " + e.getMessage());
         }
     }
 
@@ -133,7 +133,7 @@ public class DictationTaskController {
         try {
             Optional<DictationTask> taskOpt = taskService.getTaskById(id);
             if (taskOpt.isEmpty()) {
-                return ApiResponse.error("任务模板不存在: " + id);
+                return ApiResponse.error("听写任务不存在: " + id);
             }
 
             DictationTask task = taskOpt.get();
@@ -149,7 +149,7 @@ public class DictationTaskController {
             batchService.startBatch(batch.getId());
 
             log.info("Started dictation from task: {}, batch: {}", id, batch.getId());
-            return ApiResponse.success("已从任务模板开始听写", batch.getId());
+            return ApiResponse.success("已从听写任务开始听写", batch.getId());
         } catch (Exception e) {
             log.error("Failed to start from task: {}", id, e);
             return ApiResponse.error("开始听写失败: " + e.getMessage());

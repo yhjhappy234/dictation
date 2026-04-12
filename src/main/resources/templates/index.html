@@ -42,12 +42,12 @@
                     <i class="bi bi-pencil-square me-2"></i>词语录入
                 </div>
                 <div class="card-body">
-                    <!-- 选择已有任务模板 -->
+                    <!-- 选择已有听写任务 -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">选择已有任务模板：</label>
+                        <label class="form-label fw-bold">选择已有听写任务：</label>
                         <div class="d-flex gap-2">
                             <select class="form-select" id="taskSelect" onchange="loadTask()">
-                                <option value="">-- 请选择任务模板 --</option>
+                                <option value="">-- 请选择听写任务 --</option>
                             </select>
                             <button class="btn btn-outline-secondary btn-sm" onclick="refreshTasks()" title="刷新任务列表">
                                 <i class="bi bi-arrow-repeat"></i>
@@ -79,7 +79,7 @@
                         <textarea class="form-control" id="wordInput" rows="12" placeholder="示例：&#10;苹果&#10;香蕉&#10;橙子&#10;西瓜"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="batchName" class="form-label fw-bold">批次名称（可选）：</label>
+                        <label for="batchName" class="form-label fw-bold">任务名称（可选）：</label>
                         <input type="text" class="form-control" id="batchName" placeholder="例如：第一单元听写">
                     </div>
                     <div class="d-grid gap-2">
@@ -87,7 +87,7 @@
                             <i class="bi bi-play-circle me-2"></i>开始听写
                         </button>
                         <button class="btn btn-success btn-action" onclick="saveAsTask()">
-                            <i class="bi bi-save me-2"></i>保存为任务模板
+                            <i class="bi bi-save me-2"></i>保存为听写任务
                         </button>
                         <button class="btn btn-secondary btn-action" onclick="clearAll()">
                             <i class="bi bi-trash me-2"></i>清空重来
@@ -554,7 +554,7 @@
 
     // 页面加载完成
     document.addEventListener('DOMContentLoaded', function() {
-        // 加载任务模板列表
+        // 加载听写任务列表
         refreshTasks();
 
         // 可以从本地存储恢复之前的听写状态
@@ -569,7 +569,7 @@
         });
     });
 
-    // 刷新任务模板列表
+    // 刷新听写任务列表
     async function refreshTasks() {
         try {
             const response = await fetch('/api/tasks');
@@ -577,7 +577,7 @@
 
             if (result.success && result.data) {
                 const select = document.getElementById('taskSelect');
-                select.innerHTML = '<option value="">-- 请选择任务模板 --</option>';
+                select.innerHTML = '<option value="">-- 请选择听写任务 --</option>';
 
                 result.data.forEach(task => {
                     const option = document.createElement('option');
@@ -587,11 +587,11 @@
                 });
             }
         } catch (error) {
-            console.error('加载任务模板失败:', error);
+            console.error('加载听写任务失败:', error);
         }
     }
 
-    // 加载选中的任务模板
+    // 加载选中的听写任务
     async function loadTask() {
         const taskId = document.getElementById('taskSelect').value;
         if (!taskId) return;
@@ -610,12 +610,12 @@
                 showToast('加载任务失败', 'warning');
             }
         } catch (error) {
-            console.error('加载任务模板失败:', error);
+            console.error('加载听写任务失败:', error);
             showToast('加载失败，请检查网络', 'warning');
         }
     }
 
-    // 保存为任务模板
+    // 保存为听写任务
     async function saveAsTask() {
         const words = document.getElementById('wordInput').value.trim();
         const batchName = document.getElementById('batchName').value.trim();
@@ -643,13 +643,13 @@
             const result = await response.json();
 
             if (result.success) {
-                showToast(`任务模板已保存：${batchName}`, 'success');
+                showToast(`听写任务已保存：${batchName}`, 'success');
                 refreshTasks();
             } else {
                 showToast(result.message || '保存失败', 'warning');
             }
         } catch (error) {
-            console.error('保存任务模板失败:', error);
+            console.error('保存听写任务失败:', error);
             showToast('保存失败，请检查网络', 'warning');
         }
     }

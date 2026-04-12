@@ -5,8 +5,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 听写任务模板实体
- * 用于保存可重复使用的听写任务模板
+ * 听写任务实体
+ * 用于保存可重复使用的听写任务
  */
 @Data
 @Entity

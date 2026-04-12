@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 任务模板DTO
+ * 听写任务DTO
  */
 @Data
 public class TaskDTO {
