@@ -252,6 +252,17 @@
                             '<span class="badge bg-danger">错误</span>';
 
                         const readCount = record.readCount || 1;
+
+                        // 朗读次数超过3次时特殊标记
+                        const readCountBadge = readCount > 3 ?
+                            '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>' + readCount + '次</span>' :
+                            '<span class="badge bg-info">' + readCount + '次</span>';
+
+                        // 词语高亮（朗读次数超过3次）
+                        const wordHighlight = readCount > 3 ?
+                            '<strong class="text-warning">' + record.word + '</strong>' :
+                            '<strong>' + record.word + '</strong>';
+
                         const recordTime = record.startTime ? formatDateTime(record.startTime) : '-';
 
                         // 计算耗时
@@ -259,9 +270,9 @@
 
                         wordListBody.innerHTML += `
                             <tr>
-                                <td><strong>${record.word}</strong></td>
+                                <td>${wordHighlight}</td>
                                 <td>${statusBadge}</td>
-                                <td><span class="badge bg-info">${readCount}次</span></td>
+                                <td>${readCountBadge}</td>
                                 <td><small class="text-muted">${recordTime}</small></td>
                                 <td><small class="text-muted">${duration}</small></td>
                                 <td>
