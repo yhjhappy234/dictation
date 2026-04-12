@@ -123,20 +123,20 @@
                     <!-- 控制按钮 -->
                     <div class="d-flex justify-content-center flex-wrap mb-3" id="controlButtons" style="display: none;">
                         <button class="btn btn-info btn-action" onclick="previousWord()" id="prevBtn">
-                            <i class="bi bi-arrow-left-circle me-2"></i>上一个
+                            <i class="bi bi-arrow-left-circle me-2"></i>上一个 <small class="text-muted">(←)</small>
                         </button>
                         <button class="btn btn-warning btn-action" onclick="readAgain()">
-                            <i class="bi bi-volume-up me-2"></i>再次朗读
+                            <i class="bi bi-volume-up me-2"></i>再次朗读 <small class="text-muted">(↑)</small>
                         </button>
                         <button class="btn btn-info btn-action" onclick="nextWord()" id="nextBtn">
-                            <i class="bi bi-arrow-right-circle me-2"></i>下一个
+                            <i class="bi bi-arrow-right-circle me-2"></i>下一个 <small class="text-muted">(→)</small>
                         </button>
                     </div>
 
                     <!-- 答案显示 -->
                     <div class="text-center" id="answerArea" style="display: none;">
                         <button class="btn btn-outline-primary btn-action" id="answerBtn" onclick="toggleAnswer()">
-                            <i class="bi bi-eye me-2"></i>显示答案
+                            <i class="bi bi-eye me-2"></i>显示答案 <small class="text-muted">(↓)</small>
                         </button>
                     </div>
 
@@ -993,7 +993,45 @@
         refreshTasks();
         // 加载可用音色
         loadVoices();
+        // 绑定键盘快捷键
+        bindKeyboardShortcuts();
     });
+
+    // 绑定键盘快捷键
+    function bindKeyboardShortcuts() {
+        document.addEventListener('keydown', function(e) {
+            // 只有在听写进行中才响应快捷键
+            if (!isDictating) return;
+
+            // 阻止默认行为
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+            }
+
+            switch (e.key) {
+                case 'ArrowLeft':
+                    // 上一个词语
+                    previousWord();
+                    break;
+                case 'ArrowRight':
+                    // 下一个词语（最后一个词语时为完成听写）
+                    if (currentIndex === words.length - 1) {
+                        finishDictation();
+                    } else {
+                        nextWord();
+                    }
+                    break;
+                case 'ArrowUp':
+                    // 再次朗读
+                    readAgain();
+                    break;
+                case 'ArrowDown':
+                    // 显示/隐藏答案
+                    toggleAnswer();
+                    break;
+            }
+        });
+    }
 
     // 加载可用音色
     function loadVoices() {
