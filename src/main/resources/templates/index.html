@@ -400,11 +400,11 @@
     function markCorrect() {
         correctCount++;
         currentIndex++;
-        updateStats();
 
         if (currentIndex >= words.length) {
             finishDictation();
         } else {
+            updateStats();
             showCurrentWord();
         }
     }
@@ -423,11 +423,11 @@
         }
 
         currentIndex++;
-        updateStats();
 
         if (currentIndex >= words.length) {
             finishDictation();
         } else {
+            updateStats();
             showCurrentWord();
         }
     }
