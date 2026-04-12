@@ -94,6 +94,7 @@
                                 <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleSelectAll()">
                             </th>
                             <th>词语</th>
+                            <th>听写人</th>
                             <th>错误次数</th>
                             <th>练习次数</th>
                             <th>掌握度</th>
@@ -196,7 +197,12 @@
         try {
             const response = await fetch('/api/difficult-words');
             if (response.ok) {
-                difficultWords = await response.json();
+                const result = await response.json();
+                if (result.success && result.data) {
+                    difficultWords = result.data;
+                } else {
+                    difficultWords = [];
+                }
             } else {
                 // 使用模拟数据
                 loadMockData();
@@ -233,7 +239,8 @@
         const sortBy = document.getElementById('sortBy').value;
 
         filteredWords = difficultWords.filter(function(w) {
-            const matchSearch = !search || w.word.toLowerCase().includes(search);
+            const wordText = w.wordText || w.word || '';
+            const matchSearch = !search || wordText.toLowerCase().includes(search);
             const matchMastery = !mastery || w.masteryLevel === parseInt(mastery);
             return matchSearch && matchMastery;
         });
@@ -242,13 +249,13 @@
         filteredWords.sort(function(a, b) {
             switch (sortBy) {
                 case 'recent':
-                    return new Date(b.lastPractice) - new Date(a.lastPractice);
+                    return new Date(b.lastPracticeDate || b.lastPractice) - new Date(a.lastPracticeDate || a.lastPractice);
                 case 'frequency':
                     return b.errorCount - a.errorCount;
                 case 'mastery':
                     return a.masteryLevel - b.masteryLevel;
                 case 'alphabet':
-                    return a.word.localeCompare(b.word, 'zh-CN');
+                    return (a.wordText || a.word || '').localeCompare((b.wordText || b.word || ''), 'zh-CN');
                 default:
                     return 0;
             }
@@ -270,23 +277,25 @@
         const pageWords = filteredWords.slice(start, end);
 
         if (pageWords.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5"><i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i><p class="mt-2 text-muted">暂无生词</p></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5"><i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i><p class="mt-2 text-muted">暂无生词</p></td></tr>';
             return;
         }
 
         pageWords.forEach(function(w) {
             const stars = renderStars(w.masteryLevel);
             const checkedAttr = selectedIds.includes(w.id) ? 'checked' : '';
+            const dictatorDisplay = w.dictator ? '<span class="badge bg-secondary">' + w.dictator + '</span>' : '-';
 
             tbody.innerHTML += '<tr>' +
                 '<td><input type="checkbox" class="form-check-input word-checkbox" data-id="' + w.id + '" ' + checkedAttr + ' onchange="toggleSelect(' + w.id + ')"></td>' +
-                '<td><strong class="fs-5">' + w.word + '</strong>' + (w.note ? '<br><small class="text-muted">' + w.note + '</small>' : '') + '</td>' +
+                '<td><strong class="fs-5">' + w.wordText + '</strong>' + (w.note ? '<br><small class="text-muted">' + w.note + '</small>' : '') + '</td>' +
+                '<td>' + dictatorDisplay + '</td>' +
                 '<td><span class="badge bg-danger">' + w.errorCount + '</span></td>' +
-                '<td><span class="badge bg-info">' + w.practiceCount + '</span></td>' +
+                '<td><span class="badge bg-info">' + (w.practiceCount || 0) + '</span></td>' +
                 '<td>' + stars + '</td>' +
-                '<td>' + w.lastPractice + '</td>' +
+                '<td>' + (w.lastPracticeDate ? w.lastPracticeDate.split('T')[0] : '-') + '</td>' +
                 '<td>' +
-                '<button class="btn btn-sm btn-outline-primary me-1" onclick="speakWord(\'' + w.word + '\')" title="朗读"><i class="bi bi-volume-up"></i></button>' +
+                '<button class="btn btn-sm btn-outline-primary me-1" onclick="speakWord(\'' + w.wordText + '\')" title="朗读"><i class="bi bi-volume-up"></i></button>' +
                 '<button class="btn btn-sm btn-outline-success me-1" onclick="practiceWord(' + w.id + ')" title="练习"><i class="bi bi-lightning"></i></button>' +
                 '<button class="btn btn-sm btn-outline-secondary me-1" onclick="editWord(' + w.id + ')" title="编辑"><i class="bi bi-pencil"></i></button>' +
                 '<button class="btn btn-sm btn-outline-danger" onclick="deleteWord(' + w.id + ')" title="删除"><i class="bi bi-trash"></i></button>' +

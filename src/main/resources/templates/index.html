@@ -288,6 +288,9 @@
 
     // 开始听写
     function startDictation() {
+        // 停止任何警告闪烁
+        stopWarningFlash();
+
         if (!selectedTaskId) {
             showToast('请先选择一个已保存的听写任务！', 'warning');
             return;
@@ -333,6 +336,9 @@
 
     // 继续听写（从上次进度继续）
     function continueDictation() {
+        // 停止任何警告闪烁
+        stopWarningFlash();
+
         if (!selectedTaskId) {
             showToast('请先选择任务', 'warning');
             return;
@@ -496,6 +502,9 @@
 
     // 播放警告语音并高亮闪烁
     function playWarningMessage(message) {
+        // 先停止之前的闪烁
+        stopWarningFlash();
+
         // 播放语音
         if (synth.speaking) {
             synth.cancel();
@@ -510,7 +519,7 @@
         // 高亮闪烁听写区域
         const wordDisplay = document.getElementById('wordDisplay');
         let flashCount = 0;
-        const flashInterval = setInterval(() => {
+        warningFlashInterval = setInterval(() => {
             if (flashCount % 2 === 0) {
                 wordDisplay.style.backgroundColor = '#ffc107';
                 wordDisplay.style.border = '3px solid #dc3545';
@@ -523,9 +532,7 @@
 
         // 语音结束后停止闪烁
         utterance.onend = () => {
-            clearInterval(flashInterval);
-            wordDisplay.style.backgroundColor = '';
-            wordDisplay.style.border = '';
+            stopWarningFlash();
         };
 
         synth.speak(utterance);
@@ -533,6 +540,9 @@
 
     // 朗读词语
     function readWord(word) {
+        // 停止任何警告闪烁
+        stopWarningFlash();
+
         if (synth.speaking) {
             synth.cancel();
         }
@@ -734,6 +744,18 @@
         }
 
         try {
+            // 先更新进度统计数据
+            const progressResponse = await fetch(`/api/tasks/${selectedTaskId}/progress`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentIndex: words.length,
+                    correctCount: correctCount,
+                    wrongCount: wrongCount
+                })
+            });
+
+            // 然后标记任务完成
             const response = await fetch(`/api/tasks/${selectedTaskId}/complete`, {
                 method: 'POST'
             });
@@ -841,14 +863,15 @@
 
     // 保存错误词语到生词本
     async function saveWrongWords() {
+        const dictator = document.getElementById('dictatorInput').value.trim() || '凡凡';
         try {
-            await fetch('/api/difficult-words/batch', {
+            await fetch('/api/difficult-words/batch?dictator=' + encodeURIComponent(dictator), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(wrongWords.map(w => ({
-                    word: w.word,
+                    wordText: w.word,
                     masteryLevel: 1
                 })))
             });
@@ -1039,6 +1062,7 @@
     let speechRate = 0.8;
     let speechVolume = 1;
     let selectedVoice = '';
+    let warningFlashInterval = null;  // 存储警告闪烁的interval
 
     // 页面加载时初始化设置
     document.addEventListener('DOMContentLoaded', function() {
@@ -1051,6 +1075,17 @@
         // 绑定键盘快捷键
         bindKeyboardShortcuts();
     });
+
+    // 停止警告闪烁
+    function stopWarningFlash() {
+        if (warningFlashInterval) {
+            clearInterval(warningFlashInterval);
+            warningFlashInterval = null;
+            const wordDisplay = document.getElementById('wordDisplay');
+            wordDisplay.style.backgroundColor = '';
+            wordDisplay.style.border = '';
+        }
+    }
 
     // 绑定键盘快捷键
     function bindKeyboardShortcuts() {
@@ -1207,6 +1242,9 @@
 
     // 测试朗读
     function testSpeech() {
+        // 停止任何警告闪烁
+        stopWarningFlash();
+
         const testText = '听写测试';
         if (synth.speaking) {
             synth.cancel();
