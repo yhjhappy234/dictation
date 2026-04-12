@@ -166,10 +166,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 完成任务按钮 -->
-                        <button class="btn btn-success btn-action mt-3" id="completeTaskBtn" style="display: none;" onclick="completeTask()">
-                            <i class="bi bi-check-circle-fill me-2"></i>标记任务已完成
-                        </button>
                         <button class="btn btn-primary btn-action mt-3" onclick="reviewWrong()">
                             <i class="bi bi-arrow-repeat me-2"></i>复习错误词语
                         </button>
@@ -539,9 +535,9 @@
         document.getElementById('wrongCount').textContent = wrongCount;
         document.getElementById('wordDisplay').innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>';
 
-        // 如果是从已保存任务开始的，显示"完成任务"按钮
+        // 如果是从已保存任务开始的，自动标记任务为已完成
         if (selectedTaskId) {
-            document.getElementById('completeTaskBtn').style.display = 'inline-block';
+            completeTask();
         }
 
         // 显示错误词语
@@ -574,7 +570,6 @@
     // 标记任务已完成
     async function completeTask() {
         if (!selectedTaskId) {
-            showToast('没有选择任务', 'warning');
             return;
         }
 
@@ -586,15 +581,13 @@
             const result = await response.json();
 
             if (result.success) {
-                showToast('任务已标记为完成！', 'success');
-                // 隐藏按钮
-                document.getElementById('completeTaskBtn').style.display = 'none';
+                showToast('听写已完成，任务已保存！', 'success');
             } else {
-                showToast(result.message || '操作失败', 'warning');
+                showToast(result.message || '保存任务状态失败', 'warning');
             }
         } catch (error) {
             console.error('完成任务失败:', error);
-            showToast('操作失败，请检查网络', 'warning');
+            showToast('保存任务状态失败', 'warning');
         }
     }
 
