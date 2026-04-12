@@ -35,7 +35,7 @@ class WordServiceTest {
         testWord.setWordText("苹果");
         testWord.setBatchId(1L);
         testWord.setSortOrder(0);
-        testWord.setStatus("PENDING");
+        testWord.setStatus(Word.WordStatus.PENDING);
     }
 
     @Test
@@ -67,7 +67,7 @@ class WordServiceTest {
         when(wordRepository.findById(1L)).thenReturn(Optional.of(testWord));
         when(wordRepository.save(any(Word.class))).thenReturn(testWord);
 
-        Word result = wordService.updateWordStatus(1L, "COMPLETED");
+        Word result = wordService.updateWordStatus(1L, Word.WordStatus.COMPLETED);
 
         assertNotNull(result);
         verify(wordRepository, times(1)).save(any(Word.class));

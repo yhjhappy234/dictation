@@ -4,9 +4,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * JPA配置
+ * JPA Repository 配置
  */
 @Configuration
-@EnableJpaRepositories(basePackages = "com.dictation.repository")
+@EnableJpaRepositories(basePackages = "com.yhj.dictation.repository")
 public class JpaConfig {
 }
