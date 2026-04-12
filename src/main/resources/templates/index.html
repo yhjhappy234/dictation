@@ -847,14 +847,10 @@
         if (!batchId) return;
         try {
             await fetch(`/api/batches/${batchId}/complete`, {
-                method: 'PUT',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    correctCount: correctCount,
-                    wrongCount: wrongCount
-                })
+                }
             });
         } catch (error) {
             console.error('更新批次状态失败:', error);
