@@ -194,6 +194,10 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- 完成任务按钮 -->
+                        <button class="btn btn-success btn-action mt-3" id="completeTaskBtn" style="display: none;" onclick="completeTask()">
+                            <i class="bi bi-check-circle-fill me-2"></i>标记任务已完成
+                        </button>
                         <button class="btn btn-primary btn-action mt-3" onclick="reviewWrong()">
                             <i class="bi bi-arrow-repeat me-2"></i>复习错误词语
                         </button>
@@ -454,6 +458,11 @@
         document.getElementById('wrongCount').textContent = wrongCount;
         document.getElementById('wordDisplay').innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>';
 
+        // 如果是从已保存任务开始的，显示"完成任务"按钮
+        if (selectedTaskId) {
+            document.getElementById('completeTaskBtn').style.display = 'inline-block';
+        }
+
         // 显示错误词语
         if (wrongWords.length > 0) {
             document.getElementById('wrongWordsSection').style.display = 'block';
@@ -479,6 +488,33 @@
 
         // 更新批次状态
         updateBatchStatus();
+    }
+
+    // 标记任务已完成
+    async function completeTask() {
+        if (!selectedTaskId) {
+            showToast('没有选择任务', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/tasks/${selectedTaskId}/complete`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('任务已标记为完成！', 'success');
+                // 隐藏按钮
+                document.getElementById('completeTaskBtn').style.display = 'none';
+            } else {
+                showToast(result.message || '操作失败', 'warning');
+            }
+        } catch (error) {
+            console.error('完成任务失败:', error);
+            showToast('操作失败，请检查网络', 'warning');
+        }
     }
 
     // 复习错误词语
