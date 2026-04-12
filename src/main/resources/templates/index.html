@@ -567,15 +567,22 @@
             if (result.success) {
                 // 获取预设内容详情
                 const detailResponse = await fetch(`/api/preset/${presetId}`);
-                const detail = await detailResponse.json();
+                const detailResult = await detailResponse.json();
+
+                if (!detailResult.success || !detailResult.data) {
+                    showToast('获取预设内容详情失败', 'warning');
+                    return;
+                }
+
+                const detailData = detailResult.data;
 
                 // 填充词语到输入框
-                if (detail.words) {
-                    document.getElementById('wordInput').value = detail.words.join('\n');
-                } else if (detail.items) {
+                if (detailData.words) {
+                    document.getElementById('wordInput').value = detailData.words.join('\n');
+                } else if (detailData.items) {
                     // 古诗/古文格式
                     let allContent = [];
-                    detail.items.forEach(item => {
+                    detailData.items.forEach(item => {
                         const parts = item.content.split(/[，。！？、；：]/);
                         parts.forEach(part => {
                             if (part.trim()) {
@@ -586,8 +593,8 @@
                     document.getElementById('wordInput').value = allContent.join('\n');
                 }
 
-                document.getElementById('batchName').value = detail.name || '';
-                showToast(`成功导入：${detail.name}`, 'success');
+                document.getElementById('batchName').value = detailData.name || '';
+                showToast(`成功导入：${detailData.name}`, 'success');
 
                 // 触发自动保存
                 localStorage.setItem('dictationWords', document.getElementById('wordInput').value);
