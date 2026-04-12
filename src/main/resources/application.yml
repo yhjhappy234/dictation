@@ -16,18 +16,22 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
   threads:
     virtual:
       enabled: true
 
-# 日志配置
+  main:
+    lazy-initialization: true
+
+# 日志配置（生产环境级别）
 logging:
   level:
-    com.yhj.dictation: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    root: WARN
+    com.yhj.dictation: INFO
+    org.hibernate: WARN
+    org.springframework: WARN
 
 # 跨域配置
 cors:
