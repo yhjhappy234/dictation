@@ -480,6 +480,57 @@
         }
     }
 
+    // 检查是否选择了任务和听写人
+    function checkTaskAndDictator() {
+        if (!selectedTaskId) {
+            playWarningMessage('请先选择听写任务和听写人后再执行听写');
+            return false;
+        }
+        const dictator = document.getElementById('dictatorInput').value.trim();
+        if (!dictator) {
+            playWarningMessage('请先选择听写任务和听写人后再执行听写');
+            return false;
+        }
+        return true;
+    }
+
+    // 播放警告语音并高亮闪烁
+    function playWarningMessage(message) {
+        // 播放语音
+        if (synth.speaking) {
+            synth.cancel();
+        }
+
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = 'zh-CN';
+        utterance.rate = speechRate;
+        utterance.volume = speechVolume;
+        utterance.pitch = 1;
+
+        // 高亮闪烁听写区域
+        const wordDisplay = document.getElementById('wordDisplay');
+        let flashCount = 0;
+        const flashInterval = setInterval(() => {
+            if (flashCount % 2 === 0) {
+                wordDisplay.style.backgroundColor = '#ffc107';
+                wordDisplay.style.border = '3px solid #dc3545';
+            } else {
+                wordDisplay.style.backgroundColor = '';
+                wordDisplay.style.border = '';
+            }
+            flashCount++;
+        }, 200);
+
+        // 语音结束后停止闪烁
+        utterance.onend = () => {
+            clearInterval(flashInterval);
+            wordDisplay.style.backgroundColor = '';
+            wordDisplay.style.border = '';
+        };
+
+        synth.speak(utterance);
+    }
+
     // 朗读词语
     function readWord(word) {
         if (synth.speaking) {
@@ -501,6 +552,7 @@
 
     // 再次朗读（增加朗读次数）
     function readAgain() {
+        if (!checkTaskAndDictator()) return;
         if (currentIndex < words.length) {
             const word = words[currentIndex];
             readWord(word);
@@ -525,6 +577,7 @@
 
     // 上一个词语
     function previousWord() {
+        if (!checkTaskAndDictator()) return;
         if (currentIndex > 0) {
             currentIndex--;
             updateStats();
@@ -534,6 +587,7 @@
 
     // 下一个词语（默认正确，与markCorrect相同）
     function nextWord() {
+        if (!checkTaskAndDictator()) return;
         if (currentIndex < words.length) {
             const word = words[currentIndex];
             // 完成当前词语听写（默认正确）
@@ -589,6 +643,7 @@
 
     // 标记错误
     function markWrong() {
+        if (!checkTaskAndDictator()) return;
         const word = words[currentIndex];
         wrongCount++;
 

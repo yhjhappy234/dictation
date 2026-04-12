@@ -90,6 +90,12 @@
                 </div>
             </div>
 
+            <!-- 今日任务正确率图表 -->
+            <div class="chart-container mb-4">
+                <h5 class="mb-3">今日任务正确率</h5>
+                <div id="dailyChart" style="height: 350px;"></div>
+            </div>
+
             <!-- 今日任务列表 -->
             <div class="card">
                 <div class="card-header">
@@ -205,7 +211,7 @@
     let allTasks = [];
     let filteredTasks = [];
     let currentDictator = '';
-    let weeklyTrendChart, monthlyChart;
+    let dailyChart, weeklyTrendChart, monthlyChart;
 
     // 页面加载
     document.addEventListener('DOMContentLoaded', function() {
@@ -240,9 +246,11 @@
         const container = document.getElementById('dictatorTags');
         container.innerHTML = '';
 
-        // 添加"所有人"标签（默认选中）
+        // 添加"所有人"标签（默认选中）- 使用更柔和的选中样式
         const allTag = document.createElement('button');
-        allTag.className = 'btn btn-primary me-2 mb-2 dictator-tag';
+        allTag.className = 'btn btn-sm btn-light border-secondary me-2 mb-2 dictator-tag';
+        allTag.style.backgroundColor = '#f8f9fa';
+        allTag.style.borderColor = '#dee2e6';
         allTag.textContent = '所有人';
         allTag.dataset.dictator = '';
         allTag.onclick = function() { selectDictator('', this); };
@@ -251,7 +259,7 @@
         // 添加每个听写人的标签
         dictators.forEach(dictator => {
             const tag = document.createElement('button');
-            tag.className = 'btn btn-outline-primary me-2 mb-2 dictator-tag';
+            tag.className = 'btn btn-sm btn-outline-light text-secondary me-2 mb-2 dictator-tag';
             tag.textContent = dictator;
             tag.dataset.dictator = dictator;
             tag.onclick = function() { selectDictator(dictator, this); };
@@ -263,12 +271,18 @@
     function selectDictator(dictator, clickedBtn) {
         currentDictator = dictator;
 
-        // 更新标签样式
+        // 更新标签样式（柔和的选中样式，与导航菜单区分）
         document.querySelectorAll('.dictator-tag').forEach(btn => {
             if (btn.dataset.dictator === dictator) {
-                btn.className = 'btn btn-primary me-2 mb-2 dictator-tag';
+                // 选中：柔和的浅灰背景
+                btn.className = 'btn btn-sm btn-light border-secondary me-2 mb-2 dictator-tag';
+                btn.style.backgroundColor = '#f8f9fa';
+                btn.style.borderColor = '#dee2e6';
             } else {
-                btn.className = 'btn btn-outline-primary me-2 mb-2 dictator-tag';
+                // 未选中：非常柔和的轮廓
+                btn.className = 'btn btn-sm btn-outline-light text-secondary me-2 mb-2 dictator-tag';
+                btn.style.backgroundColor = '';
+                btn.style.borderColor = '';
             }
         });
 
@@ -370,6 +384,55 @@
                 `;
             });
         }
+
+        // 绘制今日任务正确率图表
+        const taskNames = todayTasks.map(task => task.taskName);
+        const correctRates = todayTasks.map(task => {
+            return task.wordCount > 0 ? Math.round((task.correctCount / task.wordCount) * 100) : 0;
+        });
+
+        dailyChart = echarts.init(document.getElementById('dailyChart'));
+        dailyChart.setOption({
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function(params) {
+                    return params[0].name + '<br/>正确率: ' + params[0].value + '%';
+                }
+            },
+            xAxis: {
+                type: 'category',
+                data: taskNames,
+                axisLabel: {
+                    fontSize: 12,
+                    interval: 0,
+                    rotate: taskNames.length > 3 ? 15 : 0
+                }
+            },
+            yAxis: {
+                type: 'value',
+                max: 100,
+                axisLabel: { fontSize: 12 }
+            },
+            series: [{
+                data: correctRates,
+                type: 'bar',
+                itemStyle: {
+                    color: function(params) {
+                        if (params.value >= 80) return '#28a745';
+                        if (params.value >= 60) return '#ffc107';
+                        return '#dc3545';
+                    }
+                },
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: '{c}%',
+                    fontSize: 12
+                }
+            }],
+            grid: { left: '10%', right: '10%', bottom: '15%', top: '15%' }
+        });
     }
 
     // 渲染周报表
@@ -379,9 +442,18 @@
         weekStart.setDate(now.getDate() - now.getDay() + 1); // 周一
         weekStart.setHours(0, 0, 0, 0);
 
+        // 获取本周的日期字符串列表（用于比较）
+        const weekDates = [];
+        for (let i = 0; i < 7; i++) {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(weekStart.getDate() + i);
+            weekDates.push(dayDate.toLocaleDateString('zh-CN'));
+        }
+
+        // 使用日期字符串比较，避免时区问题
         const weekTasks = filteredTasks.filter(task => {
-            const taskDate = new Date(task.createdAt);
-            return taskDate >= weekStart;
+            const taskDateStr = new Date(task.createdAt).toLocaleDateString('zh-CN');
+            return weekDates.includes(taskDateStr);
         });
 
         let weeklyCorrect = 0;
@@ -547,6 +619,7 @@
 
     // 窗口大小变化时调整图表
     window.addEventListener('resize', function() {
+        if (dailyChart) dailyChart.resize();
         if (weeklyTrendChart) weeklyTrendChart.resize();
         if (monthlyChart) monthlyChart.resize();
     });
