@@ -20,25 +20,49 @@ dictation/
 │   │   │   ├── controller/                  # 控制器
 │   │   │   │   ├── DictationBatchController.java
 │   │   │   │   ├── DictationTaskController.java  # 听写任务管理
-│   │   │   │   ├── WordController.java
 │   │   │   │   ├── DictationRecordController.java
-│   │   │   │   ├── DifficultWordController.java
+│   │   │   │   ├── DifficultWordController.java  # 生词本管理
+│   │   │   │   ├── WordController.java
 │   │   │   │   ├── SuggestionController.java
 │   │   │   │   ├── PresetContentController.java  # 预设内容导入
 │   │   │   │   └── PageController.java       # 页面控制器
 │   │   │   ├── dto/                         # 数据传输对象
+│   │   │   │   ├── ApiResponse.java
+│   │   │   │   ├── TaskDTO.java
+│   │   │   │   ├── TaskProgressRequest.java
+│   │   │   │   ├── DifficultWordDTO.java
+│   │   │   │   └── ... (其他DTO)
 │   │   │   ├── entity/                      # JPA实体类
+│   │   │   │   ├── DictationTask.java       # 听写任务实体
+│   │   │   │   ├── TaskRecord.java          # 任务听写记录
+│   │   │   │   ├── DifficultWord.java       # 生词实体
+│   │   │   │   └── ... (其他实体)
 │   │   │   ├── repository/                  # JPA Repository接口
+│   │   │   │   ├── DictationTaskRepository.java
+│   │   │   │   ├── TaskRecordRepository.java
+│   │   │   │   ├── DifficultWordRepository.java
+│   │   │   │   └── ... (其他Repository)
 │   │   │   └── service/                     # 业务服务层
+│   │   │       ├── DictationTaskService.java
+│   │   │       ├── TaskRecordService.java
+│   │   │       ├── DifficultWordService.java
+│   │   │       └── ... (其他Service)
 │   │   └── resources/
 │   │       ├── application.yml              # 应用配置
-│   │       ├── dictation.db                 # SQLite数据库文件
 │   │       ├── preset-content/              # 预设听写内容
 │   │       │   ├── common-words-50.json     # 50个常用词
 │   │       │   ├── common-idioms-50.json    # 50个常用成语
 │   │       │   ├── common-poems-20.json     # 20首古诗
-│   │       │   └── classics-5.json          # 5篇古文
+│   │       │   ├── classics-5.json          # 5篇古文
+│   │       │   └── grade2-unit*.json        # 二年级各单元词语
 │   │       ├── templates/                   # Thymeleaf模板
+│   │       │   ├── index.html               # 首页（听写页面）
+│   │       │   ├── tasks.html               # 任务管理页面
+│   │       │   ├── history.html             # 听写历史页面
+│   │       │   ├── difficult-words.html     # 生词本页面
+│   │       │   ├── reports.html             # 报表页面
+│   │       │   ├── dictators.html           # 听写人管理页面
+│   │       │   └── layout.html              # 布局模板
 │   │       └── static/                      # 静态资源
 │   └── test/                                # 测试目录
 └── target/                                  # 编译输出目录
