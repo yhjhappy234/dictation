@@ -75,46 +75,9 @@
                         </button>
                     </div>
 
-                    <!-- 分隔线 -->
-                    <hr class="my-4">
-                    <h6 class="text-muted mb-3"><i class="bi bi-plus-circle me-1"></i>创建新听写任务</h6>
-
-                    <!-- 快速导入预设内容 -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">快速导入预设内容：</label>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-outline-success btn-sm" onclick="importPreset('common-words-50')">
-                                <i class="bi bi-book me-1"></i>50个常用词
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('common-idioms-50')">
-                                <i class="bi bi-chat-quote me-1"></i>50个成语
-                            </button>
-                            <button class="btn btn-outline-info btn-sm" onclick="importPreset('common-poems-20')">
-                                <i class="bi bi-feather me-1"></i>20首古诗
-                            </button>
-                            <button class="btn btn-outline-warning btn-sm" onclick="importPreset('classics-5')">
-                                <i class="bi bi-scroll me-1"></i>5篇古文
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 创建新任务的输入 -->
-                    <div class="mb-3">
-                        <label for="newWordInput" class="form-label fw-bold">输入词语（每行一个）：</label>
-                        <textarea class="form-control" id="newWordInput" rows="6" placeholder="示例：&#10;苹果&#10;香蕉&#10;橙子&#10;西瓜"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="newTaskName" class="form-label fw-bold">任务名称 <span class="text-danger">*</span>：</label>
-                        <input type="text" class="form-control" id="newTaskName" placeholder="例如：第一单元听写">
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-success btn-action" onclick="saveAsTask()">
-                            <i class="bi bi-save me-2"></i>保存为听写任务
-                        </button>
-                        <button class="btn btn-secondary btn-action" onclick="clearNewTask()">
-                            <i class="bi bi-trash me-2"></i>清空重来
-                        </button>
-                        <a href="/tasks" class="btn btn-outline-info btn-action">
+                    <!-- 管理任务链接 -->
+                    <div class="text-center mt-4">
+                        <a href="/tasks" class="btn btn-outline-info">
                             <i class="bi bi-gear me-2"></i>管理听写任务
                         </a>
                     </div>
@@ -578,12 +541,6 @@
         isDictating = false;
     }
 
-    // 清空新任务输入
-    function clearNewTask() {
-        document.getElementById('newWordInput').value = '';
-        document.getElementById('newTaskName').value = '';
-    }
-
     // 保存批次到后端
     async function saveBatch() {
         const batchName = document.getElementById('batchName').value || `听写_${new Date().toLocaleDateString()}`;
@@ -668,17 +625,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         // 加载听写任务列表
         refreshTasks();
-
-        // 可以从本地存储恢复之前的输入
-        const savedWords = localStorage.getItem('dictationNewWords');
-        if (savedWords) {
-            document.getElementById('newWordInput').value = savedWords;
-        }
-
-        // 自动保存新任务输入
-        document.getElementById('newWordInput').addEventListener('input', function() {
-            localStorage.setItem('dictationNewWords', this.value);
-        });
     });
 
     // 刷新听写任务列表（只加载未完成的任务）
@@ -743,105 +689,6 @@
             console.error('加载听写任务失败:', error);
             showToast('加载失败，请检查网络', 'warning');
             selectedTaskId = null;
-        }
-    }
-
-    // 保存为听写任务
-    async function saveAsTask() {
-        const words = document.getElementById('newWordInput').value.trim();
-        const taskName = document.getElementById('newTaskName').value.trim();
-
-        if (!words) {
-            showToast('请先输入词语', 'warning');
-            return;
-        }
-
-        if (!taskName) {
-            showToast('请输入任务名称', 'warning');
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/tasks', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    taskName: taskName,
-                    words: words
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                showToast(`听写任务已保存：${taskName}`, 'success');
-                // 清空输入
-                clearNewTask();
-                // 刷新任务列表
-                refreshTasks();
-            } else {
-                showToast(result.message || '保存失败', 'warning');
-            }
-        } catch (error) {
-            console.error('保存听写任务失败:', error);
-            showToast('保存失败，请检查网络', 'warning');
-        }
-    }
-
-    // 导入预设内容（填充到新任务输入框）
-    async function importPreset(presetId) {
-        try {
-            const response = await fetch(`/api/preset/import/${presetId}`, {
-                method: 'POST'
-            });
-
-            if (!response.ok) {
-                showToast('导入失败，请重试', 'warning');
-                return;
-            }
-
-            const result = await response.json();
-
-            if (result.success) {
-                // 获取预设内容详情
-                const detailResponse = await fetch(`/api/preset/${presetId}`);
-                const detailResult = await detailResponse.json();
-
-                if (!detailResult.success || !detailResult.data) {
-                    showToast('获取预设内容详情失败', 'warning');
-                    return;
-                }
-
-                const detailData = detailResult.data;
-
-                // 填充词语到新任务输入框
-                if (detailData.words) {
-                    document.getElementById('newWordInput').value = detailData.words.join('\n');
-                } else if (detailData.items) {
-                    // 古诗/古文格式
-                    let allContent = [];
-                    detailData.items.forEach(item => {
-                        const parts = item.content.split(/[，。！？、；：]/);
-                        parts.forEach(part => {
-                            if (part.trim()) {
-                                allContent.push(part.trim());
-                            }
-                        });
-                    });
-                    document.getElementById('newWordInput').value = allContent.join('\n');
-                }
-
-                document.getElementById('newTaskName').value = detailData.name || '';
-                showToast(`成功导入：${detailData.name}`, 'success');
-
-                // 触发自动保存
-                localStorage.setItem('dictationNewWords', document.getElementById('newWordInput').value);
-            } else {
-                showToast(result.message || '导入失败', 'warning');
-            }
-        } catch (error) {
-            console.error('导入预设内容失败:', error);
-            showToast('导入失败，请检查网络连接', 'warning');
         }
     }
 </script>
