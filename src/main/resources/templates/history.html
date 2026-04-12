@@ -180,31 +180,24 @@
                 Math.round((task.correctCount / task.wordCount) * 100) : 0;
 
             const cardHtml = `
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card history-card" onclick="showTaskDetail(${task.id})">
                         <div class="card-body">
-                            <h5 class="card-title">
-                                <i class="bi bi-task-check me-2 text-primary"></i>${task.taskName}
-                            </h5>
-                            <div class="row mt-3">
-                                <div class="col-4 text-center">
-                                    <span class="badge bg-info">${task.wordCount}个词</span>
-                                </div>
-                                <div class="col-4 text-center">
-                                    <span class="badge bg-success">${task.correctCount}正确</span>
-                                </div>
-                                <div class="col-4 text-center">
-                                    <span class="badge bg-danger">${task.wrongCount}错误</span>
-                                </div>
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0"><i class="bi bi-task-check me-2 text-primary"></i>${task.taskName}</h5>
+                                <span class="badge bg-success badge-status">已完成</span>
                             </div>
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    <i class="bi bi-person me-1"></i>${task.dictator || '未知'} |
-                                    <i class="bi bi-calendar me-1"></i>${formatDate(task.createdAt)}
-                                </small>
+                            <p class="text-muted mb-3">
+                                <i class="bi bi-person me-1"></i>${task.dictator || '未知'} |
+                                <i class="bi bi-calendar3 me-1"></i>${formatDate(task.createdAt)}
+                            </p>
+                            <div class="row text-center mb-3">
+                                <div class="col-4"><div class="fs-4 fw-bold">${task.wordCount}</div><small class="text-muted">总数</small></div>
+                                <div class="col-4"><div class="fs-4 fw-bold text-success">${task.correctCount}</div><small class="text-muted">正确</small></div>
+                                <div class="col-4"><div class="fs-4 fw-bold text-danger">${task.wrongCount}</div><small class="text-muted">错误</small></div>
                             </div>
-                            <div class="progress mt-2" style="height: 8px;">
-                                <div class="progress-bar bg-success" style="width: ${accuracy}%"></div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: ${accuracy}%">${accuracy}%</div>
                             </div>
                         </div>
                     </div>

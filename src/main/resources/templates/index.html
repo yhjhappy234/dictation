@@ -22,7 +22,7 @@
                 <div class="card-body">
                     <!-- 选择已有听写任务 -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">选择未完成的听写任务：</label>
+                        <label class="form-label fw-bold">选择听写任务：</label>
                         <div class="d-flex gap-2">
                             <select class="form-select" id="taskSelect" onchange="loadTask()">
                                 <option value="">-- 请选择听写任务 --</option>
@@ -31,7 +31,7 @@
                                 <i class="bi bi-arrow-repeat"></i>
                             </button>
                         </div>
-                        <small class="text-muted">提示：只有选择已保存的未完成任务才能开始听写</small>
+                        <small class="text-muted">提示：选择任务后可开始听写，已完成任务需重置后才能再次听写</small>
                     </div>
 
                     <!-- 显示选中任务的词语 -->
@@ -744,23 +744,59 @@
         refreshTasks();
     });
 
-    // 刷新听写任务列表（只加载未完成的任务）
+    // 刷新听写任务列表（加载所有任务）
     async function refreshTasks() {
         try {
-            const response = await fetch('/api/tasks/uncompleted');
+            const response = await fetch('/api/tasks');
             const result = await response.json();
 
             if (result.success && result.data) {
                 const select = document.getElementById('taskSelect');
                 select.innerHTML = '<option value="">-- 请选择听写任务 --</option>';
 
-                result.data.forEach(task => {
-                    const option = document.createElement('option');
-                    option.value = task.id;
-                    const statusText = task.status === 'IN_PROGRESS' ? '【进行中】' : '【未开始】';
-                    option.textContent = `${statusText} ${task.taskName} (${task.wordCount}个词)`;
-                    select.appendChild(option);
-                });
+                // 按状态分组
+                const notStartedTasks = result.data.filter(t => t.status === 'NOT_STARTED');
+                const inProgressTasks = result.data.filter(t => t.status === 'IN_PROGRESS');
+                const completedTasks = result.data.filter(t => t.status === 'COMPLETED');
+
+                // 未开始任务
+                if (notStartedTasks.length > 0) {
+                    const group = document.createElement('optgroup');
+                    group.label = '未开始';
+                    notStartedTasks.forEach(task => {
+                        const option = document.createElement('option');
+                        option.value = task.id;
+                        option.textContent = `${task.taskName} (${task.wordCount}个词)`;
+                        group.appendChild(option);
+                    });
+                    select.appendChild(group);
+                }
+
+                // 进行中任务
+                if (inProgressTasks.length > 0) {
+                    const group = document.createElement('optgroup');
+                    group.label = '进行中';
+                    inProgressTasks.forEach(task => {
+                        const option = document.createElement('option');
+                        option.value = task.id;
+                        option.textContent = `${task.taskName} (${task.wordCount}个词, 进度${task.currentIndex}/${task.wordCount})`;
+                        group.appendChild(option);
+                    });
+                    select.appendChild(group);
+                }
+
+                // 已完成任务
+                if (completedTasks.length > 0) {
+                    const group = document.createElement('optgroup');
+                    group.label = '已完成';
+                    completedTasks.forEach(task => {
+                        const option = document.createElement('option');
+                        option.value = task.id;
+                        option.textContent = `${task.taskName} (${task.correctCount}/${task.wordCount}正确)`;
+                        group.appendChild(option);
+                    });
+                    select.appendChild(group);
+                }
             }
         } catch (error) {
             console.error('加载听写任务失败:', error);
@@ -801,8 +837,25 @@
                 // 设置听写人（如果有保存的话，否则默认为凡凡）
                 document.getElementById('dictatorInput').value = task.dictator || '凡凡';
 
-                // 显示进度信息
-                if (task.currentIndex > 0 || task.status === 'IN_PROGRESS') {
+                // 根据任务状态显示不同的按钮和提示
+                if (task.status === 'COMPLETED') {
+                    // 已完成任务
+                    document.getElementById('progressInfo').style.display = 'block';
+                    document.getElementById('savedCorrectCount').textContent = task.correctCount || 0;
+                    document.getElementById('savedWrongCount').textContent = task.wrongCount || 0;
+                    document.getElementById('savedProgress').textContent = task.wordCount;
+                    document.getElementById('savedTotal').textContent = task.wordCount;
+
+                    // 隐藏开始和继续按钮，只显示重置按钮
+                    document.getElementById('startBtn').style.display = 'none';
+                    document.getElementById('continueBtn').style.display = 'none';
+                    document.getElementById('resetProgressBtn').style.display = 'inline-block';
+                    document.getElementById('resetProgressBtn').textContent = '重置并开始听写';
+                    document.getElementById('startDictationSection').style.display = 'grid';
+
+                    showToast(`任务已完成：${task.taskName}，点击"重置并开始听写"可重新听写`, 'info');
+                } else if (task.status === 'IN_PROGRESS' || task.currentIndex > 0) {
+                    // 进行中任务
                     document.getElementById('progressInfo').style.display = 'block';
                     document.getElementById('savedCorrectCount').textContent = task.correctCount || 0;
                     document.getElementById('savedWrongCount').textContent = task.wrongCount || 0;
@@ -810,19 +863,23 @@
                     document.getElementById('savedTotal').textContent = task.wordCount;
 
                     // 显示继续/重新开始按钮
+                    document.getElementById('startBtn').style.display = 'inline-block';
                     document.getElementById('continueBtn').style.display = 'inline-block';
                     document.getElementById('resetProgressBtn').style.display = 'inline-block';
+                    document.getElementById('resetProgressBtn').textContent = '重新开始';
+                    document.getElementById('startDictationSection').style.display = 'grid';
+
+                    showToast(`已加载：${task.taskName}（进行中）`, 'success');
                 } else {
+                    // 未开始任务
                     document.getElementById('progressInfo').style.display = 'none';
+                    document.getElementById('startBtn').style.display = 'inline-block';
                     document.getElementById('continueBtn').style.display = 'none';
                     document.getElementById('resetProgressBtn').style.display = 'none';
+                    document.getElementById('startDictationSection').style.display = 'grid';
+
+                    showToast(`已加载：${task.taskName}（未开始）`, 'success');
                 }
-
-                document.getElementById('startDictationSection').style.display = 'grid';
-
-                // 根据状态更新显示
-                const statusBadge = task.status === 'IN_PROGRESS' ? '（进行中）' : '（未开始）';
-                showToast(`已加载：${task.taskName} ${statusBadge}`, 'success');
             } else {
                 showToast('加载任务失败', 'warning');
                 selectedTaskId = null;
