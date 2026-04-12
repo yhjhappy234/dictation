@@ -98,12 +98,9 @@
 
                     <!-- 答案显示 -->
                     <div class="text-center" id="answerArea" style="display: none;">
-                        <button class="btn btn-outline-primary btn-action" onclick="showAnswer()">
+                        <button class="btn btn-outline-primary btn-action" id="answerBtn" onclick="toggleAnswer()">
                             <i class="bi bi-eye me-2"></i>显示答案
                         </button>
-                        <div class="mt-3" id="answerText" style="display: none;">
-                            <span class="badge bg-success fs-4 px-4 py-2" id="correctWord"></span>
-                        </div>
                     </div>
 
                     <!-- 结果按钮 -->
@@ -286,8 +283,11 @@
 
         document.getElementById('currentIndex').textContent = currentIndex + 1;
         document.getElementById('wordDisplay').innerHTML = '<i class="bi bi-volume-up-fill text-primary" style="font-size: 3rem;"></i>';
-        document.getElementById('answerText').style.display = 'none';
-        document.getElementById('correctWord').textContent = '';
+
+        // 重置答案按钮为"显示答案"状态
+        const answerBtn = document.getElementById('answerBtn');
+        answerBtn.innerHTML = '<i class="bi bi-eye me-2"></i>显示答案';
+        answerBtn.className = 'btn btn-outline-primary btn-action';
 
         // 检查是否是最后一个词语，改变"下一个"按钮
         const nextBtn = document.getElementById('nextBtn');
@@ -342,11 +342,23 @@
         }
     }
 
-    // 显示答案
-    function showAnswer() {
+    // 显示/隐藏答案
+    function toggleAnswer() {
         const word = words[currentIndex];
-        document.getElementById('correctWord').textContent = word;
-        document.getElementById('answerText').style.display = 'block';
+        const answerBtn = document.getElementById('answerBtn');
+        const wordDisplay = document.getElementById('wordDisplay');
+
+        if (answerBtn.innerHTML.includes('显示答案')) {
+            // 显示答案
+            wordDisplay.innerHTML = `<i class="bi bi-volume-up-fill text-primary" style="font-size: 3rem;"></i><span class="ms-3 badge bg-success fs-3 px-4 py-2">${word}</span>`;
+            answerBtn.innerHTML = '<i class="bi bi-eye-slash me-2"></i>隐藏答案';
+            answerBtn.className = 'btn btn-outline-secondary btn-action';
+        } else {
+            // 隐藏答案
+            wordDisplay.innerHTML = '<i class="bi bi-volume-up-fill text-primary" style="font-size: 3rem;"></i>';
+            answerBtn.innerHTML = '<i class="bi bi-eye me-2"></i>显示答案';
+            answerBtn.className = 'btn btn-outline-primary btn-action';
+        }
     }
 
     // 标记正确
