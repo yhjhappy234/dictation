@@ -12,19 +12,25 @@
 
     <!-- 统计概览 -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-card">
                 <div class="stat-number" id="totalTasks">0</div>
                 <div class="stat-label">已完成任务数</div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number text-info" id="totalDictators">0</div>
+                <div class="stat-label">听写人数</div>
+            </div>
+        </div>
+        <div class="col-md-3">
             <div class="stat-card">
                 <div class="stat-number text-success" id="totalCorrect">0</div>
                 <div class="stat-label">总正确数</div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-card">
                 <div class="stat-number text-danger" id="totalWrong">0</div>
                 <div class="stat-label">总错误数</div>
@@ -112,7 +118,8 @@
                                 <th>词语</th>
                                 <th>状态</th>
                                 <th>朗读次数</th>
-                                <th>听写时间</th>
+                                <th>开始时间</th>
+                                <th>提交时间</th>
                                 <th>耗时</th>
                                 <th>操作</th>
                             </tr>
@@ -168,16 +175,24 @@
 
         if (tasks.length === 0) {
             container.innerHTML = '<div class="col-12 text-center py-5"><i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i><p class="mt-3 text-muted fs-5">暂无听写记录</p></div>';
+            document.getElementById('totalTasks').textContent = '0';
+            document.getElementById('totalDictators').textContent = '0';
+            document.getElementById('totalCorrect').textContent = '0';
+            document.getElementById('totalWrong').textContent = '0';
             return;
         }
 
         // 统计总数
         let totalCorrect = 0;
         let totalWrong = 0;
+        const dictators = new Set();
 
         tasks.forEach(task => {
             totalCorrect += task.correctCount || 0;
             totalWrong += task.wrongCount || 0;
+            if (task.dictator) {
+                dictators.add(task.dictator);
+            }
 
             const accuracy = task.wordCount > 0 ?
                 Math.round((task.correctCount / task.wordCount) * 100) : 0;
@@ -211,6 +226,7 @@
 
         // 更新统计
         document.getElementById('totalTasks').textContent = tasks.length;
+        document.getElementById('totalDictators').textContent = dictators.size;
         document.getElementById('totalCorrect').textContent = totalCorrect;
         document.getElementById('totalWrong').textContent = totalWrong;
     }
@@ -258,23 +274,34 @@
                             '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>' + readCount + '次</span>' :
                             '<span class="badge bg-info">' + readCount + '次</span>';
 
-                        // 词语高亮（朗读次数超过3次）
-                        const wordHighlight = readCount > 3 ?
+                        // 计算耗时
+                        const duration = calculateDuration(record.startTime, record.endTime);
+                        const durationInSeconds = calculateDurationInSeconds(record.startTime, record.endTime);
+
+                        // 耗时超过2分钟(120秒)时特殊标记
+                        const durationDisplay = durationInSeconds > 120 ?
+                            '<span class="text-danger fw-bold"><i class="bi bi-clock-fill me-1"></i>' + duration + '</span>' :
+                            '<small class="text-muted">' + duration + '</small>';
+
+                        // 判断是否有警告标记（朗读次数或耗时）
+                        const hasWarning = readCount > 3 || durationInSeconds > 120;
+
+                        // 词语高亮（有警告时）
+                        const wordHighlight = hasWarning ?
                             '<strong class="text-warning">' + record.word + '</strong>' :
                             '<strong>' + record.word + '</strong>';
 
-                        const recordTime = record.startTime ? formatDateTime(record.startTime) : '-';
-
-                        // 计算耗时
-                        const duration = calculateDuration(record.startTime, record.endTime);
+                        const startTime = record.startTime ? formatDateTime(record.startTime) : '-';
+                        const endTime = record.endTime ? formatDateTime(record.endTime) : '-';
 
                         wordListBody.innerHTML += `
                             <tr>
                                 <td>${wordHighlight}</td>
                                 <td>${statusBadge}</td>
                                 <td>${readCountBadge}</td>
-                                <td><small class="text-muted">${recordTime}</small></td>
-                                <td><small class="text-muted">${duration}</small></td>
+                                <td><small class="text-muted">${startTime}</small></td>
+                                <td><small class="text-muted">${endTime}</small></td>
+                                <td>${durationDisplay}</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="speakWord('${record.word}')">
                                         <i class="bi bi-volume-up"></i>
@@ -291,6 +318,7 @@
                                 <td><strong>${word}</strong></td>
                                 <td><span class="badge bg-success">正确</span></td>
                                 <td><span class="badge bg-info">-</span></td>
+                                <td><small class="text-muted">-</small></td>
                                 <td><small class="text-muted">-</small></td>
                                 <td><small class="text-muted">-</small></td>
                                 <td>
@@ -353,6 +381,19 @@
         } else {
             return `${seconds}秒`;
         }
+    }
+
+    // 计算耗时（秒数）
+    function calculateDurationInSeconds(startTime, endTime) {
+        if (!startTime || !endTime) return 0;
+
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const diffMs = end - start;
+
+        if (diffMs < 0) return 0;
+
+        return Math.floor(diffMs / 1000);
     }
 
     // 朗读词语
