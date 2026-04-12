@@ -111,6 +111,7 @@
                             <tr>
                                 <th>词语</th>
                                 <th>状态</th>
+                                <th>听写时间</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -248,10 +249,13 @@
                             '<span class="badge bg-success">正确</span>' :
                             '<span class="badge bg-danger">错误</span>';
 
+                        const recordTime = record.createdAt ? formatDateTime(record.createdAt) : '-';
+
                         wordListBody.innerHTML += `
                             <tr>
                                 <td><strong>${record.word}</strong></td>
                                 <td>${statusBadge}</td>
+                                <td><small class="text-muted">${recordTime}</small></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="speakWord('${record.word}')">
                                         <i class="bi bi-volume-up"></i>
@@ -267,6 +271,7 @@
                             <tr>
                                 <td><strong>${word}</strong></td>
                                 <td><span class="badge bg-success">正确</span></td>
+                                <td><small class="text-muted">-</small></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="speakWord('${word}')">
                                         <i class="bi bi-volume-up"></i>
@@ -293,6 +298,19 @@
         if (!dateStr) return '-';
         const date = new Date(dateStr);
         return date.toLocaleDateString('zh-CN');
+    }
+
+    // 格式化日期时间
+    function formatDateTime(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleString('zh-CN', {
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
     }
 
     // 朗读词语

@@ -10,20 +10,11 @@
         <i class="bi bi-graph-up me-2"></i>学习报表
     </h2>
 
-    <!-- 听写人筛选 -->
-    <div class="filter-section mb-4">
-        <div class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label fw-bold">听写人筛选：</label>
-                <select class="form-select" id="dictatorFilter" onchange="filterByDictator()">
-                    <option value="">-- 全部听写人 --</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-outline-secondary" onclick="resetFilter()">
-                    <i class="bi bi-refresh me-1"></i>重置
-                </button>
-            </div>
+    <!-- 听写人筛选（标签形式） -->
+    <div class="mb-4">
+        <label class="form-label fw-bold mb-2">听写人筛选：</label>
+        <div id="dictatorTags">
+            <!-- 标签将通过JavaScript动态生成 -->
         </div>
     </div>
 
@@ -237,19 +228,58 @@
             const result = await response.json();
 
             if (result.success && result.data) {
-                const select = document.getElementById('dictatorFilter');
-                select.innerHTML = '<option value="">-- 全部听写人 --</option>';
-
-                result.data.forEach(dictator => {
-                    const option = document.createElement('option');
-                    option.value = dictator;
-                    option.textContent = dictator;
-                    select.appendChild(option);
-                });
+                renderDictatorTags(result.data);
             }
         } catch (error) {
             console.error('加载听写人列表失败:', error);
         }
+    }
+
+    // 渲染听写人标签
+    function renderDictatorTags(dictators) {
+        const container = document.getElementById('dictatorTags');
+        container.innerHTML = '';
+
+        // 添加"所有人"标签（默认选中）
+        const allTag = document.createElement('button');
+        allTag.className = 'btn btn-primary me-2 mb-2 dictator-tag';
+        allTag.textContent = '所有人';
+        allTag.dataset.dictator = '';
+        allTag.onclick = function() { selectDictator('', this); };
+        container.appendChild(allTag);
+
+        // 添加每个听写人的标签
+        dictators.forEach(dictator => {
+            const tag = document.createElement('button');
+            tag.className = 'btn btn-outline-primary me-2 mb-2 dictator-tag';
+            tag.textContent = dictator;
+            tag.dataset.dictator = dictator;
+            tag.onclick = function() { selectDictator(dictator, this); };
+            container.appendChild(tag);
+        });
+    }
+
+    // 选择听写人
+    function selectDictator(dictator, clickedBtn) {
+        currentDictator = dictator;
+
+        // 更新标签样式
+        document.querySelectorAll('.dictator-tag').forEach(btn => {
+            if (btn.dataset.dictator === dictator) {
+                btn.className = 'btn btn-primary me-2 mb-2 dictator-tag';
+            } else {
+                btn.className = 'btn btn-outline-primary me-2 mb-2 dictator-tag';
+            }
+        });
+
+        // 筛选数据
+        if (currentDictator) {
+            filteredTasks = allTasks.filter(task => task.dictator === currentDictator);
+        } else {
+            filteredTasks = allTasks;
+        }
+
+        renderAllReports();
     }
 
     // 加载所有已完成任务
@@ -266,27 +296,6 @@
         } catch (error) {
             console.error('加载任务数据失败:', error);
         }
-    }
-
-    // 按听写人筛选
-    function filterByDictator() {
-        currentDictator = document.getElementById('dictatorFilter').value;
-
-        if (currentDictator) {
-            filteredTasks = allTasks.filter(task => task.dictator === currentDictator);
-        } else {
-            filteredTasks = allTasks;
-        }
-
-        renderAllReports();
-    }
-
-    // 重置筛选
-    function resetFilter() {
-        document.getElementById('dictatorFilter').value = '';
-        currentDictator = '';
-        filteredTasks = allTasks;
-        renderAllReports();
     }
 
     // 渲染所有报表
