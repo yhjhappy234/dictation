@@ -1,8 +1,10 @@
-# Backend
-backend/target/
-backend/*.jar
-backend/*.log
-backend/dictation.db
+# Build
+target/
+*.jar
+*.log
+
+# Database (keep resources copy)
+# dictation.db in resources is kept for deployment
 
 # IDE
 .idea/
