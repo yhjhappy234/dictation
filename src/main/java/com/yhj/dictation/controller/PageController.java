@@ -48,4 +48,12 @@ public class PageController {
     public String reports() {
         return "reports";
     }
+
+    /**
+     * 任务管理页面
+     */
+    @GetMapping("/tasks")
+    public String tasks() {
+        return "tasks";
+    }
 }

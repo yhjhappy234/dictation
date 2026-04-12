@@ -5,6 +5,7 @@ import com.yhj.dictation.dto.TaskCreateRequest;
 import com.yhj.dictation.dto.TaskDTO;
 import com.yhj.dictation.dto.BatchCreateRequest;
 import com.yhj.dictation.entity.DictationTask;
+import com.yhj.dictation.entity.DictationTask.TaskStatus;
 import com.yhj.dictation.entity.DictationBatch;
 import com.yhj.dictation.service.DictationTaskService;
 import com.yhj.dictation.service.DictationBatchService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 听写任务控制器
@@ -59,6 +61,20 @@ public class DictationTaskController {
         } catch (Exception e) {
             log.error("Failed to get tasks", e);
             return ApiResponse.error("获取任务列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取未完成的任务（未开始+进行中）- 用于首页下拉
+     */
+    @GetMapping("/uncompleted")
+    public ApiResponse<List<TaskDTO>> getUncompletedTasks() {
+        try {
+            List<TaskDTO> tasks = taskService.getUncompletedTaskDTOs();
+            return ApiResponse.success(tasks);
+        } catch (Exception e) {
+            log.error("Failed to get uncompleted tasks", e);
+            return ApiResponse.error("获取未完成任务失败: " + e.getMessage());
         }
     }
 
@@ -126,10 +142,91 @@ public class DictationTaskController {
     }
 
     /**
-     * 从任务模板创建批次并开始听写
+     * 更新任务状态
+     */
+    @PutMapping("/{id}/status")
+    public ApiResponse<TaskDTO> updateStatus(@PathVariable Long id, @RequestParam TaskStatus status) {
+        try {
+            DictationTask task = taskService.updateStatus(id, status);
+            return ApiResponse.success("任务状态已更新", taskService.toTaskDTO(task));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to update task status: {}", id, e);
+            return ApiResponse.error("更新任务状态失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 开始任务（状态改为进行中）
      */
     @PostMapping("/{id}/start")
-    public ApiResponse<Long> startFromTask(@PathVariable Long id) {
+    public ApiResponse<TaskDTO> startTaskStatus(@PathVariable Long id) {
+        try {
+            DictationTask task = taskService.startTask(id);
+            return ApiResponse.success("任务已开始", taskService.toTaskDTO(task));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to start task: {}", id, e);
+            return ApiResponse.error("开始任务失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 完成任务（状态改为已完成）
+     */
+    @PostMapping("/{id}/complete")
+    public ApiResponse<TaskDTO> completeTaskStatus(@PathVariable Long id) {
+        try {
+            DictationTask task = taskService.completeTask(id);
+            return ApiResponse.success("任务已完成", taskService.toTaskDTO(task));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to complete task: {}", id, e);
+            return ApiResponse.error("完成任务失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 重置任务（状态改为未开始）
+     */
+    @PostMapping("/{id}/reset")
+    public ApiResponse<TaskDTO> resetTaskStatus(@PathVariable Long id) {
+        try {
+            DictationTask task = taskService.resetTask(id);
+            return ApiResponse.success("任务已重置", taskService.toTaskDTO(task));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to reset task: {}", id, e);
+            return ApiResponse.error("重置任务失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取指定状态的任务
+     */
+    @GetMapping("/status/{status}")
+    public ApiResponse<List<TaskDTO>> getTasksByStatus(@PathVariable TaskStatus status) {
+        try {
+            List<DictationTask> tasks = taskService.getTasksByStatus(status);
+            List<TaskDTO> taskDTOs = tasks.stream()
+                    .map(taskService::toTaskDTO)
+                    .collect(Collectors.toList());
+            return ApiResponse.success(taskDTOs);
+        } catch (Exception e) {
+            log.error("Failed to get tasks by status: {}", status, e);
+            return ApiResponse.error("获取任务失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 从任务模板创建批次并开始听写
+     */
+    @PostMapping("/{id}/dictation")
+    public ApiResponse<Long> startDictationFromTask(@PathVariable Long id) {
         try {
             Optional<DictationTask> taskOpt = taskService.getTaskById(id);
             if (taskOpt.isEmpty()) {
@@ -137,6 +234,14 @@ public class DictationTaskController {
             }
 
             DictationTask task = taskOpt.get();
+
+            // 检查任务状态是否为未完成
+            if (task.getStatus() == TaskStatus.COMPLETED) {
+                return ApiResponse.error("该任务已完成，请先重置任务状态");
+            }
+
+            // 将任务状态改为进行中
+            taskService.startTask(id);
 
             // 创建批次
             BatchCreateRequest batchRequest = new BatchCreateRequest();
@@ -151,7 +256,7 @@ public class DictationTaskController {
             log.info("Started dictation from task: {}, batch: {}", id, batch.getId());
             return ApiResponse.success("已从听写任务开始听写", batch.getId());
         } catch (Exception e) {
-            log.error("Failed to start from task: {}", id, e);
+            log.error("Failed to start dictation from task: {}", id, e);
             return ApiResponse.error("开始听写失败: " + e.getMessage());
         }
     }

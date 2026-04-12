@@ -31,4 +31,17 @@ public class DictationTask {
 
     @Column(name = "is_favorite")
     private Boolean isFavorite = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private TaskStatus status = TaskStatus.NOT_STARTED;
+
+    /**
+     * 任务状态枚举
+     */
+    public enum TaskStatus {
+        NOT_STARTED,    // 未开始
+        IN_PROGRESS,    // 进行中
+        COMPLETED       // 已完成
+    }
 }

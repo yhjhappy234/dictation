@@ -3,6 +3,7 @@ package com.yhj.dictation.service;
 import com.yhj.dictation.dto.TaskCreateRequest;
 import com.yhj.dictation.dto.TaskDTO;
 import com.yhj.dictation.entity.DictationTask;
+import com.yhj.dictation.entity.DictationTask.TaskStatus;
 import com.yhj.dictation.repository.DictationTaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ public class DictationTaskService {
     private final DictationTaskRepository taskRepository;
 
     /**
-     * 创建任务模板
+     * 创建听写任务
      */
     @Transactional
     public DictationTask createTask(TaskCreateRequest request) {
@@ -35,32 +36,41 @@ public class DictationTaskService {
         task.setWords(request.getWords());
         task.setCreatedAt(LocalDateTime.now());
         task.setIsFavorite(false);
+        task.setStatus(TaskStatus.NOT_STARTED);  // 默认状态为未开始
 
         // 计算词语数量
         int wordCount = parseWords(request.getWords()).size();
         task.setWordCount(wordCount);
 
         task = taskRepository.save(task);
-        log.info("Created task: {} with {} words", task.getId(), wordCount);
+        log.info("Created task: {} with {} words, status: {}", task.getId(), wordCount, task.getStatus());
         return task;
     }
 
     /**
-     * 获取所有任务模板
+     * 获取所有任务
      */
     public List<DictationTask> getAllTasks() {
         return taskRepository.findAllByOrderByCreatedAtDesc();
     }
 
     /**
-     * 根据ID获取任务模板
+     * 获取未完成的任务（未开始+进行中）
+     */
+    public List<DictationTask> getUncompletedTasks() {
+        return taskRepository.findByStatusInOrderByCreatedAtDesc(
+                Arrays.asList(TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS));
+    }
+
+    /**
+     * 根据ID获取任务
      */
     public Optional<DictationTask> getTaskById(Long id) {
         return taskRepository.findById(id);
     }
 
     /**
-     * 更新任务模板
+     * 更新任务
      */
     @Transactional
     public DictationTask updateTask(Long id, TaskCreateRequest request) {
@@ -82,12 +92,53 @@ public class DictationTaskService {
     }
 
     /**
-     * 删除任务模板
+     * 删除任务
      */
     @Transactional
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
         log.info("Deleted task: {}", id);
+    }
+
+    /**
+     * 更新任务状态
+     */
+    @Transactional
+    public DictationTask updateStatus(Long id, TaskStatus status) {
+        Optional<DictationTask> taskOpt = taskRepository.findById(id);
+        if (taskOpt.isEmpty()) {
+            throw new IllegalArgumentException("Task not found: " + id);
+        }
+
+        DictationTask task = taskOpt.get();
+        task.setStatus(status);
+        task = taskRepository.save(task);
+        log.info("Updated task {} status to: {}", id, status);
+        return task;
+    }
+
+    /**
+     * 开始任务（状态改为进行中）
+     */
+    @Transactional
+    public DictationTask startTask(Long id) {
+        return updateStatus(id, TaskStatus.IN_PROGRESS);
+    }
+
+    /**
+     * 完成任务（状态改为已完成）
+     */
+    @Transactional
+    public DictationTask completeTask(Long id) {
+        return updateStatus(id, TaskStatus.COMPLETED);
+    }
+
+    /**
+     * 重置任务（状态改为未开始）
+     */
+    @Transactional
+    public DictationTask resetTask(Long id) {
+        return updateStatus(id, TaskStatus.NOT_STARTED);
     }
 
     /**
@@ -108,10 +159,17 @@ public class DictationTaskService {
     }
 
     /**
-     * 获取收藏的任务模板
+     * 获取收藏的任务
      */
     public List<DictationTask> getFavoriteTasks() {
         return taskRepository.findByIsFavoriteTrueOrderByCreatedAtDesc();
+    }
+
+    /**
+     * 获取指定状态的任务
+     */
+    public List<DictationTask> getTasksByStatus(TaskStatus status) {
+        return taskRepository.findByStatusOrderByCreatedAtDesc(status);
     }
 
     /**
@@ -125,6 +183,7 @@ public class DictationTaskService {
         dto.setWordCount(task.getWordCount());
         dto.setCreatedAt(task.getCreatedAt());
         dto.setIsFavorite(task.getIsFavorite());
+        dto.setStatus(task.getStatus().name());
         return dto;
     }
 
@@ -133,6 +192,15 @@ public class DictationTaskService {
      */
     public List<TaskDTO> getAllTaskDTOs() {
         return getAllTasks().stream()
+                .map(this::toTaskDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取未完成任务DTO列表
+     */
+    public List<TaskDTO> getUncompletedTaskDTOs() {
+        return getUncompletedTasks().stream()
                 .map(this::toTaskDTO)
                 .collect(Collectors.toList());
     }

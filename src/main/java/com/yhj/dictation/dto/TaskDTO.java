@@ -15,4 +15,5 @@ public class TaskDTO {
     private Integer wordCount;
     private LocalDateTime createdAt;
     private Boolean isFavorite;
+    private String status;  // 任务状态
 }

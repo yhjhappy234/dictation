@@ -134,8 +134,25 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.08);
         }
 
+        .stat-card-sm {
+            background: white;
+            border-radius: 15px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
         .stat-number {
             font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-number-sm {
+            font-size: 1.8rem;
             font-weight: bold;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             -webkit-background-clip: text;
@@ -147,6 +164,12 @@
             font-size: 1.1rem;
             color: #888;
             margin-top: 10px;
+        }
+
+        .stat-label-sm {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 5px;
         }
 
         .word-display {
@@ -318,6 +341,11 @@
                 <li class="nav-item">
                     <a class="nav-link" th:classappend="${activePage == 'index'} ? 'active'" href="/">
                         <i class="bi bi-house-door me-1"></i>首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${activePage == 'tasks'} ? 'active'" href="/tasks">
+                        <i class="bi bi-list-check me-1"></i>任务管理
                     </a>
                 </li>
                 <li class="nav-item">

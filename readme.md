@@ -19,6 +19,7 @@ dictation/
 │   │   │   │   └── JpaConfig.java           # JPA配置
 │   │   │   ├── controller/                  # 控制器
 │   │   │   │   ├── DictationBatchController.java
+│   │   │   │   ├── DictationTaskController.java  # 听写任务管理
 │   │   │   │   ├── WordController.java
 │   │   │   │   ├── DictationRecordController.java
 │   │   │   │   ├── DifficultWordController.java
@@ -117,12 +118,18 @@ dictation/
 
 ## 核心功能
 
-### 1. 词语录入
+### 1. 听写任务管理
+- 提前创建听写任务，保存词语列表
+- 任务状态管理：未开始、进行中、已完成
+- 收藏功能：标记重要任务
+- 首页只显示未完成的任务供选择
+
+### 2. 词语录入
 - 支持空格分隔批量输入词语
 - 自动创建听写批次
 - 词语状态管理（待听写/进行中/已完成）
 
-### 2. 语音听写流程
+### 3. 语音听写流程
 ```
 开始听写 → 播放词语(语音) → 停顿 → 开启麦克风监听
     ↓
@@ -208,6 +215,22 @@ dictation/
 | GET | `/api/preset/{id}` | 获取预设内容详情 |
 | POST | `/api/preset/import/{id}` | 导入预设内容创建批次 |
 
+### 听写任务管理
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| POST | `/api/tasks` | 创建听写任务 |
+| GET | `/api/tasks` | 获取所有任务列表 |
+| GET | `/api/tasks/uncompleted` | 获取未完成的任务（首页下拉） |
+| GET | `/api/tasks/{id}` | 获取任务详情 |
+| PUT | `/api/tasks/{id}` | 更新任务 |
+| DELETE | `/api/tasks/{id}` | 删除任务 |
+| PUT | `/api/tasks/{id}/status` | 更新任务状态 |
+| POST | `/api/tasks/{id}/start` | 开始任务（状态改为进行中） |
+| POST | `/api/tasks/{id}/complete` | 完成任务（状态改为已完成） |
+| POST | `/api/tasks/{id}/reset` | 重置任务（状态改为未开始） |
+| POST | `/api/tasks/{id}/dictation` | 从任务开始听写 |
+| POST | `/api/tasks/{id}/favorite` | 设置/取消收藏 |
+
 ### 学习建议
 | 方法 | 路径 | 描述 |
 |------|------|------|
@@ -250,19 +273,19 @@ java --enable-preview -jar target/dictation-1.0.0.jar
 
 ### 实体关系图
 ```
-┌─────────────────┐     ┌─────────────────┐
-│ dictation_batch │────▶│      word       │
-│                 │ 1:N │                 │
-│ - id            │     │ - id            │
-│ - batch_name    │     │ - word_text     │
-│ - total_words   │     │ - batch_id (FK) │
-│ - completed     │     │ - sort_order    │
-│ - status        │     │ - status        │
-│ - created_at    │     │ - created_at    │
-└─────────────────┘     └─────────────────┘
-                              │
-                              │ 1:N
-                              ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│ dictation_task  │     │ dictation_batch │────▶│      word       │
+│                 │     │                 │ 1:N │                 │
+│ - id            │     │ - id            │     │ - id            │
+│ - task_name     │     │ - batch_name    │     │ - word_text     │
+│ - words         │     │ - total_words   │     │ - batch_id (FK) │
+│ - word_count    │     │ - completed     │     │ - sort_order    │
+│ - status        │     │ - status        │     │ - status        │
+│ - is_favorite   │     │ - created_at    │     │ - created_at    │
+│ - created_at    │     └─────────────────┘     └─────────────────┘
+└─────────────────┘                                   │
+                                                      │ 1:N
+                                                      ▼
         ┌─────────────────┐     ┌─────────────────┐
         │ dictation_record│     │ difficult_word  │
         │                 │     │                 │
@@ -331,6 +354,15 @@ java --enable-preview -jar target/dictation-1.0.0.jar
   - 测试框架适配Spring Boot 4.0（移除@WebMvcTest/@MockBean）
   - 230个单元测试全部通过
   - 从git中移除编译产物（target/目录）
+
+- v1.3.0 (2026-04-12): 任务管理模块
+  - 新增听写任务实体（DictationTask），支持任务状态管理
+  - 任务状态：未开始(NOT_STARTED)、进行中(IN_PROGRESS)、已完成(COMPLETED)
+  - 新增任务管理页面（tasks.html），可编辑/删除/修改状态
+  - 首页重构：只能选择未完成任务进行听写
+  - 预设内容导入填充到新任务输入区
+  - 收藏功能支持
+  - 修复听写完成后进度条显示100%
 
 ## 许可证
 

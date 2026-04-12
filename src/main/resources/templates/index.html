@@ -7,23 +7,23 @@
 
 <div class="main-container">
     <!-- 统计面板 -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-number" id="totalCount">0</div>
-                <div class="stat-label">总词语数</div>
+            <div class="stat-card stat-card-sm">
+                <div class="stat-number stat-number-sm" id="totalCount">0</div>
+                <div class="stat-label stat-label-sm">总词语数</div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-number" id="completedCount">0</div>
-                <div class="stat-label">已听写</div>
+            <div class="stat-card stat-card-sm">
+                <div class="stat-number stat-number-sm" id="completedCount">0</div>
+                <div class="stat-label stat-label-sm">已听写</div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-number" id="remainingCount">0</div>
-                <div class="stat-label">剩余数</div>
+            <div class="stat-card stat-card-sm">
+                <div class="stat-number stat-number-sm" id="remainingCount">0</div>
+                <div class="stat-label stat-label-sm">剩余数</div>
             </div>
         </div>
     </div>
@@ -35,16 +35,16 @@
 
     <!-- 主要内容区域 -->
     <div class="row">
-        <!-- 左侧：词语录入 -->
+        <!-- 左侧：听写任务选择 -->
         <div class="col-lg-5 mb-4">
             <div class="card h-100">
                 <div class="card-header">
-                    <i class="bi bi-pencil-square me-2"></i>词语录入
+                    <i class="bi bi-list-check me-2"></i>听写任务选择
                 </div>
                 <div class="card-body">
                     <!-- 选择已有听写任务 -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">选择已有听写任务：</label>
+                        <label class="form-label fw-bold">选择未完成的听写任务：</label>
                         <div class="d-flex gap-2">
                             <select class="form-select" id="taskSelect" onchange="loadTask()">
                                 <option value="">-- 请选择听写任务 --</option>
@@ -53,7 +53,31 @@
                                 <i class="bi bi-arrow-repeat"></i>
                             </button>
                         </div>
+                        <small class="text-muted">提示：只有选择已保存的未完成任务才能开始听写</small>
                     </div>
+
+                    <!-- 显示选中任务的词语 -->
+                    <div class="mb-3" id="selectedTaskWords" style="display: none;">
+                        <label class="form-label fw-bold">任务词语：</label>
+                        <textarea class="form-control" id="wordInput" rows="8" readonly placeholder="选择任务后显示词语"></textarea>
+                    </div>
+
+                    <!-- 任务名称显示 -->
+                    <div class="mb-3" id="selectedTaskName" style="display: none;">
+                        <label class="form-label fw-bold">任务名称：</label>
+                        <input type="text" class="form-control" id="batchName" readonly>
+                    </div>
+
+                    <!-- 开始听写按钮 -->
+                    <div class="d-grid gap-2 mb-4" id="startDictationSection" style="display: none;">
+                        <button class="btn btn-primary btn-action" id="startBtn" onclick="startDictation()">
+                            <i class="bi bi-play-circle me-2"></i>开始听写
+                        </button>
+                    </div>
+
+                    <!-- 分隔线 -->
+                    <hr class="my-4">
+                    <h6 class="text-muted mb-3"><i class="bi bi-plus-circle me-1"></i>创建新听写任务</h6>
 
                     <!-- 快速导入预设内容 -->
                     <div class="mb-3">
@@ -74,24 +98,25 @@
                         </div>
                     </div>
 
+                    <!-- 创建新任务的输入 -->
                     <div class="mb-3">
-                        <label for="wordInput" class="form-label fw-bold">请输入要听写的词语（每行一个）：</label>
-                        <textarea class="form-control" id="wordInput" rows="12" placeholder="示例：&#10;苹果&#10;香蕉&#10;橙子&#10;西瓜"></textarea>
+                        <label for="newWordInput" class="form-label fw-bold">输入词语（每行一个）：</label>
+                        <textarea class="form-control" id="newWordInput" rows="6" placeholder="示例：&#10;苹果&#10;香蕉&#10;橙子&#10;西瓜"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="batchName" class="form-label fw-bold">任务名称：</label>
-                        <input type="text" class="form-control" id="batchName" placeholder="例如：第一单元听写" required>
+                        <label for="newTaskName" class="form-label fw-bold">任务名称 <span class="text-danger">*</span>：</label>
+                        <input type="text" class="form-control" id="newTaskName" placeholder="例如：第一单元听写">
                     </div>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-primary btn-action" id="startBtn" onclick="startDictation()">
-                            <i class="bi bi-play-circle me-2"></i>开始听写
-                        </button>
                         <button class="btn btn-success btn-action" onclick="saveAsTask()">
                             <i class="bi bi-save me-2"></i>保存为听写任务
                         </button>
-                        <button class="btn btn-secondary btn-action" onclick="clearAll()">
+                        <button class="btn btn-secondary btn-action" onclick="clearNewTask()">
                             <i class="bi bi-trash me-2"></i>清空重来
                         </button>
+                        <a href="/tasks" class="btn btn-outline-info btn-action">
+                            <i class="bi bi-gear me-2"></i>管理听写任务
+                        </a>
                     </div>
                 </div>
             </div>
@@ -223,6 +248,7 @@
     let wrongWords = [];
     let isDictating = false;
     let batchId = null;
+    let selectedTaskId = null;
 
     // 语音合成
     const synth = window.speechSynthesis;
@@ -230,9 +256,14 @@
 
     // 开始听写
     function startDictation() {
+        if (!selectedTaskId) {
+            showToast('请先选择一个已保存的听写任务！', 'warning');
+            return;
+        }
+
         const input = document.getElementById('wordInput').value.trim();
         if (!input) {
-            showToast('请先输入词语！', 'warning');
+            showToast('任务词语为空！', 'warning');
             return;
         }
 
@@ -242,7 +273,7 @@
             .filter(w => w.length > 0);
 
         if (words.length === 0) {
-            showToast('请输入有效的词语！', 'warning');
+            showToast('任务词语无效！', 'warning');
             return;
         }
 
@@ -269,8 +300,25 @@
         // 开始第一个词语
         showCurrentWord();
 
-        // 保存批次到后端
-        saveBatch();
+        // 通过API开始听写（更新任务状态为进行中）
+        startDictationFromTask(selectedTaskId);
+    }
+
+    // 从任务开始听写（调用API）
+    async function startDictationFromTask(taskId) {
+        try {
+            const response = await fetch(`/api/tasks/${taskId}/dictation`, {
+                method: 'POST'
+            });
+            const result = await response.json();
+            if (result.success) {
+                batchId = result.data;
+            } else {
+                showToast(result.message || '启动失败', 'warning');
+            }
+        } catch (error) {
+            console.error('启动听写失败:', error);
+        }
     }
 
     // 更新统计信息
@@ -387,6 +435,15 @@
     function finishDictation() {
         isDictating = false;
 
+        // 设置进度条为100%
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.width = '100%';
+        progressBar.textContent = '100%';
+
+        // 更新剩余数为0
+        document.getElementById('remainingCount').textContent = '0';
+        document.getElementById('completedCount').textContent = correctCount + wrongCount;
+
         // 显示完成区域
         document.getElementById('controlButtons').style.display = 'none';
         document.getElementById('answerArea').style.display = 'none';
@@ -470,6 +527,12 @@
         wrongCount = 0;
         wrongWords = [];
         isDictating = false;
+    }
+
+    // 清空新任务输入
+    function clearNewTask() {
+        document.getElementById('newWordInput').value = '';
+        document.getElementById('newTaskName').value = '';
     }
 
     // 保存批次到后端
@@ -557,22 +620,22 @@
         // 加载听写任务列表
         refreshTasks();
 
-        // 可以从本地存储恢复之前的听写状态
-        const savedWords = localStorage.getItem('dictationWords');
+        // 可以从本地存储恢复之前的输入
+        const savedWords = localStorage.getItem('dictationNewWords');
         if (savedWords) {
-            document.getElementById('wordInput').value = savedWords;
+            document.getElementById('newWordInput').value = savedWords;
         }
 
-        // 自动保存词语
-        document.getElementById('wordInput').addEventListener('input', function() {
-            localStorage.setItem('dictationWords', this.value);
+        // 自动保存新任务输入
+        document.getElementById('newWordInput').addEventListener('input', function() {
+            localStorage.setItem('dictationNewWords', this.value);
         });
     });
 
-    // 刷新听写任务列表
+    // 刷新听写任务列表（只加载未完成的任务）
     async function refreshTasks() {
         try {
-            const response = await fetch('/api/tasks');
+            const response = await fetch('/api/tasks/uncompleted');
             const result = await response.json();
 
             if (result.success && result.data) {
@@ -582,7 +645,8 @@
                 result.data.forEach(task => {
                     const option = document.createElement('option');
                     option.value = task.id;
-                    option.textContent = `${task.taskName} (${task.wordCount}个词)`;
+                    const statusText = task.status === 'IN_PROGRESS' ? '【进行中】' : '【未开始】';
+                    option.textContent = `${statusText} ${task.taskName} (${task.wordCount}个词)`;
                     select.appendChild(option);
                 });
             }
@@ -594,7 +658,16 @@
     // 加载选中的听写任务
     async function loadTask() {
         const taskId = document.getElementById('taskSelect').value;
-        if (!taskId) return;
+        if (!taskId) {
+            // 清除选中状态
+            selectedTaskId = null;
+            document.getElementById('selectedTaskWords').style.display = 'none';
+            document.getElementById('selectedTaskName').style.display = 'none';
+            document.getElementById('startDictationSection').style.display = 'none';
+            return;
+        }
+
+        selectedTaskId = taskId;
 
         try {
             const response = await fetch(`/api/tasks/${taskId}`);
@@ -604,28 +677,37 @@
                 const task = result.data;
                 document.getElementById('wordInput').value = task.words.join('\n');
                 document.getElementById('batchName').value = task.taskName;
-                localStorage.setItem('dictationWords', task.words.join('\n'));
-                showToast(`已加载：${task.taskName}`, 'success');
+
+                // 显示任务详情区域
+                document.getElementById('selectedTaskWords').style.display = 'block';
+                document.getElementById('selectedTaskName').style.display = 'block';
+                document.getElementById('startDictationSection').style.display = 'grid';
+
+                // 根据状态更新显示
+                const statusBadge = task.status === 'IN_PROGRESS' ? '（进行中）' : '（未开始）';
+                showToast(`已加载：${task.taskName} ${statusBadge}`, 'success');
             } else {
                 showToast('加载任务失败', 'warning');
+                selectedTaskId = null;
             }
         } catch (error) {
             console.error('加载听写任务失败:', error);
             showToast('加载失败，请检查网络', 'warning');
+            selectedTaskId = null;
         }
     }
 
     // 保存为听写任务
     async function saveAsTask() {
-        const words = document.getElementById('wordInput').value.trim();
-        const batchName = document.getElementById('batchName').value.trim();
+        const words = document.getElementById('newWordInput').value.trim();
+        const taskName = document.getElementById('newTaskName').value.trim();
 
         if (!words) {
             showToast('请先输入词语', 'warning');
             return;
         }
 
-        if (!batchName) {
+        if (!taskName) {
             showToast('请输入任务名称', 'warning');
             return;
         }
@@ -635,7 +717,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    taskName: batchName,
+                    taskName: taskName,
                     words: words
                 })
             });
@@ -643,7 +725,10 @@
             const result = await response.json();
 
             if (result.success) {
-                showToast(`听写任务已保存：${batchName}`, 'success');
+                showToast(`听写任务已保存：${taskName}`, 'success');
+                // 清空输入
+                clearNewTask();
+                // 刷新任务列表
                 refreshTasks();
             } else {
                 showToast(result.message || '保存失败', 'warning');
@@ -654,7 +739,7 @@
         }
     }
 
-    // 导入预设内容
+    // 导入预设内容（填充到新任务输入框）
     async function importPreset(presetId) {
         try {
             const response = await fetch(`/api/preset/import/${presetId}`, {
@@ -680,9 +765,9 @@
 
                 const detailData = detailResult.data;
 
-                // 填充词语到输入框
+                // 填充词语到新任务输入框
                 if (detailData.words) {
-                    document.getElementById('wordInput').value = detailData.words.join('\n');
+                    document.getElementById('newWordInput').value = detailData.words.join('\n');
                 } else if (detailData.items) {
                     // 古诗/古文格式
                     let allContent = [];
@@ -694,14 +779,14 @@
                             }
                         });
                     });
-                    document.getElementById('wordInput').value = allContent.join('\n');
+                    document.getElementById('newWordInput').value = allContent.join('\n');
                 }
 
-                document.getElementById('batchName').value = detailData.name || '';
+                document.getElementById('newTaskName').value = detailData.name || '';
                 showToast(`成功导入：${detailData.name}`, 'success');
 
                 // 触发自动保存
-                localStorage.setItem('dictationWords', document.getElementById('wordInput').value);
+                localStorage.setItem('dictationNewWords', document.getElementById('newWordInput').value);
             } else {
                 showToast(result.message || '导入失败', 'warning');
             }
