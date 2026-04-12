@@ -16,4 +16,7 @@ public class TaskDTO {
     private LocalDateTime createdAt;
     private Boolean isFavorite;
     private String status;  // 任务状态
+    private Integer currentIndex;  // 当前进度
+    private Integer correctCount;  // 正确数
+    private Integer wrongCount;  // 错误数
 }

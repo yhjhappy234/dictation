@@ -36,6 +36,15 @@ public class DictationTask {
     @Column(name = "status", nullable = false)
     private TaskStatus status = TaskStatus.NOT_STARTED;
 
+    @Column(name = "current_index")
+    private Integer currentIndex = 0;
+
+    @Column(name = "correct_count")
+    private Integer correctCount = 0;
+
+    @Column(name = "wrong_count")
+    private Integer wrongCount = 0;
+
     /**
      * 任务状态枚举
      */

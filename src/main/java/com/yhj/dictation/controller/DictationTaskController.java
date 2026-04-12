@@ -3,6 +3,7 @@ package com.yhj.dictation.controller;
 import com.yhj.dictation.dto.ApiResponse;
 import com.yhj.dictation.dto.TaskCreateRequest;
 import com.yhj.dictation.dto.TaskDTO;
+import com.yhj.dictation.dto.TaskProgressRequest;
 import com.yhj.dictation.dto.BatchCreateRequest;
 import com.yhj.dictation.entity.DictationTask;
 import com.yhj.dictation.entity.DictationTask.TaskStatus;
@@ -219,6 +220,54 @@ public class DictationTaskController {
         } catch (Exception e) {
             log.error("Failed to get tasks by status: {}", status, e);
             return ApiResponse.error("获取任务失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新任务进度
+     */
+    @PostMapping("/{id}/progress")
+    public ApiResponse<TaskDTO> updateProgress(@PathVariable Long id, @RequestBody TaskProgressRequest request) {
+        try {
+            DictationTask task = taskService.updateProgress(id, request.getCurrentIndex(), request.getCorrectCount(), request.getWrongCount());
+            return ApiResponse.success("进度已保存", taskService.toTaskDTO(task));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to update progress for task: {}", id, e);
+            return ApiResponse.error("保存进度失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 记录单个词语的听写结果
+     */
+    @PostMapping("/{id}/record")
+    public ApiResponse<TaskDTO> recordWordResult(@PathVariable Long id, @RequestParam String word, @RequestParam boolean isCorrect) {
+        try {
+            DictationTask task = taskService.recordWordResult(id, word, isCorrect);
+            return ApiResponse.success("听写结果已记录", taskService.toTaskDTO(task));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to record word result for task: {}", id, e);
+            return ApiResponse.error("记录失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 重置任务进度
+     */
+    @PostMapping("/{id}/reset-progress")
+    public ApiResponse<TaskDTO> resetProgress(@PathVariable Long id) {
+        try {
+            DictationTask task = taskService.resetProgress(id);
+            return ApiResponse.success("进度已重置", taskService.toTaskDTO(task));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to reset progress for task: {}", id, e);
+            return ApiResponse.error("重置进度失败: " + e.getMessage());
         }
     }
 

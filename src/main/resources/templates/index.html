@@ -36,8 +36,10 @@
 
                     <!-- 显示选中任务的词语 -->
                     <div class="mb-3" id="selectedTaskWords" style="display: none;">
-                        <label class="form-label fw-bold">任务词语：</label>
-                        <textarea class="form-control" id="wordInput" rows="8" readonly placeholder="选择任务后显示词语"></textarea>
+                        <label class="form-label fw-bold">任务词语列表：</label>
+                        <div class="word-list-container" id="wordListContainer">
+                            <!-- 词语列表将在这里动态生成 -->
+                        </div>
                     </div>
 
                     <!-- 任务名称显示 -->
@@ -46,10 +48,31 @@
                         <input type="text" class="form-control" id="batchName" readonly>
                     </div>
 
+                    <!-- 进度信息 -->
+                    <div class="mb-3" id="progressInfo" style="display: none;">
+                        <div class="row">
+                            <div class="col-4 text-center">
+                                <span class="badge bg-success">正确: <span id="savedCorrectCount">0</span></span>
+                            </div>
+                            <div class="col-4 text-center">
+                                <span class="badge bg-danger">错误: <span id="savedWrongCount">0</span></span>
+                            </div>
+                            <div class="col-4 text-center">
+                                <span class="badge bg-secondary">进度: <span id="savedProgress">0</span>/<span id="savedTotal">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 开始听写按钮 -->
                     <div class="d-grid gap-2 mb-4" id="startDictationSection" style="display: none;">
                         <button class="btn btn-primary btn-action" id="startBtn" onclick="startDictation()">
                             <i class="bi bi-play-circle me-2"></i>开始听写
+                        </button>
+                        <button class="btn btn-outline-warning btn-action" id="continueBtn" onclick="continueDictation()" style="display: none;">
+                            <i class="bi bi-arrow-repeat me-2"></i>继续听写
+                        </button>
+                        <button class="btn btn-outline-secondary btn-action" id="resetProgressBtn" onclick="resetTaskProgress()" style="display: none;">
+                            <i class="bi bi-refresh me-2"></i>重新开始
                         </button>
                     </div>
 

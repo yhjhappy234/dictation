@@ -184,7 +184,94 @@ public class DictationTaskService {
         dto.setCreatedAt(task.getCreatedAt());
         dto.setIsFavorite(task.getIsFavorite());
         dto.setStatus(task.getStatus().name());
+        dto.setCurrentIndex(task.getCurrentIndex());
+        dto.setCorrectCount(task.getCorrectCount());
+        dto.setWrongCount(task.getWrongCount());
         return dto;
+    }
+
+    /**
+     * 更新任务进度
+     */
+    @Transactional
+    public DictationTask updateProgress(Long id, Integer currentIndex, Integer correctCount, Integer wrongCount) {
+        Optional<DictationTask> taskOpt = taskRepository.findById(id);
+        if (taskOpt.isEmpty()) {
+            throw new IllegalArgumentException("Task not found: " + id);
+        }
+
+        DictationTask task = taskOpt.get();
+        task.setCurrentIndex(currentIndex);
+        task.setCorrectCount(correctCount);
+        task.setWrongCount(wrongCount);
+
+        // 如果有进度，状态改为进行中
+        if (currentIndex > 0 && task.getStatus() == TaskStatus.NOT_STARTED) {
+            task.setStatus(TaskStatus.IN_PROGRESS);
+        }
+
+        task = taskRepository.save(task);
+        log.info("Updated task {} progress: index={}, correct={}, wrong={}", id, currentIndex, correctCount, wrongCount);
+        return task;
+    }
+
+    /**
+     * 记录单个词语的听写结果
+     */
+    @Transactional
+    public DictationTask recordWordResult(Long id, String word, boolean isCorrect) {
+        Optional<DictationTask> taskOpt = taskRepository.findById(id);
+        if (taskOpt.isEmpty()) {
+            throw new IllegalArgumentException("Task not found: " + id);
+        }
+
+        DictationTask task = taskOpt.get();
+
+        // 更新进度
+        Integer currentIndex = task.getCurrentIndex() != null ? task.getCurrentIndex() : 0;
+        Integer correctCount = task.getCorrectCount() != null ? task.getCorrectCount() : 0;
+        Integer wrongCount = task.getWrongCount() != null ? task.getWrongCount() : 0;
+
+        currentIndex++;
+        if (isCorrect) {
+            correctCount++;
+        } else {
+            wrongCount++;
+        }
+
+        task.setCurrentIndex(currentIndex);
+        task.setCorrectCount(correctCount);
+        task.setWrongCount(wrongCount);
+
+        // 状态改为进行中
+        if (task.getStatus() == TaskStatus.NOT_STARTED) {
+            task.setStatus(TaskStatus.IN_PROGRESS);
+        }
+
+        task = taskRepository.save(task);
+        log.info("Recorded word result for task {}: word={}, correct={}", id, word, isCorrect);
+        return task;
+    }
+
+    /**
+     * 重置任务进度（用于重新开始）
+     */
+    @Transactional
+    public DictationTask resetProgress(Long id) {
+        Optional<DictationTask> taskOpt = taskRepository.findById(id);
+        if (taskOpt.isEmpty()) {
+            throw new IllegalArgumentException("Task not found: " + id);
+        }
+
+        DictationTask task = taskOpt.get();
+        task.setCurrentIndex(0);
+        task.setCorrectCount(0);
+        task.setWrongCount(0);
+        task.setStatus(TaskStatus.NOT_STARTED);
+
+        task = taskRepository.save(task);
+        log.info("Reset progress for task: {}", id);
+        return task;
     }
 
     /**
