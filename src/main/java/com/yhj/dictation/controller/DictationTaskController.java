@@ -8,8 +8,10 @@ import com.yhj.dictation.dto.BatchCreateRequest;
 import com.yhj.dictation.entity.DictationTask;
 import com.yhj.dictation.entity.DictationTask.TaskStatus;
 import com.yhj.dictation.entity.DictationBatch;
+import com.yhj.dictation.entity.TaskRecord;
 import com.yhj.dictation.service.DictationTaskService;
 import com.yhj.dictation.service.DictationBatchService;
+import com.yhj.dictation.service.TaskRecordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +31,7 @@ public class DictationTaskController {
 
     private final DictationTaskService taskService;
     private final DictationBatchService batchService;
+    private final TaskRecordService taskRecordService;
 
     /**
      * 创建任务模板
@@ -340,6 +343,34 @@ public class DictationTaskController {
         } catch (Exception e) {
             log.error("Failed to get favorite tasks", e);
             return ApiResponse.error("获取收藏任务失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取任务的听写记录
+     */
+    @GetMapping("/{id}/records")
+    public ApiResponse<List<TaskRecord>> getTaskRecords(@PathVariable Long id) {
+        try {
+            List<TaskRecord> records = taskRecordService.getRecordsByTaskId(id);
+            return ApiResponse.success(records);
+        } catch (Exception e) {
+            log.error("Failed to get task records: {}", id, e);
+            return ApiResponse.error("获取听写记录失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取所有听写人列表
+     */
+    @GetMapping("/dictators")
+    public ApiResponse<List<String>> getDictators() {
+        try {
+            List<String> dictators = taskService.getAllDictators();
+            return ApiResponse.success(dictators);
+        } catch (Exception e) {
+            log.error("Failed to get dictators", e);
+            return ApiResponse.error("获取听写人列表失败: " + e.getMessage());
         }
     }
 }

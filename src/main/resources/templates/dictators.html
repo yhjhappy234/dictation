@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head th:replace="~{layout :: head('听写小助手 - 听写人管理')}"></head>
+<body>
+<!-- 导航栏 -->
+<nav th:replace="~{layout :: navbar('dictators')}"></nav>
+
+<div class="main-container">
+    <h2 class="mb-4">
+        <i class="bi bi-people me-2"></i>听写人管理
+    </h2>
+
+    <!-- 统计区域 -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-number" id="totalDictators">0</div>
+                <div class="stat-label">听写人总数</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-number text-success" id="totalTasks">0</div>
+                <div class="stat-label">总听写任务数</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-number text-primary" id="completedTasks">0</div>
+                <div class="stat-label">已完成任务数</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 听写人列表 -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-list-ul me-2"></i>听写人列表
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>听写人</th>
+                            <th>听写任务数</th>
+                            <th>已完成任务</th>
+                            <th>总正确数</th>
+                            <th>总错误数</th>
+                            <th>正确率</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dictatorList">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页脚 -->
+<footer th:replace="~{layout :: footer}"></footer>
+
+<!-- 脚本 -->
+<div th:replace="~{layout :: scripts}"></div>
+
+<script>
+    // 全局变量
+    let dictators = [];
+
+    // 页面加载
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDictators();
+    });
+
+    // 加载听写人数据
+    async function loadDictators() {
+        try {
+            // 获取所有听写人
+            const dictatorsResponse = await fetch('/api/tasks/dictators');
+            const dictatorsResult = await dictatorsResponse.json();
+
+            if (dictatorsResult.success && dictatorsResult.data) {
+                dictators = dictatorsResult.data;
+                renderDictatorList();
+                updateStats();
+            }
+
+            // 获取所有任务统计
+            const tasksResponse = await fetch('/api/tasks');
+            const tasksResult = await tasksResponse.json();
+
+            if (tasksResult.success && tasksResult.data) {
+                calculateDictatorStats(tasksResult.data);
+            }
+        } catch (error) {
+            console.error('加载听写人数据失败:', error);
+        }
+    }
+
+    // 计算每个听写人的统计数据
+    function calculateDictatorStats(tasks) {
+        const stats = {};
+
+        tasks.forEach(task => {
+            const dictator = task.dictator || '未知';
+            if (!stats[dictator]) {
+                stats[dictator] = {
+                    taskCount: 0,
+                    completedCount: 0,
+                    correctCount: 0,
+                    wrongCount: 0
+                };
+            }
+            stats[dictator].taskCount++;
+            if (task.status === 'COMPLETED') {
+                stats[dictator].completedCount++;
+            }
+            stats[dictator].correctCount += task.correctCount || 0;
+            stats[dictator].wrongCount += task.wrongCount || 0;
+        });
+
+        // 渲染列表
+        renderDictatorList(stats);
+        updateStats(tasks, stats);
+    }
+
+    // 渲染听写人列表
+    function renderDictatorList(stats = {}) {
+        const tbody = document.getElementById('dictatorList');
+        tbody.innerHTML = '';
+
+        if (dictators.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">暂无听写人数据</td></tr>';
+            return;
+        }
+
+        dictators.forEach(dictator => {
+            const stat = stats[dictator] || {
+                taskCount: 0,
+                completedCount: 0,
+                correctCount: 0,
+                wrongCount: 0
+            };
+
+            const total = stat.correctCount + stat.wrongCount;
+            const accuracy = total > 0 ? Math.round(stat.correctCount / total * 100) : 0;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong><i class="bi bi-person me-2"></i>${dictator}</strong></td>
+                    <td><span class="badge bg-info">${stat.taskCount}</span></td>
+                    <td><span class="badge bg-success">${stat.completedCount}</span></td>
+                    <td><span class="badge bg-success">${stat.correctCount}</span></td>
+                    <td><span class="badge bg-danger">${stat.wrongCount}</span></td>
+                    <td>
+                        <div class="progress" style="height: 20px; width: 100px;">
+                            <div class="progress-bar bg-success" style="width: ${accuracy}%">${accuracy}%</div>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewTasks('${dictator}')">
+                            <i class="bi bi-eye me-1"></i>查看任务
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // 更新统计
+    function updateStats(tasks = [], stats = {}) {
+        document.getElementById('totalDictators').textContent = dictators.length;
+        document.getElementById('totalTasks').textContent = tasks.length || 0;
+        document.getElementById('completedTasks').textContent = tasks.filter(t => t.status === 'COMPLETED').length || 0;
+    }
+
+    // 查看指定听写人的任务
+    function viewTasks(dictator) {
+        // 跳转到任务管理页面，带上听写人筛选参数
+        window.location.href = `/tasks?dictator=${encodeURIComponent(dictator)}`;
+    }
+</script>
+</body>
+</html>

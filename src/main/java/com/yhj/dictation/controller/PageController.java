@@ -56,4 +56,12 @@ public class PageController {
     public String tasks() {
         return "tasks";
     }
+
+    /**
+     * 听写人管理页面
+     */
+    @GetMapping("/dictators")
+    public String dictators() {
+        return "dictators";
+    }
 }

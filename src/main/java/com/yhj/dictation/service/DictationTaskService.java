@@ -322,4 +322,17 @@ public class DictationTaskService {
                 .map(String::trim)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 获取所有听写人列表（去重）
+     */
+    public List<String> getAllDictators() {
+        List<DictationTask> tasks = taskRepository.findAll();
+        return tasks.stream()
+                .map(DictationTask::getDictator)
+                .filter(d -> d != null && !d.trim().isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
 }

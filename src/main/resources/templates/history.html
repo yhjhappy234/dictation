@@ -10,6 +10,22 @@
         <i class="bi bi-clock-history me-2"></i>听写历史记录
     </h2>
 
+    <!-- 切换选项卡 -->
+    <ul class="nav nav-tabs mb-4" id="historyTabs">
+        <li class="nav-item">
+            <a class="nav-link active" href="#" onclick="showBatchHistory()">
+                <i class="bi bi-list-ul me-2"></i>批次历史
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showTaskHistory()">
+                <i class="bi bi-task-check me-2"></i>任务历史
+            </a>
+        </li>
+    </ul>
+
+    <!-- 批次历史区域 -->
+    <div id="batchHistorySection">
     <!-- 筛选区域 -->
     <div class="filter-section">
         <div class="row g-3 align-items-end">
@@ -75,6 +91,36 @@
         <ul class="pagination justify-content-center" id="pagination">
         </ul>
     </nav>
+    </div>
+
+    <!-- 任务历史区域 -->
+    <div id="taskHistorySection" style="display: none;">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTasks">0</div>
+                    <div class="stat-label">已完成任务数</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number text-success" id="totalTaskCorrect">0</div>
+                    <div class="stat-label">总正确数</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number text-danger" id="totalTaskWrong">0</div>
+                    <div class="stat-label">总错误数</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 任务列表 -->
+        <div class="row" id="taskHistoryList">
+            <!-- 任务卡片将通过JavaScript动态加载 -->
+        </div>
+    </div>
 </div>
 
 <!-- 详情弹窗 -->
@@ -89,13 +135,19 @@
             </div>
             <div class="modal-body">
                 <div class="row mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="stat-card">
                             <h6 class="text-muted">批次名称</h6>
                             <h4 id="modalBatchName">-</h4>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <h6 class="text-muted">听写人</h6>
+                            <h4 id="modalDictator">-</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="stat-card">
                             <h6 class="text-muted">听写时间</h6>
                             <h4 id="modalDate">-</h4>
@@ -172,8 +224,186 @@
     // 页面加载
     document.addEventListener('DOMContentLoaded', function() {
         loadBatches();
+        loadTaskHistory();
         setDefaultDates();
     });
+
+    // 显示批次历史
+    function showBatchHistory() {
+        document.getElementById('batchHistorySection').style.display = 'block';
+        document.getElementById('taskHistorySection').style.display = 'none';
+        document.querySelectorAll('#historyTabs .nav-link').forEach(link => link.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    // 显示任务历史
+    function showTaskHistory() {
+        document.getElementById('batchHistorySection').style.display = 'none';
+        document.getElementById('taskHistorySection').style.display = 'block';
+        document.querySelectorAll('#historyTabs .nav-link').forEach(link => link.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    // 加载任务历史
+    async function loadTaskHistory() {
+        try {
+            const response = await fetch('/api/tasks/status/COMPLETED');
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                renderTaskHistoryList(result.data);
+            }
+        } catch (error) {
+            console.error('加载任务历史失败:', error);
+        }
+    }
+
+    // 渲染任务历史列表
+    function renderTaskHistoryList(tasks) {
+        const container = document.getElementById('taskHistoryList');
+        container.innerHTML = '';
+
+        // 统计总数
+        let totalCorrect = 0;
+        let totalWrong = 0;
+
+        tasks.forEach(task => {
+            totalCorrect += task.correctCount || 0;
+            totalWrong += task.wrongCount || 0;
+
+            const accuracy = task.wordCount > 0 ?
+                Math.round((task.correctCount / task.wordCount) * 100) : 0;
+
+            const cardHtml = `
+                <div class="col-md-6 mb-3">
+                    <div class="card history-card" onclick="showTaskDetail(${task.id})">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-task-check me-2 text-primary"></i>${task.taskName}
+                            </h5>
+                            <div class="row mt-3">
+                                <div class="col-4 text-center">
+                                    <span class="badge bg-info">${task.wordCount}个词</span>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <span class="badge bg-success">${task.correctCount}正确</span>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <span class="badge bg-danger">${task.wrongCount}错误</span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-person me-1"></i>${task.dictator || '未知'} |
+                                    <i class="bi bi-calendar me-1"></i>${formatDate(task.createdAt)}
+                                </small>
+                            </div>
+                            <div class="progress mt-2" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: ${accuracy}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += cardHtml;
+        });
+
+        // 更新统计
+        document.getElementById('totalTasks').textContent = tasks.length;
+        document.getElementById('totalTaskCorrect').textContent = totalCorrect;
+        document.getElementById('totalTaskWrong').textContent = totalWrong;
+    }
+
+    // 显示任务详情
+    async function showTaskDetail(taskId) {
+        try {
+            const response = await fetch(`/api/tasks/${taskId}`);
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const task = result.data;
+
+                // 设置弹窗内容
+                document.getElementById('modalBatchName').textContent = task.taskName;
+                document.getElementById('modalDictator').textContent = task.dictator || '未知';
+                document.getElementById('modalDate').textContent = formatDate(task.createdAt);
+                document.getElementById('modalWordCount').textContent = task.wordCount;
+                document.getElementById('modalCorrect').textContent = task.correctCount;
+                document.getElementById('modalWrong').textContent = task.wrongCount;
+
+                const accuracy = task.wordCount > 0 ?
+                    Math.round((task.correctCount / task.wordCount) * 100) : 0;
+                document.getElementById('modalProgress').style.width = accuracy + '%';
+                document.getElementById('modalProgress').textContent = accuracy + '%';
+
+                // 加载词语列表
+                const wordListBody = document.getElementById('modalWordList');
+                wordListBody.innerHTML = '';
+
+                // 获取词语记录
+                const recordResponse = await fetch(`/api/tasks/${taskId}/records`);
+                const recordResult = await recordResponse.json();
+
+                if (recordResult.success && recordResult.data) {
+                    recordResult.data.forEach(record => {
+                        const statusBadge = record.isCorrect ?
+                            '<span class="badge bg-success">正确</span>' :
+                            '<span class="badge bg-danger">错误</span>';
+
+                        wordListBody.innerHTML += `
+                            <tr>
+                                <td><strong>${record.word}</strong></td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="speakWord('${record.word}')">
+                                        <i class="bi bi-volume-up"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    // 如果没有记录，显示词语列表
+                    task.words.forEach(word => {
+                        wordListBody.innerHTML += `
+                            <tr>
+                                <td><strong>${word}</strong></td>
+                                <td><span class="badge bg-success">正确</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="speakWord('${word}')">
+                                        <i class="bi bi-volume-up"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                // 保存当前任务ID用于重听
+                currentBatchId = taskId;
+
+                const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+                modal.show();
+            }
+        } catch (error) {
+            console.error('加载任务详情失败:', error);
+        }
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('zh-CN');
+    }
+
+    // 朗读词语
+    function speakWord(word) {
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'zh-CN';
+        utterance.rate = 0.8;
+        speechSynthesis.speak(utterance);
+    }
 
     // 设置默认日期
     function setDefaultDates() {
