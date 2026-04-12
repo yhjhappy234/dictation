@@ -50,9 +50,9 @@ dictation/
 - **框架**: Spring Boot 4.0.5
 - **Java版本**: JDK 21
 - **数据库**: SQLite 3
-- **ORM**: Spring Data JPA (Hibernate 7.0)
+- **ORM**: Spring Data JPA (Hibernate 6.6.11)
 - **模板引擎**: Thymeleaf 3.1
-- **JSON处理**: Jackson 3.1 (tools.jackson)
+- **JSON处理**: Jackson (com.fasterxml.jackson)
 - **构建工具**: Maven 3.11+
 
 ### 前端技术栈
@@ -281,22 +281,27 @@ java --enable-preview -jar target/dictation-1.0.0.jar
 │ - words         │     │ - total_words   │     │ - batch_id (FK) │
 │ - word_count    │     │ - completed     │     │ - sort_order    │
 │ - status        │     │ - status        │     │ - status        │
-│ - is_favorite   │     │ - created_at    │     │ - created_at    │
-│ - created_at    │     └─────────────────┘     └─────────────────┘
-└─────────────────┘                                   │
-                                                      │ 1:N
-                                                      ▼
-        ┌─────────────────┐     ┌─────────────────┐
-        │ dictation_record│     │ difficult_word  │
-        │                 │     │                 │
-        │ - id            │     │ - id            │
-        │ - word_id (FK)  │     │ - word_id (FK)  │
-        │ - batch_id (FK) │     │ - error_count   │
-        │ - start_time    │     │ - avg_duration  │
-        │ - end_time      │     │ - mastery_level │
-        │ - duration      │     │ - last_practice │
-        │ - repeat_count  │     └─────────────────┘
-        └─────────────────┘
+│ - correct_count │     │ - created_at    │     │ - created_at    │
+│ - wrong_count   │     └─────────────────┘     └─────────────────┘
+│ - dictator      │                                   │
+│ - is_favorite   │                                   │ 1:N
+│ - created_at    │                                   ▼
+└─────────────────┘             ┌─────────────────┐     ┌─────────────────┐
+        │                       │ dictation_record│     │ difficult_word  │
+        │ 1:N                   │                 │     │                 │
+        ▼                       │ - id            │     │ - id            │
+┌─────────────────┐             │ - word_id (FK)  │     │ - word_text     │
+│   task_record   │             │ - batch_id (FK) │     │ - dictator      │
+│                 │             │ - start_time    │     │ - error_count   │
+│ - id            │             │ - end_time      │     │ - avg_duration  │
+│ - task_id (FK)  │             │ - duration      │     │ - mastery_level │
+│ - word          │             │ - repeat_count  │     │ - last_practice │
+│ - is_correct    │             └─────────────────┘     └─────────────────┘
+│ - duration      │
+│ - read_count    │
+│ - start_time    │
+│ - end_time      │
+└─────────────────┘
 ```
 
 ## 特色功能
@@ -329,7 +334,7 @@ java --enable-preview -jar target/dictation-1.0.0.jar
 
 ## 开发团队
 
-基于 Claude Code multi-agent 模式开发
+YHJ-TECH 结合 AI Coding 模式开发
 
 ## 版本历史
 
@@ -349,8 +354,7 @@ java --enable-preview -jar target/dictation-1.0.0.jar
 
 - v1.2.0 (2026-04-12): 框架升级
   - Spring Boot升级至4.0.5（最新稳定版）
-  - Jackson升级至3.1（包名迁移至tools.jackson）
-  - Hibernate升级至7.0.6
+  - Hibernate升级至6.6.11
   - 测试框架适配Spring Boot 4.0（移除@WebMvcTest/@MockBean）
   - 230个单元测试全部通过
   - 从git中移除编译产物（target/目录）
