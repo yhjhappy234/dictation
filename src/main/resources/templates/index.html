@@ -64,7 +64,7 @@
                     </div>
 
                     <!-- 听写人选择 -->
-                    <div class="mb-3" id="dictatorSection" style="display: none;">
+                    <div class="mb-3" id="dictatorSection">
                         <label class="form-label fw-bold">听写人：</label>
                         <div class="d-flex gap-2">
                             <input type="text" class="form-control" id="dictatorInput" value="凡凡" placeholder="输入听写人姓名">
@@ -776,7 +776,6 @@
             document.getElementById('selectedTaskWords').style.display = 'none';
             document.getElementById('selectedTaskName').style.display = 'none';
             document.getElementById('progressInfo').style.display = 'none';
-            document.getElementById('dictatorSection').style.display = 'none';
             document.getElementById('startDictationSection').style.display = 'none';
             return;
         }
@@ -798,7 +797,6 @@
                 // 显示任务详情区域
                 document.getElementById('selectedTaskWords').style.display = 'block';
                 document.getElementById('selectedTaskName').style.display = 'block';
-                document.getElementById('dictatorSection').style.display = 'block';
 
                 // 设置听写人（如果有保存的话，否则默认为凡凡）
                 document.getElementById('dictatorInput').value = task.dictator || '凡凡';
