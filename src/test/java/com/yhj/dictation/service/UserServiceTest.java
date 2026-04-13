@@ -234,6 +234,15 @@ class UserServiceTest {
             assertNotNull(result);
             verify(userRepository).save(any(User.class));
         }
+
+        @Test
+        @DisplayName("用户不存在")
+        void updateRole_userNotFound() {
+            when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+            assertThrows(IllegalArgumentException.class, () ->
+                userService.updateRole(999L, User.UserRole.ADMIN));
+        }
     }
 
     @Nested
@@ -253,6 +262,15 @@ class UserServiceTest {
         }
 
         @Test
+        @DisplayName("禁用用户 - 用户不存在")
+        void disableUser_userNotFound() {
+            when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+            assertThrows(IllegalArgumentException.class, () ->
+                userService.disableUser(999L));
+        }
+
+        @Test
         @DisplayName("启用用户成功")
         void enableUser_success() {
             testUser.setStatus(User.UserStatus.DISABLED);
@@ -263,6 +281,15 @@ class UserServiceTest {
 
             assertNotNull(result);
             assertEquals(User.UserStatus.ACTIVE, result.getStatus());
+        }
+
+        @Test
+        @DisplayName("启用用户 - 用户不存在")
+        void enableUser_userNotFound() {
+            when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+            assertThrows(IllegalArgumentException.class, () ->
+                userService.enableUser(999L));
         }
     }
 
@@ -343,6 +370,59 @@ class UserServiceTest {
             boolean result = userService.isAdmin(1L);
 
             assertFalse(result);
+        }
+
+        @Test
+        @DisplayName("检查是否是管理员 - 用户不存在")
+        void isAdmin_userNotFound() {
+            when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+            boolean result = userService.isAdmin(999L);
+
+            assertFalse(result);
+        }
+
+        @Test
+        @DisplayName("根据用户名获取用户 - 成功")
+        void getUserByUsername_success() {
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+
+            Optional<User> result = userService.getUserByUsername("testuser");
+
+            assertTrue(result.isPresent());
+            assertEquals("testuser", result.get().getUsername());
+        }
+
+        @Test
+        @DisplayName("根据用户名获取用户 - 不存在")
+        void getUserByUsername_notFound() {
+            when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+
+            Optional<User> result = userService.getUserByUsername("nonexistent");
+
+            assertFalse(result.isPresent());
+        }
+
+        @Test
+        @DisplayName("初始化默认用户 - 用户不存在时创建")
+        void initDefaultUser_create() {
+            when(userRepository.existsByUsername("admin")).thenReturn(false);
+            when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+            when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+            userService.initDefaultUser("admin", "password");
+
+            verify(userRepository).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("初始化默认用户 - 用户已存在不创建")
+        void initDefaultUser_alreadyExists() {
+            when(userRepository.existsByUsername("admin")).thenReturn(true);
+
+            userService.initDefaultUser("admin", "password");
+
+            verify(userRepository, never()).save(any(User.class));
         }
     }
 }
