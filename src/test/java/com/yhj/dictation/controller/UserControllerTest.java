@@ -291,5 +291,216 @@ class UserControllerTest {
                         .andExpect(jsonPath("$.message").value("不能删除自己"));
             }
         }
+
+        @Test
+        @DisplayName("非管理员不能删除用户")
+        void deleteUser_notAdmin() throws Exception {
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(false);
+
+                mockMvc.perform(delete("/api/users/1"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+
+        @Test
+        @DisplayName("删除用户失败")
+        void deleteUser_fail() throws Exception {
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(2L);
+                doThrow(new IllegalArgumentException("用户不存在")).when(userService).deleteUser(anyLong());
+
+                mockMvc.perform(delete("/api/users/999"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("createUser 验证测试")
+    class CreateUserValidationTests {
+
+        @Test
+        @DisplayName("用户名为空")
+        void createUser_emptyUsername() throws Exception {
+            UserCreateRequest request = new UserCreateRequest();
+            request.setUsername("");
+            request.setPassword("password");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+
+                mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.message").value("用户名不能为空"));
+            }
+        }
+
+        @Test
+        @DisplayName("密码为空")
+        void createUser_emptyPassword() throws Exception {
+            UserCreateRequest request = new UserCreateRequest();
+            request.setUsername("newuser");
+            request.setPassword("");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+
+                mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.message").value("密码不能为空"));
+            }
+        }
+
+        @Test
+        @DisplayName("无效角色")
+        void createUser_invalidRole() throws Exception {
+            UserCreateRequest request = new UserCreateRequest();
+            request.setUsername("newuser");
+            request.setPassword("password");
+            request.setRole("INVALID_ROLE");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+
+                mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.message").value("无效的角色: INVALID_ROLE"));
+            }
+        }
+
+        @Test
+        @DisplayName("创建ADMIN角色用户")
+        void createUser_adminRole() throws Exception {
+            UserCreateRequest request = new UserCreateRequest();
+            request.setUsername("newadmin");
+            request.setPassword("password");
+            request.setRole("ADMIN");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.createUser(anyString(), anyString(), any())).thenReturn(testUser);
+
+                mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(true));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("getUserById 方法测试")
+    class GetUserByIdTests {
+
+        @Test
+        @DisplayName("管理员获取用户详情成功")
+        void getUserById_admin() throws Exception {
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(anyLong())).thenReturn(java.util.Optional.of(testUser));
+
+                mockMvc.perform(get("/api/users/1"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(true));
+            }
+        }
+
+        @Test
+        @DisplayName("非管理员不能获取用户详情")
+        void getUserById_notAdmin() throws Exception {
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(false);
+
+                mockMvc.perform(get("/api/users/1"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+
+        @Test
+        @DisplayName("用户不存在")
+        void getUserById_notFound() throws Exception {
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(anyLong())).thenReturn(java.util.Optional.empty());
+
+                mockMvc.perform(get("/api/users/999"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("updateMyPassword 验证测试")
+    class UpdatePasswordValidationTests {
+
+        @Test
+        @DisplayName("新密码为空")
+        void updateMyPassword_emptyPassword() throws Exception {
+            PasswordUpdateRequest request = new PasswordUpdateRequest();
+            request.setNewPassword("");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
+
+                mockMvc.perform(post("/api/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.message").value("新密码不能为空"));
+            }
+        }
+
+        @Test
+        @DisplayName("修改密码失败")
+        void updateMyPassword_fail() throws Exception {
+            PasswordUpdateRequest request = new PasswordUpdateRequest();
+            request.setNewPassword("newPassword");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
+                when(userService.updatePassword(anyLong(), anyString())).thenThrow(new IllegalArgumentException("用户不存在"));
+
+                mockMvc.perform(post("/api/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("updateMyAvatar 验证测试")
+    class UpdateAvatarValidationTests {
+
+        @Test
+        @DisplayName("修改头像失败")
+        void updateMyAvatar_fail() throws Exception {
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
+                when(userService.updateAvatar(anyLong(), anyString())).thenThrow(new IllegalArgumentException("头像不存在"));
+
+                mockMvc.perform(post("/api/users/me/avatar?avatar=invalid.png"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
     }
 }
