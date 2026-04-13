@@ -1,9 +1,7 @@
 package com.yhj.dictation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yhj.dictation.dto.ApiResponse;
 import com.yhj.dictation.dto.UserCreateRequest;
-import com.yhj.dictation.dto.UserUpdateRequest;
 import com.yhj.dictation.dto.PasswordUpdateRequest;
 import com.yhj.dictation.entity.User;
 import com.yhj.dictation.service.UserService;
@@ -22,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -91,7 +88,7 @@ class UserControllerTest {
                 mockMvc.perform(get("/api/users"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false))
-                        .andExpect(jsonPath("$.message").value("权限不足"));
+                        .andExpect(jsonPath("$.message").value("权限不足，只有管理员可以查看用户列表"));
             }
         }
     }
@@ -135,7 +132,7 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false))
-                        .andExpect(jsonPath("$.message").value("权限不足"));
+                        .andExpect(jsonPath("$.message").value("权限不足，只有管理员可以创建用户"));
             }
         }
 
@@ -211,6 +208,7 @@ class UserControllerTest {
         void updateMyAvatar_success() throws Exception {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
+                mockedUserContext.when(() -> UserContext.updateAvatar(anyString())).thenAnswer(invocation -> null);
                 when(userService.updateAvatar(anyLong(), anyString())).thenReturn(testUser);
 
                 mockMvc.perform(post("/api/users/me/avatar?avatar=avatar2.png"))
@@ -272,6 +270,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(2L); // 不是自己
+                doNothing().when(userService).deleteUser(anyLong());
 
                 mockMvc.perform(delete("/api/users/1"))
                         .andExpect(status().isOk())

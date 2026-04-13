@@ -600,9 +600,9 @@ class DictationTaskControllerTest {
             batch.setId(1L);
 
             when(taskService.getTaskById(1L)).thenReturn(Optional.of(testTask));
-            doNothing().when(taskService).startTask(1L);
+            when(taskService.startTask(1L)).thenReturn(testTask);
             when(batchService.createBatch(any())).thenReturn(batch);
-            doNothing().when(batchService).startBatch(1L);
+            when(batchService.startBatch(1L)).thenReturn(batch);
 
             // When & Then
             mockMvc.perform(post("/api/tasks/1/dictation"))

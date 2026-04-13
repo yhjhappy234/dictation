@@ -13,11 +13,21 @@ dictation/
 │   ├── main/
 │   │   ├── java/com/yhj/dictation/
 │   │   │   ├── DictationApplication.java    # 主启动类
+│   │   │   ├── annotation/                  # 自定义注解
+│   │   │   │   └── AuditLog.java            # 审计日志注解
+│   │   │   ├── aspect/                      # AOP切面
+│   │   │   │   └── AuditAspect.java         # 审计日志切面
 │   │   │   ├── config/                      # 配置类
+│   │   │   │   ├── AsyncConfig.java         # 异步配置
 │   │   │   │   ├── CorsConfig.java          # 跨域配置
+│   │   │   │   ├── DataInitializer.java     # 数据初始化
 │   │   │   │   ├── GlobalExceptionHandler.java # 全局异常处理
-│   │   │   │   └── JpaConfig.java           # JPA配置
+│   │   │   │   ├── JpaConfig.java           # JPA配置
+│   │   │   │   ├── SecurityConfig.java      # 安全配置
+│   │   │   │   └── WebConfig.java           # Web配置（拦截器）
 │   │   │   ├── controller/                  # 控制器
+│   │   │   │   ├── AuthController.java      # 认证控制器
+│   │   │   │   ├── UserController.java      # 用户管理控制器
 │   │   │   │   ├── DictationBatchController.java
 │   │   │   │   ├── DictationTaskController.java  # 听写任务管理
 │   │   │   │   ├── DictationRecordController.java
@@ -28,25 +38,39 @@ dictation/
 │   │   │   │   └── PageController.java       # 页面控制器
 │   │   │   ├── dto/                         # 数据传输对象
 │   │   │   │   ├── ApiResponse.java
+│   │   │   │   ├── LoginRequest.java        # 登录请求
+│   │   │   │   ├── UserInfoDTO.java         # 用户信息
+│   │   │   │   ├── UserCreateRequest.java   # 创建用户请求
+│   │   │   │   ├── PasswordUpdateRequest.java # 密码更新请求
 │   │   │   │   ├── TaskDTO.java
 │   │   │   │   ├── TaskProgressRequest.java
 │   │   │   │   ├── DifficultWordDTO.java
 │   │   │   │   └── ... (其他DTO)
 │   │   │   ├── entity/                      # JPA实体类
+│   │   │   │   ├── User.java                # 用户实体
+│   │   │   │   ├── AuditLogEntity.java      # 审计日志实体
 │   │   │   │   ├── DictationTask.java       # 听写任务实体
 │   │   │   │   ├── TaskRecord.java          # 任务听写记录
 │   │   │   │   ├── DifficultWord.java       # 生词实体
 │   │   │   │   └── ... (其他实体)
+│   │   │   ├── interceptor/                 # 拦截器
+│   │   │   │   └── AuthInterceptor.java     # 认证拦截器
 │   │   │   ├── repository/                  # JPA Repository接口
+│   │   │   │   ├── UserRepository.java      # 用户Repository
+│   │   │   │   ├── AuditLogEntityRepository.java # 审计日志Repository
 │   │   │   │   ├── DictationTaskRepository.java
 │   │   │   │   ├── TaskRecordRepository.java
 │   │   │   │   ├── DifficultWordRepository.java
 │   │   │   │   └── ... (其他Repository)
-│   │   │   └── service/                     # 业务服务层
-│   │   │       ├── DictationTaskService.java
-│   │   │       ├── TaskRecordService.java
-│   │   │       ├── DifficultWordService.java
-│   │   │       └── ... (其他Service)
+│   │   │   ├── service/                     # 业务服务层
+│   │   │   │   ├── UserService.java         # 用户服务
+│   │   │   │   ├── AuditLogService.java     # 审计日志服务
+│   │   │   │   ├── DictationTaskService.java
+│   │   │   │   ├── TaskRecordService.java
+│   │   │   │   ├── DifficultWordService.java
+│   │   │   │   └── ... (其他Service)
+│   │   │   └── util/                        # 工具类
+│   │   │       └── UserContext.java         # 用户上下文
 │   │   └── resources/
 │   │       ├── application.yml              # 应用配置
 │   │       ├── preset-content/              # 预设听写内容
@@ -65,6 +89,8 @@ dictation/
 │   │       │   ├── grade5-up.json           # 五年级上册词语
 │   │       │   └── grade5-down.json         # 五年级下册词语
 │   │       ├── templates/                   # Thymeleaf模板
+│   │       │   ├── login.html               # 登录页面
+│   │       │   ├── user-management.html     # 用户管理页面
 │   │       │   ├── index.html               # 首页（听写页面）
 │   │       │   ├── tasks.html               # 任务管理页面
 │   │       │   ├── history.html             # 听写历史页面
@@ -73,6 +99,7 @@ dictation/
 │   │       │   ├── dictators.html           # 听写人管理页面
 │   │       │   └── layout.html              # 布局模板
 │   │       └── static/                      # 静态资源
+│   │           └── images/avatars/          # 用户头像
 │   └── test/                                # 测试目录
 └── target/                                  # 编译输出目录
 ```
@@ -85,13 +112,14 @@ dictation/
 - **数据库**: SQLite 3
 - **ORM**: Spring Data JPA (Hibernate 6.6.11)
 - **模板引擎**: Thymeleaf 3.1
+- **安全**: Spring Security (密码加密)
 - **JSON处理**: Jackson (com.fasterxml.jackson)
 - **构建工具**: Maven 3.11+
 
 ### 前端技术栈
 - **模板引擎**: Thymeleaf (服务端渲染)
 - **JavaScript**: 原生 JavaScript (ES6+)
-- **样式**: CSS3
+- **样式**: CSS3 + Bootstrap 5
 - **图表库**: Chart.js 4.4
 
 ### 语音交互
@@ -112,17 +140,32 @@ dictation/
 │  └──────────────────────────────────────────────────────────┘  │
 │                              │                                  │
 │  ┌──────────────────────────────────────────────────────────┐  │
+│  │              拦截器层 (AuthInterceptor)                   │  │
+│  │  ┌─────────────────────────────────────────────────┐     │  │
+│  │  │  登录认证拦截 - 保护所有API和页面请求            │     │  │
+│  │  └─────────────────────────────────────────────────┘     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
 │  │                    Controller 层                          │  │
 │  │  ┌─────────────────┐  ┌─────────────────────────────┐   │  │
 │  │  │  PageController │  │    REST API Controllers     │   │  │
-│  │  │   (页面路由)    │  │  (Batch/Word/Record/...)   │   │  │
+│  │  │   (页面路由)    │  │  (Auth/User/Batch/Word...) │   │  │
 │  │  └─────────────────┘  └─────────────────────────────┘   │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                AOP切面 (AuditAspect)                      │  │
+│  │  ┌─────────────────────────────────────────────────┐     │  │
+│  │  │  @AuditLog注解 - 异步记录操作日志               │     │  │
+│  │  └─────────────────────────────────────────────────┘     │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                              │                                  │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │                    Service 业务层                         │  │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │  │
-│  │  │ BatchService│  │ WordService │  │RecordService│      │  │
+│  │  │ UserService │  │ BatchService│  │ WordService │      │  │
+│  │  │AuditService │  │RecordService│  │ ...更多...  │      │  │
 │  │  └─────────────┘  └─────────────┘  └─────────────┘      │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                              │                                  │
@@ -136,20 +179,27 @@ dictation/
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │                   SQLite Database                        │  │
 │  │  ┌─────────────────────────────────────────────┐        │  │
-│  │  │ dictation_batch │ word │ dictation_record  │        │  │
-│  │  │ difficult_word │ suggestion              │        │  │
+│  │  │ user | audit_log | dictation_batch | word   │        │  │
+│  │  │ dictation_task | task_record | difficult_word│       │  │
 │  │  └─────────────────────────────────────────────┘        │  │
 │  └──────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
-
-单体架构优势：
-  - 简化部署：一个应用包含所有功能，一次启动即可运行
-  - 统一管理：前后端代码在同一项目中，便于维护
-  - 减少复杂度：无需前后端分离的额外配置和依赖
-  - 开发效率高：Thymeleaf模板热更新，快速迭代
 ```
 
 ## 核心功能
+
+### 用户认证功能
+- **登录认证**：所有操作需要登录后才能进行
+- **用户角色**：支持管理员(ADMIN)和普通用户(USER)两种角色
+- **用户管理**：管理员可以添加、删除、修改用户
+- **密码管理**：使用BCrypt加密，普通用户可修改自己的密码
+- **头像系统**：20个内置头像，用户可以更换头像
+- **Session管理**：登录有效期2小时
+
+### 审计日志功能
+- **操作记录**：记录所有关键操作行为
+- **AOP异步处理**：使用@AuditLog注解，不阻塞主流程
+- **审计信息**：包含用户、操作类型、时间、IP地址、执行时长等
 
 ### 1. 听写任务管理
 - 提前创建听写任务，保存词语列表
@@ -171,12 +221,6 @@ dictation/
   ├─ 超时5秒无响应 → 提示"下一个听写词语：**"
   └─ 所有词语完成 → 播放"所有听写均已完成"
 ```
-
-### 3. 控制按钮
-- **再次读取**: 重复播放当前词语
-- **上一个**: 返回上一个词语
-- **下一个**: 跳到下一个词语
-- **开始听写**: 启动听写流程
 
 ### 4. 学习统计
 - 实时统计：当前词语、已完成数、剩余数
@@ -203,6 +247,26 @@ dictation/
 
 ## API接口文档
 
+### 认证接口
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| POST | `/api/auth/login` | 用户登录 |
+| POST | `/api/auth/logout` | 用户登出 |
+| GET | `/api/auth/current` | 获取当前用户信息 |
+| GET | `/api/auth/status` | 检查登录状态 |
+| GET | `/api/auth/avatars` | 获取头像列表 |
+
+### 用户管理接口
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| GET | `/api/users` | 获取所有用户（管理员） |
+| POST | `/api/users` | 创建用户（管理员） |
+| PUT | `/api/users/{id}` | 更新用户（管理员） |
+| DELETE | `/api/users/{id}` | 删除用户（管理员） |
+| POST | `/api/users/me/password` | 修改密码（所有用户） |
+| POST | `/api/users/me/avatar` | 修改头像（所有用户） |
+| GET | `/api/users/me/is-admin` | 检查是否管理员 |
+
 ### 批次管理
 | 方法 | 路径 | 描述 |
 |------|------|------|
@@ -218,14 +282,21 @@ dictation/
 | GET | `/api/words/batch/{id}` | 获取批次词语列表 |
 | PUT | `/api/words/{id}/status` | 更新词语状态 |
 
-### 听写操作
+### 听写任务管理
 | 方法 | 路径 | 描述 |
 |------|------|------|
-| POST | `/api/records/start/{batchId}` | 开始听写 |
-| POST | `/api/records/next/{batchId}` | 下一个词语 |
-| POST | `/api/records/previous/{batchId}` | 上一个词语 |
-| POST | `/api/records/complete/{wordId}` | 完成词语听写 |
-| POST | `/api/records/end/{batchId}` | 结束听写 |
+| POST | `/api/tasks` | 创建听写任务 |
+| GET | `/api/tasks` | 获取所有任务列表 |
+| GET | `/api/tasks/uncompleted` | 获取未完成的任务（首页下拉） |
+| GET | `/api/tasks/{id}` | 获取任务详情 |
+| PUT | `/api/tasks/{id}` | 更新任务 |
+| DELETE | `/api/tasks/{id}` | 删除任务 |
+| PUT | `/api/tasks/{id}/status` | 更新任务状态 |
+| POST | `/api/tasks/{id}/start` | 开始任务 |
+| POST | `/api/tasks/{id}/complete` | 完成任务 |
+| POST | `/api/tasks/{id}/reset` | 重置任务 |
+| POST | `/api/tasks/{id}/dictation` | 从任务开始听写 |
+| POST | `/api/tasks/{id}/favorite` | 设置/取消收藏 |
 
 ### 生词本管理
 | 方法 | 路径 | 描述 |
@@ -240,34 +311,6 @@ dictation/
 | GET | `/api/reports/daily` | 日报表 |
 | GET | `/api/reports/weekly` | 周报表 |
 | GET | `/api/reports/monthly` | 月报表 |
-
-### 预设内容导入
-| 方法 | 路径 | 描述 |
-|------|------|------|
-| GET | `/api/preset/list` | 获取预设内容列表 |
-| GET | `/api/preset/{id}` | 获取预设内容详情 |
-| POST | `/api/preset/import/{id}` | 导入预设内容创建批次 |
-
-### 听写任务管理
-| 方法 | 路径 | 描述 |
-|------|------|------|
-| POST | `/api/tasks` | 创建听写任务 |
-| GET | `/api/tasks` | 获取所有任务列表 |
-| GET | `/api/tasks/uncompleted` | 获取未完成的任务（首页下拉） |
-| GET | `/api/tasks/{id}` | 获取任务详情 |
-| PUT | `/api/tasks/{id}` | 更新任务 |
-| DELETE | `/api/tasks/{id}` | 删除任务 |
-| PUT | `/api/tasks/{id}/status` | 更新任务状态 |
-| POST | `/api/tasks/{id}/start` | 开始任务（状态改为进行中） |
-| POST | `/api/tasks/{id}/complete` | 完成任务（状态改为已完成） |
-| POST | `/api/tasks/{id}/reset` | 重置任务（状态改为未开始） |
-| POST | `/api/tasks/{id}/dictation` | 从任务开始听写 |
-| POST | `/api/tasks/{id}/favorite` | 设置/取消收藏 |
-
-### 学习建议
-| 方法 | 路径 | 描述 |
-|------|------|------|
-| GET | `/api/suggestions` | 获取听写建议 |
 
 ## 运行指南
 
@@ -289,53 +332,21 @@ java --enable-preview -jar target/dictation-1.0.0.jar
 
 应用启动后访问 `http://localhost:8080`
 
-### 开发模式
-Thymeleaf模板支持热更新，修改HTML模板后刷新浏览器即可看到效果。
+### 默认用户配置
+首次启动时会自动创建默认管理员用户。用户名和密码可通过环境变量设置：
+- `APP_DEFAULT_USERNAME`: 用户名
+- `APP_DEFAULT_PASSWORD`: 密码
 
-### 生产部署
+### 测试
 ```bash
-# 打包应用
-mvn clean package -DskipTests
+# 运行测试
+mvn test
 
-# 生成的jar包在 target/ 目录
-# 包含内嵌Tomcat服务器，直接运行即可
-java --enable-preview -jar target/dictation-1.0.0.jar
+# 生成覆盖率报告
+mvn test jacoco:report
 ```
 
-## 数据库设计
-
-### 实体关系图
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│ dictation_task  │     │ dictation_batch │────▶│      word       │
-│                 │     │                 │ 1:N │                 │
-│ - id            │     │ - id            │     │ - id            │
-│ - task_name     │     │ - batch_name    │     │ - word_text     │
-│ - words         │     │ - total_words   │     │ - batch_id (FK) │
-│ - word_count    │     │ - completed     │     │ - sort_order    │
-│ - status        │     │ - status        │     │ - status        │
-│ - correct_count │     │ - created_at    │     │ - created_at    │
-│ - wrong_count   │     └─────────────────┘     └─────────────────┘
-│ - dictator      │                                   │
-│ - is_favorite   │                                   │ 1:N
-│ - created_at    │                                   ▼
-└─────────────────┘             ┌─────────────────┐     ┌─────────────────┐
-        │                       │ dictation_record│     │ difficult_word  │
-        │ 1:N                   │                 │     │                 │
-        ▼                       │ - id            │     │ - id            │
-┌─────────────────┐             │ - word_id (FK)  │     │ - word_text     │
-│   task_record   │             │ - batch_id (FK) │     │ - dictator      │
-│                 │             │ - start_time    │     │ - error_count   │
-│ - id            │             │ - end_time      │     │ - avg_duration  │
-│ - task_id (FK)  │             │ - duration      │     │ - mastery_level │
-│ - word          │             │ - repeat_count  │     │ - last_practice │
-│ - is_correct    │             └─────────────────┘     └─────────────────┘
-│ - duration      │
-│ - read_count    │
-│ - start_time    │
-│ - end_time      │
-└─────────────────┘
-```
+覆盖率报告位于 `target/site/jacoco/index.html`
 
 ## 特色功能
 
@@ -388,18 +399,26 @@ YHJ-TECH 结合 AI Coding 模式开发
 - v1.2.0 (2026-04-12): 框架升级
   - Spring Boot升级至4.0.5（最新稳定版）
   - Hibernate升级至6.6.11
-  - 测试框架适配Spring Boot 4.0（移除@WebMvcTest/@MockBean）
+  - 测试框架适配Spring Boot 4.0
   - 230个单元测试全部通过
   - 从git中移除编译产物（target/目录）
 
 - v1.3.0 (2026-04-12): 任务管理模块
-  - 新增听写任务实体（DictationTask），支持任务状态管理
-  - 任务状态：未开始(NOT_STARTED)、进行中(IN_PROGRESS)、已完成(COMPLETED)
-  - 新增任务管理页面（tasks.html），可编辑/删除/修改状态
+  - 新增听写任务实体，支持任务状态管理
+  - 任务状态：未开始、进行中、已完成
+  - 新增任务管理页面，可编辑/删除/修改状态
   - 首页重构：只能选择未完成任务进行听写
   - 预设内容导入填充到新任务输入区
   - 收藏功能支持
-  - 修复听写完成后进度条显示100%
+
+- v1.4.0 (2026-04-13): 用户认证与审计日志
+  - 用户认证模块：登录/登出、Session管理（2小时有效期）
+  - 用户角色：管理员和普通用户
+  - 用户管理：管理员可CRUD用户
+  - 头像系统：20个内置头像，用户可更换
+  - 审计日志模块：@AuditLog注解、AOP异步处理
+  - 单元测试：新增认证和审计相关测试
+  - 密码加密：BCrypt加密存储
 
 ## 许可证
 

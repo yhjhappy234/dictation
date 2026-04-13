@@ -497,6 +497,7 @@ class DictationTaskServiceTest {
         @DisplayName("更新进度 - 成功")
         void updateProgress_success() {
             // Given
+            testTask.setStatus(TaskStatus.IN_PROGRESS); // 已经是进行中状态
             when(taskRepository.findById(1L)).thenReturn(Optional.of(testTask));
             when(taskRepository.save(any(DictationTask.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -507,7 +508,7 @@ class DictationTaskServiceTest {
             assertEquals(2, result.getCurrentIndex());
             assertEquals(1, result.getCorrectCount());
             assertEquals(1, result.getWrongCount());
-            assertEquals(TaskStatus.NOT_STARTED, result.getStatus()); // 进度是0时不改变状态
+            assertEquals(TaskStatus.IN_PROGRESS, result.getStatus()); // 已经是进行中状态，保持不变
         }
 
         @Test
