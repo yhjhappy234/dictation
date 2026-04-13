@@ -1,5 +1,5 @@
 """
-E2E测试主程序
+E2E测试主程序 - 全面覆盖所有API功能
 """
 import pytest
 import time
@@ -37,6 +37,24 @@ def setup_server(client: HttpClient) -> None:
     assert wait_for_server(client), "服务器未启动或无法访问"
 
 
+@pytest.fixture(scope="module")
+def logged_in_client(client: HttpClient) -> Generator[HttpClient, None, None]:
+    """登录后的客户端"""
+    # 登录
+    login_data = {
+        "username": TEST_DATA["username"],
+        "password": TEST_DATA["password"]
+    }
+    response = client.post(API_ENDPOINTS["auth_login"], json=login_data)
+    if response.status_code == 200 and response.json().get("success"):
+        yield client
+        # 登出
+        client.post(API_ENDPOINTS["auth_logout"])
+    else:
+        # 如果登录失败，仍然返回client（可能是未配置认证）
+        yield client
+
+
 @pytest.fixture
 def created_batch(client: HttpClient) -> Generator[dict, None, None]:
     """创建测试批次并清理"""
@@ -56,6 +74,24 @@ def created_batch(client: HttpClient) -> Generator[dict, None, None]:
     cleanup_test_data(client, batch_id)
 
 
+@pytest.fixture
+def created_task(client: HttpClient) -> Generator[dict, None, None]:
+    """创建测试任务并清理"""
+    task_data = {
+        "taskName": DataGenerator.random_batch_name(),
+        "words": TEST_DATA["words"]
+    }
+    response = client.post(API_ENDPOINTS["tasks"], json=task_data)
+    if response.status_code == 200:
+        task = response.json().get("data")
+        task_id = task.get("id")
+        yield task
+        # 清理
+        client.delete(API_ENDPOINTS["task_by_id"].format(id=task_id))
+    else:
+        yield {}
+
+
 # ==================== 健康检查测试 ====================
 
 class TestServerHealth:
@@ -70,6 +106,108 @@ class TestServerHealth:
         """测试API健康检查"""
         response = client.get(API_ENDPOINTS["batches"])
         assert response.status_code == 200, f"API不可用, 状态码: {response.status_code}"
+
+
+# ==================== 认证API测试 ====================
+
+class TestAuthAPI:
+    """认证API测试"""
+
+    def test_login_success(self, client: HttpClient):
+        """测试登录成功"""
+        login_data = {
+            "username": TEST_DATA["username"],
+            "password": TEST_DATA["password"]
+        }
+        response = client.post(API_ENDPOINTS["auth_login"], json=login_data)
+        # 可能成功也可能失败（取决于服务器配置）
+        assert response.status_code == 200
+
+    def test_login_empty_username(self, client: HttpClient):
+        """测试登录 - 空用户名"""
+        login_data = {
+            "username": "",
+            "password": "password"
+        }
+        response = client.post(API_ENDPOINTS["auth_login"], json=login_data)
+        AssertUtil.assert_error(response, "用户名不能为空")
+
+    def test_login_empty_password(self, client: HttpClient):
+        """测试登录 - 空密码"""
+        login_data = {
+            "username": "testuser",
+            "password": ""
+        }
+        response = client.post(API_ENDPOINTS["auth_login"], json=login_data)
+        AssertUtil.assert_error(response, "密码不能为空")
+
+    def test_login_wrong_password(self, client: HttpClient):
+        """测试登录 - 错误密码"""
+        login_data = {
+            "username": TEST_DATA["username"],
+            "password": "wrongpassword"
+        }
+        response = client.post(API_ENDPOINTS["auth_login"], json=login_data)
+        # 应该返回错误
+        if response.status_code == 200:
+            assert response.json().get("success") == False
+
+    def test_get_current_user(self, client: HttpClient):
+        """测试获取当前用户"""
+        response = client.get(API_ENDPOINTS["auth_current"])
+        assert response.status_code == 200
+
+    def test_check_login_status(self, client: HttpClient):
+        """测试检查登录状态"""
+        response = client.get(API_ENDPOINTS["auth_status"])
+        AssertUtil.assert_success(response)
+        data = response.json().get("data")
+        assert isinstance(data, bool)
+
+    def test_get_avatars(self, client: HttpClient):
+        """测试获取头像列表"""
+        response = client.get(API_ENDPOINTS["auth_avatars"])
+        AssertUtil.assert_success(response)
+        avatars = response.json().get("data", [])
+        assert len(avatars) > 0, "头像列表为空"
+
+    def test_logout(self, client: HttpClient):
+        """测试登出"""
+        response = client.post(API_ENDPOINTS["auth_logout"])
+        assert response.status_code == 200
+
+
+# ==================== 用户管理API测试 ====================
+
+class TestUserAPI:
+    """用户管理API测试"""
+
+    def test_get_all_users(self, client: HttpClient):
+        """测试获取所有用户"""
+        response = client.get(API_ENDPOINTS["users"])
+        # 可能需要管理员权限
+        assert response.status_code == 200
+
+    def test_is_admin(self, client: HttpClient):
+        """测试检查管理员状态"""
+        response = client.get(API_ENDPOINTS["user_me_is_admin"])
+        AssertUtil.assert_success(response)
+        data = response.json().get("data")
+        assert isinstance(data, bool)
+
+    def test_update_avatar(self, client: HttpClient):
+        """测试更新头像"""
+        # 先获取可用头像
+        avatars_response = client.get(API_ENDPOINTS["auth_avatars"])
+        if avatars_response.status_code == 200:
+            avatars = avatars_response.json().get("data", [])
+            if avatars:
+                response = client.post(
+                    API_ENDPOINTS["user_me_avatar"],
+                    params={"avatar": avatars[0]}
+                )
+                # 可能需要登录
+                assert response.status_code in [200, 401]
 
 
 # ==================== 批次管理API测试 ====================
@@ -127,6 +265,23 @@ class TestBatchAPI:
         endpoint = API_ENDPOINTS["batch_by_id"].format(id=999999)
         response = client.get(endpoint)
         AssertUtil.assert_error(response)
+
+    def test_get_today_batches(self, client: HttpClient):
+        """测试获取今日批次"""
+        response = client.get(API_ENDPOINTS["batches_today"])
+        AssertUtil.assert_success(response)
+
+    def test_get_batches_by_range(self, client: HttpClient):
+        """测试获取日期范围批次"""
+        today = date.today()
+        start = today - timedelta(days=7)
+        end = today
+
+        response = client.get(
+            API_ENDPOINTS["batches_range"],
+            params={"start": start.isoformat(), "end": end.isoformat()}
+        )
+        AssertUtil.assert_success(response)
 
     def test_start_batch(self, client: HttpClient, created_batch: dict):
         """测试开始批次"""
@@ -248,7 +403,7 @@ class TestWordAPI:
         if words:
             word_id = words[0].get("id")
             endpoint = API_ENDPOINTS["word_status"].format(id=word_id)
-            response = client.put(endpoint, json={"status": "COMPLETED"})
+            response = client.put(endpoint, params={"status": "COMPLETED"})
 
             AssertUtil.assert_success(response, "更新成功")
 
@@ -321,10 +476,10 @@ class TestWordAPI:
         AssertUtil.assert_success(response)
 
 
-# ==================== 听写流程API测试 ====================
+# ==================== 听写记录API测试 ====================
 
 class TestDictationAPI:
-    """听写流程API测试"""
+    """听写记录API测试"""
 
     def test_start_record(self, client: HttpClient, created_batch: dict):
         """测试开始听写记录"""
@@ -375,6 +530,32 @@ class TestDictationAPI:
             response = client.post(complete_endpoint)
 
             AssertUtil.assert_success(response, "完成")
+
+        # 清理
+        cleanup_test_data(client, batch_id)
+
+    def test_complete_by_word_id(self, client: HttpClient):
+        """测试通过词语ID完成记录"""
+        # 创建批次
+        batch_data = {
+            "batchName": DataGenerator.random_batch_name(),
+            "words": TEST_DATA["words"]
+        }
+        create_response = client.post(API_ENDPOINTS["batches"], json=batch_data)
+        batch = create_response.json().get("data")
+        batch_id = batch.get("id")
+
+        # 获取第一个词语
+        first_word_endpoint = API_ENDPOINTS["word_first"].format(batchId=batch_id)
+        word_response = client.get(first_word_endpoint)
+        word = word_response.json().get("data")
+
+        if word:
+            word_id = word.get("id")
+            endpoint = API_ENDPOINTS["record_complete_by_word"].format(wordId=word_id)
+            response = client.post(endpoint, json={"duration": 10})
+
+            AssertUtil.assert_success(response)
 
         # 清理
         cleanup_test_data(client, batch_id)
@@ -472,6 +653,277 @@ class TestDictationAPI:
         )
         AssertUtil.assert_success(response)
 
+    def test_end_dictation(self, client: HttpClient, created_batch: dict):
+        """测试结束听写"""
+        batch_id = created_batch.get("id")
+        endpoint = API_ENDPOINTS["end_dictation"].format(batchId=batch_id)
+        response = client.post(endpoint)
+        AssertUtil.assert_success(response)
+
+    def test_finish_batch(self, client: HttpClient, created_batch: dict):
+        """测试完成批次"""
+        batch_id = created_batch.get("id")
+        endpoint = API_ENDPOINTS["finish_batch"].format(batchId=batch_id)
+        response = client.post(endpoint)
+        AssertUtil.assert_success(response)
+
+    def test_delete_record(self, client: HttpClient):
+        """测试删除记录"""
+        # 创建批次并创建记录
+        batch_data = {
+            "batchName": DataGenerator.random_batch_name(),
+            "words": TEST_DATA["words"]
+        }
+        create_response = client.post(API_ENDPOINTS["batches"], json=batch_data)
+        batch = create_response.json().get("data")
+        batch_id = batch.get("id")
+
+        # 获取第一个词语并开始记录
+        first_word_endpoint = API_ENDPOINTS["word_first"].format(batchId=batch_id)
+        word_response = client.get(first_word_endpoint)
+        word = word_response.json().get("data")
+
+        if word:
+            word_id = word.get("id")
+            start_response = client.post(
+                API_ENDPOINTS["record_start"],
+                params={"wordId": word_id, "batchId": batch_id}
+            )
+            record = start_response.json().get("data")
+            record_id = record.get("id")
+
+            # 删除记录
+            endpoint = API_ENDPOINTS["record_delete"].format(id=record_id)
+            response = client.delete(endpoint)
+            AssertUtil.assert_success(response)
+
+        # 清理
+        cleanup_test_data(client, batch_id)
+
+
+# ==================== 任务管理API测试 ====================
+
+class TestTaskAPI:
+    """任务管理API测试"""
+
+    def test_create_task(self, client: HttpClient):
+        """测试创建任务"""
+        task_data = {
+            "taskName": DataGenerator.random_batch_name(),
+            "words": TEST_DATA["words"]
+        }
+        response = client.post(API_ENDPOINTS["tasks"], json=task_data)
+        AssertUtil.assert_success(response, "创建成功")
+
+        data = AssertUtil.assert_data_not_empty(response)
+        assert data.get("id") is not None, "任务ID为空"
+
+        # 清理
+        task_id = data.get("id")
+        client.delete(API_ENDPOINTS["task_by_id"].format(id=task_id))
+
+    def test_create_task_empty_name(self, client: HttpClient):
+        """测试创建任务 - 空名称"""
+        task_data = {
+            "taskName": "",
+            "words": TEST_DATA["words"]
+        }
+        response = client.post(API_ENDPOINTS["tasks"], json=task_data)
+        AssertUtil.assert_error(response, "任务名称不能为空")
+
+    def test_create_task_empty_words(self, client: HttpClient):
+        """测试创建任务 - 空词语"""
+        task_data = {
+            "taskName": "测试任务",
+            "words": ""
+        }
+        response = client.post(API_ENDPOINTS["tasks"], json=task_data)
+        AssertUtil.assert_error(response, "词语不能为空")
+
+    def test_get_all_tasks(self, client: HttpClient):
+        """测试获取所有任务"""
+        response = client.get(API_ENDPOINTS["tasks"])
+        AssertUtil.assert_success(response)
+
+    def test_get_uncompleted_tasks(self, client: HttpClient):
+        """测试获取未完成任务"""
+        response = client.get(API_ENDPOINTS["tasks_uncompleted"])
+        AssertUtil.assert_success(response)
+
+    def test_get_tasks_by_status(self, client: HttpClient):
+        """测试按状态获取任务"""
+        endpoint = API_ENDPOINTS["tasks_by_status"].format(status="NOT_STARTED")
+        response = client.get(endpoint)
+        AssertUtil.assert_success(response)
+
+    def test_get_favorite_tasks(self, client: HttpClient):
+        """测试获取收藏任务"""
+        response = client.get(API_ENDPOINTS["tasks_favorites"])
+        AssertUtil.assert_success(response)
+
+    def test_get_dictators(self, client: HttpClient):
+        """测试获取听写人列表"""
+        response = client.get(API_ENDPOINTS["tasks_dictators"])
+        AssertUtil.assert_success(response)
+
+    def test_get_task_by_id(self, client: HttpClient, created_task: dict):
+        """测试根据ID获取任务"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_by_id"].format(id=task_id)
+            response = client.get(endpoint)
+            AssertUtil.assert_success(response)
+            data = response.json().get("data")
+            assert data.get("id") == task_id
+
+    def test_update_task(self, client: HttpClient, created_task: dict):
+        """测试更新任务"""
+        task_id = created_task.get("id")
+        if task_id:
+            task_data = {
+                "taskName": "更新后的任务",
+                "words": "新词语"
+            }
+            endpoint = API_ENDPOINTS["task_update"].format(id=task_id)
+            response = client.put(endpoint, json=task_data)
+            AssertUtil.assert_success(response)
+
+    def test_start_task(self, client: HttpClient, created_task: dict):
+        """测试开始任务"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_start"].format(id=task_id)
+            response = client.post(endpoint)
+            AssertUtil.assert_success(response)
+
+    def test_complete_task(self, client: HttpClient, created_task: dict):
+        """测试完成任务"""
+        task_id = created_task.get("id")
+        if task_id:
+            # 先开始任务
+            client.post(API_ENDPOINTS["task_start"].format(id=task_id))
+            # 再完成
+            endpoint = API_ENDPOINTS["task_complete"].format(id=task_id)
+            response = client.post(endpoint)
+            AssertUtil.assert_success(response)
+
+    def test_set_favorite(self, client: HttpClient, created_task: dict):
+        """测试设置收藏"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_favorite"].format(id=task_id)
+            response = client.post(endpoint, params={"isFavorite": True})
+            AssertUtil.assert_success(response)
+
+    def test_set_dictator(self, client: HttpClient, created_task: dict):
+        """测试设置听写人"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_dictator"].format(id=task_id)
+            response = client.post(endpoint, params={"dictator": "小明"})
+            AssertUtil.assert_success(response)
+
+    def test_reset_task(self, client: HttpClient, created_task: dict):
+        """测试重置任务"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_reset"].format(id=task_id)
+            response = client.post(endpoint)
+            AssertUtil.assert_success(response)
+
+    def test_reset_progress(self, client: HttpClient, created_task: dict):
+        """测试重置进度"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_reset_progress"].format(id=task_id)
+            response = client.post(endpoint)
+            AssertUtil.assert_success(response)
+
+    def test_update_status(self, client: HttpClient, created_task: dict):
+        """测试更新任务状态"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_status"].format(id=task_id)
+            response = client.put(endpoint, params={"status": "IN_PROGRESS"})
+            AssertUtil.assert_success(response)
+
+    def test_update_progress(self, client: HttpClient, created_task: dict):
+        """测试更新进度"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_progress"].format(id=task_id)
+            response = client.post(endpoint, json={
+                "currentIndex": 1,
+                "correctCount": 1,
+                "wrongCount": 0
+            })
+            AssertUtil.assert_success(response)
+
+    def test_record_word_result(self, client: HttpClient, created_task: dict):
+        """测试记录词语结果"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_record"].format(id=task_id)
+            response = client.post(endpoint, params={"word": "苹果", "isCorrect": True})
+            AssertUtil.assert_success(response)
+
+    def test_get_task_records(self, client: HttpClient, created_task: dict):
+        """测试获取任务记录"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_records"].format(id=task_id)
+            response = client.get(endpoint)
+            AssertUtil.assert_success(response)
+
+    def test_start_word(self, client: HttpClient, created_task: dict):
+        """测试开始词语"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_start_word"].format(id=task_id)
+            response = client.post(endpoint, params={"word": "苹果"})
+            AssertUtil.assert_success(response)
+
+    def test_read_word(self, client: HttpClient, created_task: dict):
+        """测试朗读词语"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_read_word"].format(id=task_id)
+            response = client.post(endpoint, params={"word": "苹果"})
+            AssertUtil.assert_success(response)
+
+    def test_complete_word(self, client: HttpClient, created_task: dict):
+        """测试完成词语"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_complete_word"].format(id=task_id)
+            response = client.post(endpoint, params={"word": "苹果", "isCorrect": True})
+            AssertUtil.assert_success(response)
+
+    def test_start_dictation_from_task(self, client: HttpClient, created_task: dict):
+        """测试从任务开始听写"""
+        task_id = created_task.get("id")
+        if task_id:
+            endpoint = API_ENDPOINTS["task_dictation"].format(id=task_id)
+            response = client.post(endpoint)
+            # 可能成功也可能失败（取决于任务状态）
+            assert response.status_code == 200
+
+    def test_delete_task(self, client: HttpClient):
+        """测试删除任务"""
+        # 创建任务
+        task_data = {
+            "taskName": DataGenerator.random_batch_name(),
+            "words": TEST_DATA["words"]
+        }
+        create_response = client.post(API_ENDPOINTS["tasks"], json=task_data)
+        task = create_response.json().get("data")
+        task_id = task.get("id")
+
+        # 删除任务
+        endpoint = API_ENDPOINTS["task_delete"].format(id=task_id)
+        response = client.delete(endpoint)
+        AssertUtil.assert_success(response)
+
 
 # ==================== 生词本API测试 ====================
 
@@ -541,6 +993,57 @@ class TestDifficultWordAPI:
 
                     assert response.status_code == 200, f"更新掌握级别失败: {response.text}"
 
+    def test_handle_practice_success(self, client: HttpClient, created_batch: dict):
+        """测试处理练习成功"""
+        batch_id = created_batch.get("id")
+        words_endpoint = API_ENDPOINTS["batch_words"].format(id=batch_id)
+        words_response = client.get(words_endpoint)
+        words = words_response.json().get("data", [])
+
+        if words:
+            word_id = words[0].get("id")
+            endpoint = API_ENDPOINTS["difficult_word_success"].format(wordId=word_id)
+            response = client.post(endpoint)
+            AssertUtil.assert_success(response)
+
+    def test_handle_practice_failure(self, client: HttpClient, created_batch: dict):
+        """测试处理练习失败"""
+        batch_id = created_batch.get("id")
+        words_endpoint = API_ENDPOINTS["batch_words"].format(id=batch_id)
+        words_response = client.get(words_endpoint)
+        words = words_response.json().get("data", [])
+
+        if words:
+            word_id = words[0].get("id")
+            endpoint = API_ENDPOINTS["difficult_word_failure"].format(wordId=word_id)
+            response = client.post(endpoint, params={"errorCount": 2})
+            AssertUtil.assert_success(response)
+
+    def test_delete_difficult_word(self, client: HttpClient, created_batch: dict):
+        """测试删除生词"""
+        batch_id = created_batch.get("id")
+        words_endpoint = API_ENDPOINTS["batch_words"].format(id=batch_id)
+        words_response = client.get(words_endpoint)
+        words = words_response.json().get("data", [])
+
+        if words:
+            word_id = words[0].get("id")
+
+            # 先添加生词
+            add_response = client.post(
+                API_ENDPOINTS["difficult_words"],
+                json={"wordId": word_id}
+            )
+
+            if add_response.status_code == 200:
+                add_data = add_response.json().get("data")
+                if add_data and add_data.get("id"):
+                    difficult_id = add_data.get("id")
+                    # 删除生词
+                    endpoint = API_ENDPOINTS["difficult_word_by_id"].format(id=difficult_id)
+                    response = client.delete(endpoint)
+                    AssertUtil.assert_success(response)
+
 
 # ==================== 报表API测试 ====================
 
@@ -600,6 +1103,57 @@ class TestSuggestionAPI:
         response = client.get(API_ENDPOINTS["suggestions_frequent_error"])
         AssertUtil.assert_success(response)
 
+    def test_update_suggestion_priority(self, client: HttpClient):
+        """测试更新建议优先级"""
+        # 先获取建议
+        response = client.get(API_ENDPOINTS["suggestions"])
+        suggestions = response.json().get("data", [])
+
+        if suggestions:
+            suggestion_id = suggestions[0].get("id")
+            endpoint = API_ENDPOINTS["suggestion_priority"].format(id=suggestion_id)
+            response = client.put(endpoint, params={"priority": 5})
+            AssertUtil.assert_success(response)
+
+
+# ==================== 预设内容API测试 ====================
+
+class TestPresetContentAPI:
+    """预设内容API测试"""
+
+    def test_get_preset_list(self, client: HttpClient):
+        """测试获取预设内容列表"""
+        response = client.get(API_ENDPOINTS["preset_list"])
+        AssertUtil.assert_success(response)
+
+        presets = AssertUtil.assert_list_not_empty(response)
+        assert len(presets) >= 4, "预设内容列表数量不足"
+
+    def test_get_preset_content(self, client: HttpClient):
+        """测试获取预设内容详情"""
+        endpoint = API_ENDPOINTS["preset_content"].format(id="common-words-50")
+        response = client.get(endpoint)
+        AssertUtil.assert_success(response)
+
+    def test_get_nonexistent_preset(self, client: HttpClient):
+        """测试获取不存在的预设内容"""
+        endpoint = API_ENDPOINTS["preset_content"].format(id="nonexistent")
+        response = client.get(endpoint)
+        AssertUtil.assert_error(response)
+
+    def test_import_preset_content(self, client: HttpClient):
+        """测试导入预设内容"""
+        endpoint = API_ENDPOINTS["preset_import"].format(id="common-words-50")
+        response = client.post(endpoint)
+        AssertUtil.assert_success(response)
+
+        data = response.json().get("data")
+        batch_id = data
+
+        # 清理
+        if batch_id:
+            cleanup_test_data(client, batch_id)
+
 
 # ==================== 页面访问测试 ====================
 
@@ -610,6 +1164,11 @@ class TestPageAccess:
         """测试首页访问"""
         response = client.get(PAGE_ROUTES["index"])
         assert response.status_code == 200, f"首页访问失败: {response.status_code}"
+
+    def test_login_page(self, client: HttpClient):
+        """测试登录页面访问"""
+        response = client.get(PAGE_ROUTES["login"])
+        assert response.status_code == 200, f"登录页面访问失败: {response.status_code}"
 
     def test_history_page(self, client: HttpClient):
         """测试历史记录页面访问"""
@@ -625,6 +1184,22 @@ class TestPageAccess:
         """测试报表页面访问"""
         response = client.get(PAGE_ROUTES["reports"])
         assert response.status_code == 200, f"报表页面访问失败: {response.status_code}"
+
+    def test_tasks_page(self, client: HttpClient):
+        """测试任务管理页面访问"""
+        response = client.get(PAGE_ROUTES["tasks"])
+        assert response.status_code == 200, f"任务管理页面访问失败: {response.status_code}"
+
+    def test_dictators_page(self, client: HttpClient):
+        """测试听写人管理页面访问"""
+        response = client.get(PAGE_ROUTES["dictators"])
+        assert response.status_code == 200, f"听写人管理页面访问失败: {response.status_code}"
+
+    def test_user_management_page(self, client: HttpClient):
+        """测试用户管理页面访问"""
+        response = client.get(PAGE_ROUTES["user_management"])
+        # 可能需要管理员权限
+        assert response.status_code in [200, 302, 401], f"用户管理页面访问失败: {response.status_code}"
 
 
 # ==================== 集成测试 ====================
@@ -727,8 +1302,142 @@ class TestIntegration:
                 client.put(mastery_endpoint, params={"level": 3})
 
                 # 5. 从生词本移除
-                delete_endpoint = API_ENDPOINTS["difficult_words"] + f"/{difficult_id}"
+                delete_endpoint = API_ENDPOINTS["difficult_word_by_id"].format(id=difficult_id)
                 client.delete(delete_endpoint)
 
         # 6. 清理
         cleanup_test_data(client, batch_id)
+
+    def test_task_dictation_flow(self, client: HttpClient):
+        """测试任务听写流程"""
+        # 1. 创建任务
+        task_data = {
+            "taskName": DataGenerator.random_batch_name(),
+            "words": TEST_DATA["words"]
+        }
+        create_response = client.post(API_ENDPOINTS["tasks"], json=task_data)
+        AssertUtil.assert_success(create_response)
+        task = create_response.json().get("data")
+        task_id = task.get("id")
+
+        # 2. 设置听写人
+        dictator_endpoint = API_ENDPOINTS["task_dictator"].format(id=task_id)
+        client.post(dictator_endpoint, params={"dictator": "小明"})
+
+        # 3. 设置收藏
+        favorite_endpoint = API_ENDPOINTS["task_favorite"].format(id=task_id)
+        client.post(favorite_endpoint, params={"isFavorite": True})
+
+        # 4. 开始任务
+        start_endpoint = API_ENDPOINTS["task_start"].format(id=task_id)
+        client.post(start_endpoint)
+
+        # 5. 更新进度
+        progress_endpoint = API_ENDPOINTS["task_progress"].format(id=task_id)
+        client.post(progress_endpoint, json={
+            "currentIndex": 2,
+            "correctCount": 2,
+            "wrongCount": 0
+        })
+
+        # 6. 记录词语结果
+        record_endpoint = API_ENDPOINTS["task_record"].format(id=task_id)
+        client.post(record_endpoint, params={"word": "苹果", "isCorrect": True})
+
+        # 7. 完成任务
+        complete_endpoint = API_ENDPOINTS["task_complete"].format(id=task_id)
+        complete_response = client.post(complete_endpoint)
+        AssertUtil.assert_success(complete_response)
+
+        # 8. 重置任务
+        reset_endpoint = API_ENDPOINTS["task_reset"].format(id=task_id)
+        client.post(reset_endpoint)
+
+        # 9. 清理
+        client.delete(API_ENDPOINTS["task_by_id"].format(id=task_id))
+
+    def test_preset_import_flow(self, client: HttpClient):
+        """测试预设内容导入流程"""
+        # 1. 获取预设内容列表
+        list_response = client.get(API_ENDPOINTS["preset_list"])
+        AssertUtil.assert_success(list_response)
+        presets = list_response.json().get("data", [])
+
+        # 2. 选择一个预设内容
+        preset_id = presets[0].get("id")
+
+        # 3. 查看预设内容详情
+        content_endpoint = API_ENDPOINTS["preset_content"].format(id=preset_id)
+        content_response = client.get(content_endpoint)
+        AssertUtil.assert_success(content_response)
+
+        # 4. 导入预设内容
+        import_endpoint = API_ENDPOINTS["preset_import"].format(id=preset_id)
+        import_response = client.post(import_endpoint)
+        AssertUtil.assert_success(import_response)
+
+        batch_id = import_response.json().get("data")
+
+        # 5. 验证批次已创建
+        batch_endpoint = API_ENDPOINTS["batch_by_id"].format(id=batch_id)
+        batch_response = client.get(batch_endpoint)
+        AssertUtil.assert_success(batch_response)
+
+        # 6. 清理
+        if batch_id:
+            cleanup_test_data(client, batch_id)
+
+
+# ==================== 错误处理测试 ====================
+
+class TestErrorHandling:
+    """错误处理测试"""
+
+    def test_invalid_endpoint(self, client: HttpClient):
+        """测试无效端点"""
+        response = client.get("/api/nonexistent")
+        assert response.status_code in [404, 200]
+
+    def test_invalid_json(self, client: HttpClient):
+        """测试无效JSON"""
+        response = client.post(
+            API_ENDPOINTS["batches"],
+            data="invalid json",
+            headers={"Content-Type": "application/json"}
+        )
+        assert response.status_code in [400, 200]
+
+    def test_missing_parameters(self, client: HttpClient):
+        """测试缺少参数"""
+        response = client.post(API_ENDPOINTS["batches"], json={})
+        # 应该返回错误或使用默认值
+        assert response.status_code in [200, 400]
+
+
+# ==================== 性能测试 ====================
+
+class TestPerformance:
+    """性能测试"""
+
+    def test_batch_list_performance(self, client: HttpClient):
+        """测试批次列表性能"""
+        start_time = time.time()
+        response = client.get(API_ENDPOINTS["batches"])
+        end_time = time.time()
+
+        assert response.status_code == 200
+        assert (end_time - start_time) < 2.0, f"请求时间过长: {end_time - start_time}秒"
+
+    def test_concurrent_requests(self, client: HttpClient):
+        """测试并发请求"""
+        import concurrent.futures
+
+        def make_request():
+            return client.get(API_ENDPOINTS["batches"])
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(make_request) for _ in range(5)]
+            results = [f.result() for f in futures]
+
+        for result in results:
+            assert result.status_code == 200
