@@ -538,5 +538,61 @@ class AuditAspectTest {
                 verify(auditLogService).saveLogAsync(any(AuditLogEntity.class));
             }
         }
+
+        @Test
+        @DisplayName("获取IP地址异常处理")
+        void getIpAddressException() throws Throwable {
+            when(joinPoint.getSignature()).thenReturn(signature);
+            when(signature.getMethod()).thenReturn(method);
+            when(method.getAnnotation(AuditLog.class)).thenReturn(auditLogAnnotation);
+            when(signature.getDeclaringType()).thenReturn(AuditAspectTest.class);
+            when(signature.getName()).thenReturn("mockMethod");
+            when(joinPoint.getArgs()).thenReturn(new Object[]{});
+            when(joinPoint.proceed()).thenReturn("result");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class);
+                 MockedStatic<RequestContextHolder> mockedRequestContext = mockStatic(RequestContextHolder.class)) {
+                mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
+                mockedUserContext.when(UserContext::getCurrentUsername).thenReturn("testuser");
+                // 模拟getRequestAttributes抛出异常
+                mockedRequestContext.when(RequestContextHolder::getRequestAttributes)
+                        .thenThrow(new RuntimeException("Mock exception"));
+
+                // 异常情况下仍然应该执行成功
+                auditAspect.around(joinPoint);
+
+                verify(auditLogService).saveLogAsync(any(AuditLogEntity.class));
+            }
+        }
+
+        @Test
+        @DisplayName("X-Real-IP 为空时使用 RemoteAddr")
+        void getIpWhenXRealIpEmpty() throws Throwable {
+            org.springframework.mock.web.MockHttpServletRequest mockRequest = new org.springframework.mock.web.MockHttpServletRequest();
+            mockRequest.addHeader("X-Forwarded-For", "unknown");
+            mockRequest.addHeader("X-Real-IP", "");
+            mockRequest.setRemoteAddr("192.168.1.6");
+            org.springframework.web.context.request.ServletRequestAttributes attributes =
+                    new org.springframework.web.context.request.ServletRequestAttributes(mockRequest);
+
+            when(joinPoint.getSignature()).thenReturn(signature);
+            when(signature.getMethod()).thenReturn(method);
+            when(method.getAnnotation(AuditLog.class)).thenReturn(auditLogAnnotation);
+            when(signature.getDeclaringType()).thenReturn(AuditAspectTest.class);
+            when(signature.getName()).thenReturn("mockMethod");
+            when(joinPoint.getArgs()).thenReturn(new Object[]{});
+            when(joinPoint.proceed()).thenReturn("result");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class);
+                 MockedStatic<RequestContextHolder> mockedRequestContext = mockStatic(RequestContextHolder.class)) {
+                mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
+                mockedUserContext.when(UserContext::getCurrentUsername).thenReturn("testuser");
+                mockedRequestContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+
+                auditAspect.around(joinPoint);
+
+                verify(auditLogService).saveLogAsync(any(AuditLogEntity.class));
+            }
+        }
     }
 }
