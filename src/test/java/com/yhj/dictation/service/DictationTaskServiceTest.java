@@ -822,4 +822,87 @@ class DictationTaskServiceTest {
             assertTrue(dto.getWords().isEmpty());
         }
     }
+
+    @Nested
+    @DisplayName("getAllTaskDTOs 方法测试")
+    class GetAllTaskDTOsTests {
+
+        @Test
+        @DisplayName("获取所有任务DTO - 成功")
+        void getAllTaskDTOs_success() {
+            // Given
+            DictationTask task2 = new DictationTask();
+            task2.setId(2L);
+            task2.setTaskName("Task 2");
+            task2.setWords("word1 word2");
+            task2.setWordCount(2);
+            task2.setStatus(TaskStatus.IN_PROGRESS);
+            task2.setDictator("Jerry");
+
+            when(taskRepository.findAllByOrderByCreatedAtDesc()).thenReturn(Arrays.asList(testTask, task2));
+
+            // When
+            List<TaskDTO> result = taskService.getAllTaskDTOs();
+
+            // Then
+            assertEquals(2, result.size());
+            assertEquals("Test Task", result.get(0).getTaskName());
+            assertEquals("Task 2", result.get(1).getTaskName());
+        }
+
+        @Test
+        @DisplayName("获取所有任务DTO - 空列表")
+        void getAllTaskDTOs_emptyList() {
+            // Given
+            when(taskRepository.findAllByOrderByCreatedAtDesc()).thenReturn(Collections.emptyList());
+
+            // When
+            List<TaskDTO> result = taskService.getAllTaskDTOs();
+
+            // Then
+            assertTrue(result.isEmpty());
+        }
+    }
+
+    @Nested
+    @DisplayName("getUncompletedTaskDTOs 方法测试")
+    class GetUncompletedTaskDTOsTests {
+
+        @Test
+        @DisplayName("获取未完成任务DTO - 成功")
+        void getUncompletedTaskDTOs_success() {
+            // Given
+            testTask.setStatus(TaskStatus.NOT_STARTED);
+            DictationTask task2 = new DictationTask();
+            task2.setId(2L);
+            task2.setTaskName("Task 2");
+            task2.setWords("word1 word2");
+            task2.setWordCount(2);
+            task2.setStatus(TaskStatus.IN_PROGRESS);
+            task2.setDictator("Jerry");
+
+            when(taskRepository.findByStatusInOrderByCreatedAtDesc(anyList()))
+                    .thenReturn(Arrays.asList(testTask, task2));
+
+            // When
+            List<TaskDTO> result = taskService.getUncompletedTaskDTOs();
+
+            // Then
+            assertEquals(2, result.size());
+        }
+
+        @Test
+        @DisplayName("获取未完成任务DTO - 空列表")
+        void getUncompletedTaskDTOs_emptyList() {
+            // Given
+            when(taskRepository.findByStatusInOrderByCreatedAtDesc(anyList()))
+                    .thenReturn(Collections.emptyList());
+
+            // When
+            List<TaskDTO> result = taskService.getUncompletedTaskDTOs();
+
+            // Then
+            assertTrue(result.isEmpty());
+        }
+    }
 }
