@@ -2,6 +2,7 @@ package com.yhj.dictation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yhj.dictation.dto.UserCreateRequest;
+import com.yhj.dictation.dto.UserUpdateRequest;
 import com.yhj.dictation.dto.PasswordUpdateRequest;
 import com.yhj.dictation.entity.User;
 import com.yhj.dictation.service.UserService;
@@ -500,6 +501,175 @@ class UserControllerTest {
                 mockMvc.perform(post("/api/users/me/avatar?avatar=invalid.png"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("updateUser 方法测试")
+    class UpdateUserTests {
+
+        @Test
+        @DisplayName("管理员更新用户成功 - 更新角色")
+        void updateUser_role() throws Exception {
+            UserUpdateRequest request = new UserUpdateRequest();
+            request.setRole("ADMIN");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
+                when(userService.updateRole(anyLong(), any())).thenReturn(testUser);
+
+                mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(true));
+            }
+        }
+
+        @Test
+        @DisplayName("管理员更新用户成功 - 更新状态为ACTIVE")
+        void updateUser_statusActive() throws Exception {
+            UserUpdateRequest request = new UserUpdateRequest();
+            request.setStatus("ACTIVE");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
+                when(userService.enableUser(anyLong())).thenReturn(testUser);
+
+                mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(true));
+            }
+        }
+
+        @Test
+        @DisplayName("管理员更新用户成功 - 更新状态为DISABLED")
+        void updateUser_statusDisabled() throws Exception {
+            UserUpdateRequest request = new UserUpdateRequest();
+            request.setStatus("DISABLED");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
+                when(userService.disableUser(anyLong())).thenReturn(testUser);
+
+                mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(true));
+            }
+        }
+
+        @Test
+        @DisplayName("管理员更新用户成功 - 更新头像")
+        void updateUser_avatar() throws Exception {
+            UserUpdateRequest request = new UserUpdateRequest();
+            request.setAvatar("avatar2.png");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
+                when(userService.updateAvatar(anyLong(), anyString())).thenReturn(testUser);
+
+                mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(true));
+            }
+        }
+
+        @Test
+        @DisplayName("管理员更新用户 - 用户不存在")
+        void updateUser_userNotFound() throws Exception {
+            UserUpdateRequest request = new UserUpdateRequest();
+            request.setRole("ADMIN");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(anyLong())).thenReturn(java.util.Optional.empty());
+
+                mockMvc.perform(put("/api/users/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+
+        @Test
+        @DisplayName("非管理员不能更新用户")
+        void updateUser_notAdmin() throws Exception {
+            UserUpdateRequest request = new UserUpdateRequest();
+            request.setRole("ADMIN");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(false);
+
+                mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+
+        @Test
+        @DisplayName("无效角色")
+        void updateUser_invalidRole() throws Exception {
+            UserUpdateRequest request = new UserUpdateRequest();
+            request.setRole("INVALID_ROLE");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
+
+                mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+
+        @Test
+        @DisplayName("无效状态")
+        void updateUser_invalidStatus() throws Exception {
+            UserUpdateRequest request = new UserUpdateRequest();
+            request.setStatus("INVALID_STATUS");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
+
+                mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false));
+            }
+        }
+
+        @Test
+        @DisplayName("空请求 - 不更新任何内容")
+        void updateUser_emptyRequest() throws Exception {
+            UserUpdateRequest request = new UserUpdateRequest();
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
+                when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
+
+                mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(true));
             }
         }
     }
