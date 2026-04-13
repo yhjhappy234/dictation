@@ -6,6 +6,7 @@ import com.yhj.dictation.dto.TaskDTO;
 import com.yhj.dictation.dto.TaskCreateRequest;
 import com.yhj.dictation.entity.DictationTask;
 import com.yhj.dictation.entity.TaskRecord;
+import com.yhj.dictation.dto.TaskProgressRequest;
 import com.yhj.dictation.entity.DictationBatch;
 import com.yhj.dictation.service.DictationTaskService;
 import com.yhj.dictation.service.DictationBatchService;
@@ -140,6 +141,25 @@ class DictationTaskControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").value("词语不能为空"));
         }
+
+        @Test
+        @DisplayName("创建任务 - 异常情况")
+        void createTask_exception() throws Exception {
+            // Given
+            TaskCreateRequest request = new TaskCreateRequest();
+            request.setTaskName("Test");
+            request.setWords("词语");
+
+            when(taskService.createTask(any(TaskCreateRequest.class)))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
     }
 
     @Nested
@@ -171,6 +191,49 @@ class DictationTaskControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isEmpty());
         }
+
+        @Test
+        @DisplayName("获取所有任务 - 异常情况")
+        void getAllTasks_exception() throws Exception {
+            // Given
+            when(taskService.getAllTaskDTOs()).thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(get("/api/tasks"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+    }
+
+    @Nested
+    @DisplayName("getUncompletedTasks API测试")
+    class GetUncompletedTasksApiTests {
+
+        @Test
+        @DisplayName("获取未完成任务 - 成功")
+        void getUncompletedTasks_success() throws Exception {
+            // Given
+            List<TaskDTO> tasks = Arrays.asList(testTaskDTO);
+            when(taskService.getUncompletedTaskDTOs()).thenReturn(tasks);
+
+            // When & Then
+            mockMvc.perform(get("/api/tasks/uncompleted"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data").isArray());
+        }
+
+        @Test
+        @DisplayName("获取未完成任务 - 异常情况")
+        void getUncompletedTasks_exception() throws Exception {
+            // Given
+            when(taskService.getUncompletedTaskDTOs()).thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(get("/api/tasks/uncompleted"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
     }
 
     @Nested
@@ -199,6 +262,18 @@ class DictationTaskControllerTest {
 
             // When & Then
             mockMvc.perform(get("/api/tasks/999"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("获取任务详情 - 异常情况")
+        void getTaskById_exception() throws Exception {
+            // Given
+            when(taskService.getTaskById(anyLong())).thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(get("/api/tasks/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -239,6 +314,24 @@ class DictationTaskControllerTest {
 
             // When & Then
             mockMvc.perform(put("/api/tasks/999")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("更新任务 - 异常情况")
+        void updateTask_exception() throws Exception {
+            // Given
+            TaskCreateRequest request = new TaskCreateRequest();
+            request.setTaskName("Updated");
+
+            when(taskService.updateTask(anyLong(), any(TaskCreateRequest.class)))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(put("/api/tasks/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -306,6 +399,19 @@ class DictationTaskControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
+
+        @Test
+        @DisplayName("开始任务 - 异常情况")
+        void startTask_exception() throws Exception {
+            // Given
+            when(taskService.startTask(anyLong()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/start"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
     }
 
     @Nested
@@ -325,6 +431,32 @@ class DictationTaskControllerTest {
             mockMvc.perform(post("/api/tasks/1/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("完成任务 - 任务不存在")
+        void completeTask_notFound() throws Exception {
+            // Given
+            when(taskService.completeTask(anyLong()))
+                    .thenThrow(new IllegalArgumentException("Task not found"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/999/complete"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("完成任务 - 异常情况")
+        void completeTask_exception() throws Exception {
+            // Given
+            when(taskService.completeTask(anyLong()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/complete"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 
@@ -346,6 +478,32 @@ class DictationTaskControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
+
+        @Test
+        @DisplayName("设置听写人 - 任务不存在")
+        void setDictator_notFound() throws Exception {
+            // Given
+            when(taskService.setDictator(anyLong(), anyString()))
+                    .thenThrow(new IllegalArgumentException("Task not found"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/999/dictator?dictator=小明"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("设置听写人 - 异常情况")
+        void setDictator_exception() throws Exception {
+            // Given
+            when(taskService.setDictator(anyLong(), anyString()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/dictator?dictator=小明"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
     }
 
     @Nested
@@ -363,6 +521,32 @@ class DictationTaskControllerTest {
             mockMvc.perform(post("/api/tasks/1/reset-progress"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("重置进度 - 任务不存在")
+        void resetProgress_notFound() throws Exception {
+            // Given
+            when(taskService.resetProgress(anyLong()))
+                    .thenThrow(new IllegalArgumentException("Task not found"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/999/reset-progress"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("重置进度 - 异常情况")
+        void resetProgress_exception() throws Exception {
+            // Given
+            when(taskService.resetProgress(anyLong()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/reset-progress"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 
@@ -389,6 +573,19 @@ class DictationTaskControllerTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
         }
+
+        @Test
+        @DisplayName("获取任务记录 - 异常情况")
+        void getTaskRecords_exception() throws Exception {
+            // Given
+            when(taskRecordService.getRecordsByTaskId(anyLong()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(get("/api/tasks/1/records"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
     }
 
     @Nested
@@ -411,6 +608,19 @@ class DictationTaskControllerTest {
             mockMvc.perform(post("/api/tasks/1/start-word?word=词语1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("开始听写词语 - 异常情况")
+        void startWord_exception() throws Exception {
+            // Given
+            when(taskRecordService.startWord(anyLong(), anyString()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/start-word?word=词语1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 
@@ -444,6 +654,19 @@ class DictationTaskControllerTest {
 
             // When & Then
             mockMvc.perform(post("/api/tasks/1/read-word?word=词语"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("增加朗读次数 - 异常情况")
+        void incrementReadCount_exception() throws Exception {
+            // Given
+            when(taskRecordService.incrementReadCountByWord(anyLong(), anyString()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/read-word?word=词语1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -488,24 +711,18 @@ class DictationTaskControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
-    }
-
-    @Nested
-    @DisplayName("getUncompletedTasks API测试")
-    class GetUncompletedTasksApiTests {
 
         @Test
-        @DisplayName("获取未完成任务 - 成功")
-        void getUncompletedTasks_success() throws Exception {
+        @DisplayName("完成词语听写 - 异常情况")
+        void completeWord_exception() throws Exception {
             // Given
-            List<TaskDTO> tasks = Arrays.asList(testTaskDTO);
-            when(taskService.getUncompletedTaskDTOs()).thenReturn(tasks);
+            when(taskRecordService.completeWord(anyLong(), anyString(), anyBoolean()))
+                    .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/uncompleted"))
+            mockMvc.perform(post("/api/tasks/1/complete-word?word=词语1&isCorrect=true"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data").isArray());
+                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 
@@ -528,6 +745,19 @@ class DictationTaskControllerTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
         }
+
+        @Test
+        @DisplayName("获取已完成任务 - 异常情况")
+        void getTasksByStatus_exception() throws Exception {
+            // Given
+            when(taskService.getTasksByStatus(any(DictationTask.TaskStatus.class)))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(get("/api/tasks/status/COMPLETED"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
     }
 
     @Nested
@@ -547,6 +777,18 @@ class DictationTaskControllerTest {
             mockMvc.perform(get("/api/tasks/favorites"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("获取收藏任务 - 异常情况")
+        void getFavoriteTasks_exception() throws Exception {
+            // Given
+            when(taskService.getFavoriteTasks()).thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(get("/api/tasks/favorites"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 
@@ -568,6 +810,32 @@ class DictationTaskControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
+
+        @Test
+        @DisplayName("设置收藏 - 任务不存在")
+        void setFavorite_notFound() throws Exception {
+            // Given
+            when(taskService.setFavorite(anyLong(), anyBoolean()))
+                    .thenThrow(new IllegalArgumentException("Task not found"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/999/favorite?isFavorite=true"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("设置收藏 - 异常情况")
+        void setFavorite_exception() throws Exception {
+            // Given
+            when(taskService.setFavorite(anyLong(), anyBoolean()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/favorite?isFavorite=true"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
     }
 
     @Nested
@@ -585,6 +853,215 @@ class DictationTaskControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
+        }
+
+        @Test
+        @DisplayName("获取听写人列表 - 异常情况")
+        void getDictators_exception() throws Exception {
+            // Given
+            when(taskService.getAllDictators()).thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(get("/api/tasks/dictators"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+    }
+
+    @Nested
+    @DisplayName("updateStatus API测试")
+    class UpdateStatusApiTests {
+
+        @Test
+        @DisplayName("更新任务状态 - 成功")
+        void updateStatus_success() throws Exception {
+            // Given
+            testTask.setStatus(DictationTask.TaskStatus.COMPLETED);
+            testTaskDTO.setStatus("COMPLETED");
+            when(taskService.updateStatus(eq(1L), any(DictationTask.TaskStatus.class))).thenReturn(testTask);
+            when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
+
+            // When & Then
+            mockMvc.perform(put("/api/tasks/1/status?status=COMPLETED"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("更新任务状态 - 任务不存在")
+        void updateStatus_notFound() throws Exception {
+            // Given
+            when(taskService.updateStatus(anyLong(), any(DictationTask.TaskStatus.class)))
+                    .thenThrow(new IllegalArgumentException("Task not found"));
+
+            // When & Then
+            mockMvc.perform(put("/api/tasks/999/status?status=COMPLETED"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("更新任务状态 - 异常情况")
+        void updateStatus_exception() throws Exception {
+            // Given
+            when(taskService.updateStatus(anyLong(), any(DictationTask.TaskStatus.class)))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(put("/api/tasks/1/status?status=COMPLETED"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+    }
+
+    @Nested
+    @DisplayName("resetTaskStatus API测试")
+    class ResetTaskStatusApiTests {
+
+        @Test
+        @DisplayName("重置任务状态 - 成功")
+        void resetTaskStatus_success() throws Exception {
+            // Given
+            testTask.setStatus(DictationTask.TaskStatus.NOT_STARTED);
+            testTaskDTO.setStatus("NOT_STARTED");
+            when(taskService.resetTask(1L)).thenReturn(testTask);
+            when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/reset"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("重置任务状态 - 任务不存在")
+        void resetTaskStatus_notFound() throws Exception {
+            // Given
+            when(taskService.resetTask(anyLong()))
+                    .thenThrow(new IllegalArgumentException("Task not found"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/999/reset"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("重置任务状态 - 异常情况")
+        void resetTaskStatus_exception() throws Exception {
+            // Given
+            when(taskService.resetTask(anyLong()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/reset"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+    }
+
+    @Nested
+    @DisplayName("updateProgress API测试")
+    class UpdateProgressApiTests {
+
+        @Test
+        @DisplayName("更新任务进度 - 成功")
+        void updateProgress_success() throws Exception {
+            // Given
+            TaskProgressRequest request = new TaskProgressRequest();
+            request.setCurrentIndex(2);
+            request.setCorrectCount(1);
+            request.setWrongCount(1);
+
+            when(taskService.updateProgress(eq(1L), anyInt(), anyInt(), anyInt())).thenReturn(testTask);
+            when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/progress")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("更新任务进度 - 任务不存在")
+        void updateProgress_notFound() throws Exception {
+            // Given
+            TaskProgressRequest request = new TaskProgressRequest();
+            request.setCurrentIndex(0);
+
+            when(taskService.updateProgress(anyLong(), anyInt(), anyInt(), anyInt()))
+                    .thenThrow(new IllegalArgumentException("Task not found"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/999/progress")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("更新任务进度 - 异常情况")
+        void updateProgress_exception() throws Exception {
+            // Given
+            TaskProgressRequest request = new TaskProgressRequest();
+            request.setCurrentIndex(0);
+
+            when(taskService.updateProgress(anyLong(), anyInt(), anyInt(), anyInt()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/progress")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+    }
+
+    @Nested
+    @DisplayName("recordWordResult API测试")
+    class RecordWordResultApiTests {
+
+        @Test
+        @DisplayName("记录词语结果 - 成功")
+        void recordWordResult_success() throws Exception {
+            // Given
+            when(taskService.recordWordResult(eq(1L), anyString(), eq(true))).thenReturn(testTask);
+            when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/record?word=词语1&isCorrect=true"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("记录词语结果 - 任务不存在")
+        void recordWordResult_notFound() throws Exception {
+            // Given
+            when(taskService.recordWordResult(anyLong(), anyString(), anyBoolean()))
+                    .thenThrow(new IllegalArgumentException("Task not found"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/999/record?word=词语&isCorrect=true"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        @DisplayName("记录词语结果 - 异常情况")
+        void recordWordResult_exception() throws Exception {
+            // Given
+            when(taskService.recordWordResult(anyLong(), anyString(), anyBoolean()))
+                    .thenThrow(new RuntimeException("Database error"));
+
+            // When & Then
+            mockMvc.perform(post("/api/tasks/1/record?word=词语&isCorrect=true"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 

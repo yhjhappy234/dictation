@@ -577,6 +577,106 @@ class TaskRecordServiceTest {
     }
 
     @Nested
+    @DisplayName("updateTaskStatistics 方法测试")
+    class UpdateTaskStatisticsTests {
+
+        @Test
+        @DisplayName("更新任务统计 - 成功更新")
+        void updateTaskStatistics_success() {
+            // Given
+            testTask.setCorrectCount(0);
+            testTask.setWrongCount(0);
+            when(taskRepository.findById(TASK_ID)).thenReturn(Optional.of(testTask));
+            when(recordRepository.countByTaskIdAndIsCorrectTrue(TASK_ID)).thenReturn(5L);
+            when(recordRepository.countByTaskIdAndIsCorrectFalse(TASK_ID)).thenReturn(3L);
+            when(taskRepository.save(any(DictationTask.class))).thenReturn(testTask);
+
+            // When
+            taskRecordService.updateTaskStatistics(TASK_ID);
+
+            // Then
+            assertEquals(5, testTask.getCorrectCount());
+            assertEquals(3, testTask.getWrongCount());
+            verify(taskRepository).save(any(DictationTask.class));
+        }
+
+        @Test
+        @DisplayName("更新任务统计 - 任务不存在直接返回")
+        void updateTaskStatistics_taskNotFound_returns() {
+            // Given
+            when(taskRepository.findById(TASK_ID)).thenReturn(Optional.empty());
+
+            // When
+            taskRecordService.updateTaskStatistics(TASK_ID);
+
+            // Then
+            verify(recordRepository, never()).countByTaskIdAndIsCorrectTrue(anyLong());
+            verify(recordRepository, never()).countByTaskIdAndIsCorrectFalse(anyLong());
+            verify(taskRepository, never()).save(any(DictationTask.class));
+        }
+
+        @Test
+        @DisplayName("更新任务统计 - correctCount为null时设置为0")
+        void updateTaskStatistics_nullCorrectCount_setsToZero() {
+            // Given
+            testTask.setCorrectCount(10);
+            testTask.setWrongCount(0);
+            when(taskRepository.findById(TASK_ID)).thenReturn(Optional.of(testTask));
+            when(recordRepository.countByTaskIdAndIsCorrectTrue(TASK_ID)).thenReturn(null);
+            when(recordRepository.countByTaskIdAndIsCorrectFalse(TASK_ID)).thenReturn(2L);
+            when(taskRepository.save(any(DictationTask.class))).thenReturn(testTask);
+
+            // When
+            taskRecordService.updateTaskStatistics(TASK_ID);
+
+            // Then
+            assertEquals(0, testTask.getCorrectCount());
+            assertEquals(2, testTask.getWrongCount());
+            verify(taskRepository).save(any(DictationTask.class));
+        }
+
+        @Test
+        @DisplayName("更新任务统计 - wrongCount为null时设置为0")
+        void updateTaskStatistics_nullWrongCount_setsToZero() {
+            // Given
+            testTask.setCorrectCount(0);
+            testTask.setWrongCount(10);
+            when(taskRepository.findById(TASK_ID)).thenReturn(Optional.of(testTask));
+            when(recordRepository.countByTaskIdAndIsCorrectTrue(TASK_ID)).thenReturn(3L);
+            when(recordRepository.countByTaskIdAndIsCorrectFalse(TASK_ID)).thenReturn(null);
+            when(taskRepository.save(any(DictationTask.class))).thenReturn(testTask);
+
+            // When
+            taskRecordService.updateTaskStatistics(TASK_ID);
+
+            // Then
+            assertEquals(3, testTask.getCorrectCount());
+            assertEquals(0, testTask.getWrongCount());
+            verify(taskRepository).save(any(DictationTask.class));
+        }
+
+        @Test
+        @DisplayName("更新任务统计 - both counts为null时都设置为0")
+        void updateTaskStatistics_bothNull_setsToZero() {
+            // Given
+            testTask.setCorrectCount(10);
+            testTask.setWrongCount(10);
+            when(taskRepository.findById(TASK_ID)).thenReturn(Optional.of(testTask));
+            when(recordRepository.countByTaskIdAndIsCorrectTrue(TASK_ID)).thenReturn(null);
+            when(recordRepository.countByTaskIdAndIsCorrectFalse(TASK_ID)).thenReturn(null);
+            when(taskRepository.save(any(DictationTask.class))).thenReturn(testTask);
+
+            // When
+            taskRecordService.updateTaskStatistics(TASK_ID);
+
+            // Then
+            assertEquals(0, testTask.getCorrectCount());
+            assertEquals(0, testTask.getWrongCount());
+            verify(taskRepository).save(any(DictationTask.class));
+        }
+    }
+
+    @Nested
     @DisplayName("saveTaskResults 方法测试")
     class SaveTaskResultsTests {
 
