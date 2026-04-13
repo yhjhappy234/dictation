@@ -1,5 +1,8 @@
 server:
   port: 8080
+  servlet:
+    session:
+      timeout: 2h
 
 spring:
   application:
@@ -39,3 +42,10 @@ cors:
   allowed-methods: "*"
   allowed-headers: "*"
   allow-credentials: true
+
+# 默认用户配置（通过环境变量设置，不在此文件中暴露）
+# 设置环境变量：APP_DEFAULT_USERNAME 和 APP_DEFAULT_PASSWORD
+app:
+  default:
+    username: ${APP_DEFAULT_USERNAME:admin}
+    password: ${APP_DEFAULT_PASSWORD:default123456}

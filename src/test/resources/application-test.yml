@@ -36,3 +36,9 @@ cors:
   allowed-methods: "*"
   allowed-headers: "*"
   allow-credentials: true
+
+# 测试环境默认用户配置
+app:
+  default:
+    username: testuser
+    password: testpass123

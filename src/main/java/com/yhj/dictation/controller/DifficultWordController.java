@@ -1,5 +1,6 @@
 package com.yhj.dictation.controller;
 
+import com.yhj.dictation.annotation.AuditLog;
 import com.yhj.dictation.dto.ApiResponse;
 import com.yhj.dictation.dto.DifficultWordAddRequest;
 import com.yhj.dictation.dto.DifficultWordDTO;
@@ -60,6 +61,7 @@ public class DifficultWordController {
     }
 
     @PostMapping
+    @AuditLog(operation = "添加生词", recordParams = true)
     public ApiResponse<DifficultWordDTO> addDifficultWord(@RequestBody DifficultWordAddRequest request) {
         try {
             DifficultWordDTO dto = difficultWordService.addDifficultWordDTO(
@@ -72,6 +74,7 @@ public class DifficultWordController {
     }
 
     @PostMapping("/batch")
+    @AuditLog(operation = "批量添加生词", recordParams = true)
     public ApiResponse<List<DifficultWordDTO>> addDifficultWordsBatch(
             @RequestBody List<DifficultWordDTO> words,
             @RequestParam(required = false) String dictator) {
@@ -88,6 +91,7 @@ public class DifficultWordController {
     }
 
     @PutMapping("/{id}/mastery")
+    @AuditLog(operation = "更新生词掌握级别", recordParams = true)
     public ApiResponse<DifficultWordDTO> updateMasteryLevel(
             @PathVariable Long id,
             @RequestParam Integer level) {
@@ -108,6 +112,7 @@ public class DifficultWordController {
     }
 
     @PostMapping("/text/{wordText}/success")
+    @AuditLog(operation = "生词练习成功", recordParams = true)
     public ApiResponse<Void> practiceSuccessByText(@PathVariable String wordText) {
         try {
             difficultWordService.handlePracticeSuccessByText(wordText);
@@ -119,6 +124,7 @@ public class DifficultWordController {
     }
 
     @PostMapping("/text/{wordText}/failure")
+    @AuditLog(operation = "生词练习失败", recordParams = true)
     public ApiResponse<Void> practiceFailureByText(
             @PathVariable String wordText,
             @RequestParam(required = false) String dictator) {
@@ -132,6 +138,7 @@ public class DifficultWordController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(operation = "移除生词", level = AuditLog.LogLevel.IMPORTANT, recordParams = true)
     public ApiResponse<Void> removeDifficultWord(@PathVariable Long id) {
         try {
             difficultWordService.removeDifficultWord(id);

@@ -369,10 +369,81 @@
                         <i class="bi bi-graph-up me-1"></i>报表
                     </a>
                 </li>
+                <!-- 用户管理（管理员可见） -->
+                <li class="nav-item" id="userManagementNavItem" style="display: none;">
+                    <a class="nav-link" th:classappend="${activePage == 'user-management'} ? 'active'" href="/user-management">
+                        <i class="bi bi-person-badge me-1"></i>用户管理
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <img id="userAvatar" src="/images/avatars/avatar1.png" class="rounded-circle me-2" width="32" height="32" alt="头像">
+                        <span id="currentUsername">用户</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#avatarModal">
+                                <i class="bi bi-image me-1"></i>更换头像
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#passwordModal">
+                                <i class="bi bi-key me-1"></i>修改密码
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-1"></i>退出登录</a></li>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>
 </nav>
+
+<!-- 更换头像模态框 -->
+<div class="modal fade" id="avatarModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-image me-2"></i>更换头像</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="avatarGrid">
+                    <!-- 头像列表将通过JS动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 修改密码模态框 -->
+<div class="modal fade" id="passwordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-key me-2"></i>修改密码</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="passwordForm">
+                    <div class="mb-3">
+                        <label class="form-label">新密码</label>
+                        <input type="password" class="form-control" id="newPassword" required minlength="6">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">确认密码</label>
+                        <input type="password" class="form-control" id="confirmPassword" required minlength="6">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="changePassword()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- 页脚fragment -->
 <footer th:fragment="footer" class="text-center py-4 mt-5">
@@ -385,5 +456,146 @@
 <div th:fragment="scripts">
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 获取当前用户信息
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/auth/current');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    document.getElementById('currentUsername').textContent = result.data.username;
+                    // 设置头像
+                    if (result.data.avatar) {
+                        document.getElementById('userAvatar').src = '/images/avatars/' + result.data.avatar;
+                    }
+                    // 显示用户管理菜单（管理员）
+                    if (result.data.role === 'ADMIN') {
+                        document.getElementById('userManagementNavItem').style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+        }
+
+        // 加载头像列表
+        async function loadAvatars() {
+            try {
+                const response = await fetch('/api/auth/avatars');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const grid = document.getElementById('avatarGrid');
+                    grid.innerHTML = '';
+                    result.data.forEach(avatar => {
+                        const col = document.createElement('div');
+                        col.className = 'col-3 mb-3';
+                        col.innerHTML = `
+                            <img src="/images/avatars/${avatar}"
+                                 class="img-thumbnail avatar-option"
+                                 width="80" height="80"
+                                 onclick="selectAvatar('${avatar}')"
+                                 style="cursor: pointer;">
+                        `;
+                        grid.appendChild(col);
+                    });
+                }
+            } catch (error) {
+                console.error('加载头像列表失败:', error);
+            }
+        }
+
+        // 选择头像
+        async function selectAvatar(avatar) {
+            try {
+                const response = await fetch('/api/users/me/avatar?avatar=' + avatar, { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('userAvatar').src = '/images/avatars/' + avatar;
+                    bootstrap.Modal.getInstance(document.getElementById('avatarModal')).hide();
+                    showToast('头像修改成功', 'success');
+                } else {
+                    showToast(result.message || '修改失败', 'warning');
+                }
+            } catch (error) {
+                console.error('修改头像失败:', error);
+                showToast('修改失败', 'warning');
+            }
+        }
+
+        // 修改密码
+        async function changePassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!newPassword || newPassword.length < 6) {
+                showToast('密码长度至少6位', 'warning');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showToast('两次密码不一致', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users/me/password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newPassword: newPassword })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    showToast('密码修改成功', 'success');
+                } else {
+                    showToast(result.message || '修改失败', 'warning');
+                }
+            } catch (error) {
+                console.error('修改密码失败:', error);
+                showToast('修改失败', 'warning');
+            }
+        }
+
+        // 登出
+        async function logout() {
+            try {
+                const response = await fetch('/api/auth/logout', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('登出失败:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // 显示提示
+        function showToast(message, type = 'info') {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type === 'warning' ? 'warning' : 'primary'} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            const container = document.createElement('div');
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.innerHTML = toastHtml;
+            document.body.appendChild(container);
+            const toast = new bootstrap.Toast(container.querySelector('.toast'));
+            toast.show();
+            setTimeout(() => container.remove(), 5000);
+        }
+
+        // 页面加载时
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadCurrentUser();
+            await loadAvatars();
+        });
+    </script>
 </div>
 </html>

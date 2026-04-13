@@ -1,5 +1,6 @@
 package com.yhj.dictation.controller;
 
+import com.yhj.dictation.annotation.AuditLog;
 import com.yhj.dictation.dto.ApiResponse;
 import com.yhj.dictation.dto.TaskCreateRequest;
 import com.yhj.dictation.dto.TaskDTO;
@@ -37,6 +38,7 @@ public class DictationTaskController {
      * 创建任务模板
      */
     @PostMapping
+    @AuditLog(operation = "创建听写任务", recordParams = true)
     public ApiResponse<TaskDTO> createTask(@RequestBody TaskCreateRequest request) {
         try {
             if (request.getTaskName() == null || request.getTaskName().trim().isEmpty()) {
@@ -103,6 +105,7 @@ public class DictationTaskController {
      * 更新任务模板
      */
     @PutMapping("/{id}")
+    @AuditLog(operation = "更新听写任务", recordParams = true)
     public ApiResponse<TaskDTO> updateTask(@PathVariable Long id, @RequestBody TaskCreateRequest request) {
         try {
             DictationTask task = taskService.updateTask(id, request);
@@ -119,6 +122,7 @@ public class DictationTaskController {
      * 删除任务模板
      */
     @DeleteMapping("/{id}")
+    @AuditLog(operation = "删除听写任务", level = AuditLog.LogLevel.IMPORTANT, recordParams = true)
     public ApiResponse<Void> deleteTask(@PathVariable Long id) {
         try {
             taskService.deleteTask(id);
@@ -133,6 +137,7 @@ public class DictationTaskController {
      * 设置/取消收藏
      */
     @PostMapping("/{id}/favorite")
+    @AuditLog(operation = "设置任务收藏", recordParams = true)
     public ApiResponse<TaskDTO> setFavorite(@PathVariable Long id, @RequestParam boolean isFavorite) {
         try {
             DictationTask task = taskService.setFavorite(id, isFavorite);
@@ -149,6 +154,7 @@ public class DictationTaskController {
      * 更新任务状态
      */
     @PutMapping("/{id}/status")
+    @AuditLog(operation = "更新任务状态", recordParams = true)
     public ApiResponse<TaskDTO> updateStatus(@PathVariable Long id, @RequestParam TaskStatus status) {
         try {
             DictationTask task = taskService.updateStatus(id, status);
@@ -165,6 +171,7 @@ public class DictationTaskController {
      * 开始任务（状态改为进行中）
      */
     @PostMapping("/{id}/start")
+    @AuditLog(operation = "开始听写任务", recordParams = true)
     public ApiResponse<TaskDTO> startTaskStatus(@PathVariable Long id) {
         try {
             DictationTask task = taskService.startTask(id);
@@ -181,6 +188,7 @@ public class DictationTaskController {
      * 完成任务（状态改为已完成）
      */
     @PostMapping("/{id}/complete")
+    @AuditLog(operation = "完成听写任务", recordParams = true)
     public ApiResponse<TaskDTO> completeTaskStatus(@PathVariable Long id) {
         try {
             DictationTask task = taskService.completeTask(id);
@@ -197,6 +205,7 @@ public class DictationTaskController {
      * 设置听写人
      */
     @PostMapping("/{id}/dictator")
+    @AuditLog(operation = "设置听写人", recordParams = true)
     public ApiResponse<TaskDTO> setDictator(@PathVariable Long id, @RequestParam String dictator) {
         try {
             DictationTask task = taskService.setDictator(id, dictator);
@@ -213,6 +222,7 @@ public class DictationTaskController {
      * 重置任务（状态改为未开始）
      */
     @PostMapping("/{id}/reset")
+    @AuditLog(operation = "重置听写任务", recordParams = true)
     public ApiResponse<TaskDTO> resetTaskStatus(@PathVariable Long id) {
         try {
             DictationTask task = taskService.resetTask(id);
@@ -246,6 +256,7 @@ public class DictationTaskController {
      * 更新任务进度
      */
     @PostMapping("/{id}/progress")
+    @AuditLog(operation = "更新任务进度", recordParams = true)
     public ApiResponse<TaskDTO> updateProgress(@PathVariable Long id, @RequestBody TaskProgressRequest request) {
         try {
             DictationTask task = taskService.updateProgress(id, request.getCurrentIndex(), request.getCorrectCount(), request.getWrongCount());
@@ -262,6 +273,7 @@ public class DictationTaskController {
      * 记录单个词语的听写结果
      */
     @PostMapping("/{id}/record")
+    @AuditLog(operation = "记录词语听写结果", recordParams = true)
     public ApiResponse<TaskDTO> recordWordResult(@PathVariable Long id, @RequestParam String word, @RequestParam boolean isCorrect) {
         try {
             DictationTask task = taskService.recordWordResult(id, word, isCorrect);
@@ -278,6 +290,7 @@ public class DictationTaskController {
      * 重置任务进度
      */
     @PostMapping("/{id}/reset-progress")
+    @AuditLog(operation = "重置任务进度", recordParams = true)
     public ApiResponse<TaskDTO> resetProgress(@PathVariable Long id) {
         try {
             DictationTask task = taskService.resetProgress(id);
@@ -294,6 +307,7 @@ public class DictationTaskController {
      * 从任务模板创建批次并开始听写
      */
     @PostMapping("/{id}/dictation")
+    @AuditLog(operation = "开始听写", recordParams = true)
     public ApiResponse<Long> startDictationFromTask(@PathVariable Long id) {
         try {
             Optional<DictationTask> taskOpt = taskService.getTaskById(id);
@@ -409,6 +423,7 @@ public class DictationTaskController {
      * 完成听写词语（记录结束时间和结果）
      */
     @PostMapping("/{id}/complete-word")
+    @AuditLog(operation = "完成词语听写", recordParams = true)
     public ApiResponse<TaskRecord> completeWord(@PathVariable Long id, @RequestParam String word, @RequestParam boolean isCorrect) {
         try {
             TaskRecord record = taskRecordService.completeWord(id, word, isCorrect);

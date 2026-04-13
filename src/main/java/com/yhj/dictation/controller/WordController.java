@@ -1,5 +1,6 @@
 package com.yhj.dictation.controller;
 
+import com.yhj.dictation.annotation.AuditLog;
 import com.yhj.dictation.dto.ApiResponse;
 import com.yhj.dictation.dto.StatusUpdateRequest;
 import com.yhj.dictation.dto.WordAddRequest;
@@ -30,6 +31,7 @@ public class WordController {
     }
 
     @PutMapping("/{id}/status")
+    @AuditLog(operation = "更新词语状态", recordParams = true)
     public ApiResponse<WordDTO> updateWordStatus(@PathVariable Long id, @RequestBody StatusUpdateRequest request) {
         try {
             Word.WordStatus status = Word.WordStatus.valueOf(request.getStatus());
@@ -41,6 +43,7 @@ public class WordController {
     }
 
     @PutMapping("/{id}/pinyin")
+    @AuditLog(operation = "更新词语拼音", recordParams = true)
     public ApiResponse<WordDTO> updateWordPinyin(@PathVariable Long id, @RequestBody WordAddRequest request) {
         try {
             Word word = wordService.updateWordPinyin(id, request.getPinyin());
@@ -51,6 +54,7 @@ public class WordController {
     }
 
     @PostMapping("/{id}/complete")
+    @AuditLog(operation = "标记词语完成", recordParams = true)
     public ApiResponse<WordDTO> markAsCompleted(@PathVariable Long id) {
         try {
             Word word = wordService.markAsCompleted(id);
@@ -61,6 +65,7 @@ public class WordController {
     }
 
     @PostMapping("/{id}/skip")
+    @AuditLog(operation = "跳过词语", recordParams = true)
     public ApiResponse<WordDTO> markAsSkipped(@PathVariable Long id) {
         try {
             Word word = wordService.markAsSkipped(id);
@@ -95,6 +100,7 @@ public class WordController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(operation = "删除词语", level = AuditLog.LogLevel.IMPORTANT, recordParams = true)
     public ApiResponse<Void> deleteWord(@PathVariable Long id) {
         try {
             wordService.deleteWord(id);

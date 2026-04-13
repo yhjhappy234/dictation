@@ -10,6 +10,22 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class PageController {
 
     /**
+     * 登录页面
+     */
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
+
+    /**
+     * 用户管理页面（管理员）
+     */
+    @GetMapping("/user-management")
+    public String userManagement() {
+        return "user-management";
+    }
+
+    /**
      * 主页面 - 听写功能
      */
     @GetMapping("/")
