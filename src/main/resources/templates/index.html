@@ -608,7 +608,7 @@
             correctCount++;
 
             if (currentIndex >= words.length) {
-                finishDictation();
+                await finishDictation();
             } else {
                 updateStats();
                 showCurrentWord();
@@ -673,7 +673,7 @@
         currentIndex++;
 
         if (currentIndex >= words.length) {
-            finishDictation();
+            await finishDictation();
         } else {
             updateStats();
             showCurrentWord();
