@@ -366,6 +366,43 @@ class DictationRecordControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
+
+        @Test
+        @DisplayName("获取今日报告 - 包含跳过记录")
+        void getTodayReport_withSkipped() throws Exception {
+            DictationRecord skippedRecord = new DictationRecord();
+            skippedRecord.setId(2L);
+            skippedRecord.setStatus(DictationRecord.RecordStatus.SKIPPED);
+            skippedRecord.setRepeatCount(0);
+
+            when(recordService.getTodayRecords()).thenReturn(List.of(testRecord, skippedRecord));
+
+            mockMvc.perform(get("/api/records/report/today"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("获取今日报告 - 无持续时间")
+        void getTodayReport_nullDuration() throws Exception {
+            testRecord.setDurationSeconds(null);
+
+            when(recordService.getTodayRecords()).thenReturn(List.of(testRecord));
+
+            mockMvc.perform(get("/api/records/report/today"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("获取今日报告 - 空记录列表")
+        void getTodayReport_emptyList() throws Exception {
+            when(recordService.getTodayRecords()).thenReturn(List.of());
+
+            mockMvc.perform(get("/api/records/report/today"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+        }
     }
 
     @Nested
@@ -376,6 +413,21 @@ class DictationRecordControllerTest {
         @DisplayName("获取批次报告")
         void getBatchReport() throws Exception {
             when(recordService.getRecordsByBatchId(anyLong())).thenReturn(List.of(testRecord));
+
+            mockMvc.perform(get("/api/records/report/batch/1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true));
+        }
+
+        @Test
+        @DisplayName("获取批次报告 - 包含跳过记录")
+        void getBatchReport_withSkipped() throws Exception {
+            DictationRecord skippedRecord = new DictationRecord();
+            skippedRecord.setId(2L);
+            skippedRecord.setStatus(DictationRecord.RecordStatus.SKIPPED);
+            skippedRecord.setRepeatCount(0);
+
+            when(recordService.getRecordsByBatchId(anyLong())).thenReturn(List.of(testRecord, skippedRecord));
 
             mockMvc.perform(get("/api/records/report/batch/1"))
                     .andExpect(status().isOk())
