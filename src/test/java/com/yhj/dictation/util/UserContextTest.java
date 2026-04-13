@@ -109,6 +109,35 @@ class UserContextTest {
                 assertEquals("testuser", username);
             }
         }
+
+        @Test
+        @DisplayName("用户名不是String类型")
+        void getCurrentUsername_notString() {
+            try (MockedStatic<RequestContextHolder> mockedContext = mockStatic(RequestContextHolder.class)) {
+                mockedContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+                when(attributes.getRequest()).thenReturn(request);
+                when(request.getSession(false)).thenReturn(session);
+                when(session.getAttribute("username")).thenReturn(123); // 返回Integer而非String
+
+                String username = UserContext.getCurrentUsername();
+
+                assertNull(username);
+            }
+        }
+
+        @Test
+        @DisplayName("无Session")
+        void getCurrentUsername_noSession() {
+            try (MockedStatic<RequestContextHolder> mockedContext = mockStatic(RequestContextHolder.class)) {
+                mockedContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+                when(attributes.getRequest()).thenReturn(request);
+                when(request.getSession(false)).thenReturn(null);
+
+                String username = UserContext.getCurrentUsername();
+
+                assertNull(username);
+            }
+        }
     }
 
     @Nested
@@ -129,6 +158,35 @@ class UserContextTest {
                 assertEquals("ADMIN", role);
             }
         }
+
+        @Test
+        @DisplayName("角色不是String类型")
+        void getCurrentUserRole_notString() {
+            try (MockedStatic<RequestContextHolder> mockedContext = mockStatic(RequestContextHolder.class)) {
+                mockedContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+                when(attributes.getRequest()).thenReturn(request);
+                when(request.getSession(false)).thenReturn(session);
+                when(session.getAttribute("userRole")).thenReturn(123);
+
+                String role = UserContext.getCurrentUserRole();
+
+                assertNull(role);
+            }
+        }
+
+        @Test
+        @DisplayName("无Session")
+        void getCurrentUserRole_noSession() {
+            try (MockedStatic<RequestContextHolder> mockedContext = mockStatic(RequestContextHolder.class)) {
+                mockedContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+                when(attributes.getRequest()).thenReturn(request);
+                when(request.getSession(false)).thenReturn(null);
+
+                String role = UserContext.getCurrentUserRole();
+
+                assertNull(role);
+            }
+        }
     }
 
     @Nested
@@ -147,6 +205,35 @@ class UserContextTest {
                 String avatar = UserContext.getCurrentUserAvatar();
 
                 assertEquals("avatar1.png", avatar);
+            }
+        }
+
+        @Test
+        @DisplayName("头像不是String类型")
+        void getCurrentUserAvatar_notString() {
+            try (MockedStatic<RequestContextHolder> mockedContext = mockStatic(RequestContextHolder.class)) {
+                mockedContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+                when(attributes.getRequest()).thenReturn(request);
+                when(request.getSession(false)).thenReturn(session);
+                when(session.getAttribute("userAvatar")).thenReturn(123);
+
+                String avatar = UserContext.getCurrentUserAvatar();
+
+                assertNull(avatar);
+            }
+        }
+
+        @Test
+        @DisplayName("无Session")
+        void getCurrentUserAvatar_noSession() {
+            try (MockedStatic<RequestContextHolder> mockedContext = mockStatic(RequestContextHolder.class)) {
+                mockedContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+                when(attributes.getRequest()).thenReturn(request);
+                when(request.getSession(false)).thenReturn(null);
+
+                String avatar = UserContext.getCurrentUserAvatar();
+
+                assertNull(avatar);
             }
         }
     }
@@ -215,6 +302,21 @@ class UserContextTest {
                 verify(session).setAttribute("userAvatar", "avatar1.png");
             }
         }
+
+        @Test
+        @DisplayName("无Session时不设置")
+        void setCurrentUser_noSession() {
+            try (MockedStatic<RequestContextHolder> mockedContext = mockStatic(RequestContextHolder.class)) {
+                mockedContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+                when(attributes.getRequest()).thenReturn(request);
+                when(request.getSession(false)).thenReturn(null);
+
+                UserContext.setCurrentUser(1L, "testuser", "USER", "avatar1.png");
+
+                // 不调用session的setAttribute方法
+                verify(session, never()).setAttribute(any(), any());
+            }
+        }
     }
 
     @Nested
@@ -232,6 +334,20 @@ class UserContextTest {
                 UserContext.updateAvatar("avatar2.png");
 
                 verify(session).setAttribute("userAvatar", "avatar2.png");
+            }
+        }
+
+        @Test
+        @DisplayName("无Session时不更新")
+        void updateAvatar_noSession() {
+            try (MockedStatic<RequestContextHolder> mockedContext = mockStatic(RequestContextHolder.class)) {
+                mockedContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+                when(attributes.getRequest()).thenReturn(request);
+                when(request.getSession(false)).thenReturn(null);
+
+                UserContext.updateAvatar("avatar2.png");
+
+                verify(session, never()).setAttribute(any(), any());
             }
         }
     }
@@ -255,6 +371,21 @@ class UserContextTest {
                 verify(session).removeAttribute("userRole");
                 verify(session).removeAttribute("userAvatar");
                 verify(session).invalidate();
+            }
+        }
+
+        @Test
+        @DisplayName("无Session时不清除")
+        void clearCurrentUser_noSession() {
+            try (MockedStatic<RequestContextHolder> mockedContext = mockStatic(RequestContextHolder.class)) {
+                mockedContext.when(RequestContextHolder::getRequestAttributes).thenReturn(attributes);
+                when(attributes.getRequest()).thenReturn(request);
+                when(request.getSession(false)).thenReturn(null);
+
+                UserContext.clearCurrentUser();
+
+                verify(session, never()).removeAttribute(any());
+                verify(session, never()).invalidate();
             }
         }
     }
