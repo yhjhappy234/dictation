@@ -28,6 +28,11 @@ spring:
   main:
     lazy-initialization: true
 
+  # 时区配置 - 默认东八区
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+
 # 日志配置（生产环境级别）
 logging:
   level:
@@ -48,4 +53,4 @@ cors:
 app:
   default:
     username: ${APP_DEFAULT_USERNAME:admin}
-    password: ${APP_DEFAULT_PASSWORD:default123456}
+    password: ${APP_DEFAULT_PASSWORD:123456}

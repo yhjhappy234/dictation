@@ -537,6 +537,27 @@ recognition.onresult = (event) => {
 
 ---
 
-**文档版本**：v1.1
+**文档版本**：v1.2
+
+### 版本更新记录
+
+- **v1.2 (2026-04-16)**:
+  - Spring Boot 4.0.5适配
+    - AOP starter重命名：`spring-boot-starter-aspectj`
+    - ObjectMapper显式配置
+    - SecurityConfig session修复
+  - 新增API端点：`/api/batches/today`、`/api/batches/range`
+  - E2E测试：108个测试全部通过
+  - 单元测试覆盖率：90%+
+  - 时区：GMT+8
+
+- **v1.1 (2026-04-13)**:
+  - 用户认证与审计日志
+  - 用户角色管理
+  - 头像系统
+  - 密码加密
+
+- **v1.0 (2026-04-06)**:
+  - 初始版本
 **创建日期**：2026-04-06
 **最后更新**：2026-04-12

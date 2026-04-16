@@ -11,7 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -224,5 +226,28 @@ public class DictationBatchService {
     public BatchResponse createBatchResponse(BatchCreateRequest request) {
         DictationBatch batch = createBatch(request);
         return toBatchResponse(batch);
+    }
+
+    /**
+     * 获取今日批次响应DTO列表
+     */
+    public List<BatchResponse> getTodayBatchResponses() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+        return getBatchesByDateRange(startOfDay, endOfDay).stream()
+                .map(this::toBatchResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * 根据日期范围获取批次响应DTO列表
+     */
+    public List<BatchResponse> getBatchesByDateRange(LocalDate start, LocalDate end) {
+        LocalDateTime startDateTime = start.atStartOfDay();
+        LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
+        return getBatchesByDateRange(startDateTime, endDateTime).stream()
+                .map(this::toBatchResponse)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

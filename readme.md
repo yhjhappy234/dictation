@@ -420,6 +420,17 @@ YHJ-TECH 结合 AI Coding 模式开发
   - 单元测试：新增认证和审计相关测试
   - 密码加密：BCrypt加密存储
 
+- v1.5.0 (2026-04-16): Spring Boot 4.0.5适配与测试完善
+  - 修复Spring Boot 4.0.5兼容性问题：
+    - `spring-boot-starter-aop` → `spring-boot-starter-aspectj`
+    - 添加显式`ObjectMapper` bean配置
+    - 修复SecurityConfig session管理配置
+  - 新增批次API端点：`/api/batches/today`、`/api/batches/range`
+  - E2E测试完善：108个测试全部通过
+  - 单元测试覆盖率：90%以上（行覆盖率和分支覆盖率）
+  - 时区配置：默认东八区（GMT+8）
+  - 测试数据自动清理机制
+
 ## 许可证
 
 MIT License

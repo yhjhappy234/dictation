@@ -9,8 +9,10 @@ import com.yhj.dictation.service.DictationBatchService;
 import com.yhj.dictation.service.WordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,6 +48,26 @@ public class DictationBatchController {
     @GetMapping
     public ApiResponse<List<BatchResponse>> getAllBatches() {
         List<BatchResponse> batches = batchService.getAllBatchResponses();
+        return ApiResponse.success(batches);
+    }
+
+    /**
+     * 获取今日批次
+     */
+    @GetMapping("/today")
+    public ApiResponse<List<BatchResponse>> getTodayBatches() {
+        List<BatchResponse> batches = batchService.getTodayBatchResponses();
+        return ApiResponse.success(batches);
+    }
+
+    /**
+     * 获取日期范围内的批次
+     */
+    @GetMapping("/range")
+    public ApiResponse<List<BatchResponse>> getBatchesByRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        List<BatchResponse> batches = batchService.getBatchesByDateRange(start, end);
         return ApiResponse.success(batches);
     }
 

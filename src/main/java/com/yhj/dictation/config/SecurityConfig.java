@@ -40,9 +40,7 @@ public class SecurityConfig {
                 // 禁用 HTTP Basic 认证
                 .httpBasic(AbstractHttpConfigurer::disable)
                 // 禁用登出处理（使用自定义登出）
-                .logout(AbstractHttpConfigurer::disable)
-                // 禁用 Session 管理（使用自定义 Session）
-                .sessionManagement(session -> session.disable());
+                .logout(AbstractHttpConfigurer::disable);
 
         return http.build();
     }

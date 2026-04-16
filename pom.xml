@@ -55,8 +55,7 @@
         <!-- Spring AOP -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
-            <version>3.5.13</version>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
 
         <!-- SQLite JDBC Driver -->

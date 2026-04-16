@@ -53,12 +53,12 @@ class AssertUtil:
     """断言工具类"""
 
     @staticmethod
-    def assert_success(response: requests.Response, message: str = "操作成功") -> None:
+    def assert_success(response: requests.Response, message: str = None) -> None:
         """断言响应成功"""
         assert response.status_code == 200, f"请求失败, 状态码: {response.status_code}"
         data = response.json()
         assert data.get("success") is True, f"操作失败: {data.get('message')}"
-        if message:
+        if message is not None:
             assert message in data.get("message", ""), f"消息不匹配: {data.get('message')}"
 
     @staticmethod

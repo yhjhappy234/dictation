@@ -91,8 +91,8 @@ API_ENDPOINTS = {
     "difficult_words_difficult": "/api/difficult-words/difficult",
     "difficult_words_recommended": "/api/difficult-words/recommended",
     "difficult_word_mastery": "/api/difficult-words/{id}/mastery",
-    "difficult_word_success": "/api/difficult-words/{wordId}/success",
-    "difficult_word_failure": "/api/difficult-words/{wordId}/failure",
+    "difficult_word_success": "/api/difficult-words/text/{wordText}/success",
+    "difficult_word_failure": "/api/difficult-words/text/{wordText}/failure",
     "difficult_word_by_id": "/api/difficult-words/{id}",
 
     # 建议
@@ -148,7 +148,7 @@ TEST_DATA = {
     "updated_pinyin": "ce shi",
     "task_name": "E2E测试任务",
     "username": "admin",
-    "password": "admin123",
+    "password": "123456",
     "new_user_username": "testuser_e2e",
     "new_user_password": "test123",
 }
