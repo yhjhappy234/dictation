@@ -552,6 +552,12 @@
     // 导入预设内容
     async function importPreset(presetId) {
         try {
+            // 先打开创建任务面板
+            const panel = document.getElementById('createTaskPanel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+            }
+
             const response = await fetch(`/api/preset/import/${presetId}`, {
                 method: 'POST'
             });
@@ -576,24 +582,27 @@
                 const detailData = detailResult.data;
 
                 // 填充词语到输入框
-                if (detailData.words) {
+                if (detailData.words && Array.isArray(detailData.words)) {
                     document.getElementById('createTaskWords').value = detailData.words.join('\n');
-                } else if (detailData.items) {
+                } else if (detailData.items && Array.isArray(detailData.items)) {
                     // 古诗/古文格式
                     let allContent = [];
                     detailData.items.forEach(item => {
-                        const parts = item.content.split(/[，。！？、；：]/);
-                        parts.forEach(part => {
-                            if (part.trim()) {
-                                allContent.push(part.trim());
-                            }
-                        });
+                        if (item.content) {
+                            const parts = item.content.split(/[，。！？、；：]/);
+                            parts.forEach(part => {
+                                if (part.trim()) {
+                                    allContent.push(part.trim());
+                                }
+                            });
+                        }
                     });
                     document.getElementById('createTaskWords').value = allContent.join('\n');
                 }
 
+                // 填充任务名称
                 document.getElementById('createTaskName').value = detailData.name || '';
-                showToast(`成功导入：${detailData.name}`, 'success');
+                showToast(`已填充：${detailData.name || '预设内容'}，请点击"保存任务"完成创建`, 'success');
             } else {
                 showToast(result.message || '导入失败', 'warning');
             }
