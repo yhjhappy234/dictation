@@ -10,8 +10,11 @@ spring:
     name: dictation
 
   datasource:
-    url: jdbc:sqlite:${user.dir}/src/main/resources/dictation.db
+    url: jdbc:sqlite:${user.dir}/src/main/resources/dictation.db?busy_timeout=30000&journal_mode=WAL
     driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1
+      connection-timeout: 30000
 
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
