@@ -460,7 +460,7 @@
         // 获取当前用户信息
         async function loadCurrentUser() {
             try {
-                const response = await fetch('/api/auth/current');
+                const response = await fetch('/api/auth/current', { credentials: 'include' });
                 const result = await response.json();
                 if (result.success && result.data) {
                     document.getElementById('currentUsername').textContent = result.data.username;
@@ -481,7 +481,7 @@
         // 加载头像列表
         async function loadAvatars() {
             try {
-                const response = await fetch('/api/auth/avatars');
+                const response = await fetch('/api/auth/avatars', { credentials: 'include' });
                 const result = await response.json();
                 if (result.success && result.data) {
                     const grid = document.getElementById('avatarGrid');
@@ -507,7 +507,10 @@
         // 选择头像
         async function selectAvatar(avatar) {
             try {
-                const response = await fetch('/api/users/me/avatar?avatar=' + avatar, { method: 'POST' });
+                const response = await fetch('/api/users/me/avatar?avatar=' + avatar, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
                 const result = await response.json();
                 if (result.success) {
                     document.getElementById('userAvatar').src = '/images/avatars/' + avatar;
@@ -541,6 +544,7 @@
                 const response = await fetch('/api/users/me/password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ newPassword: newPassword })
                 });
                 const result = await response.json();
@@ -561,7 +565,10 @@
         // 登出
         async function logout() {
             try {
-                const response = await fetch('/api/auth/logout', { method: 'POST' });
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
                 const result = await response.json();
                 if (result.success) {
                     window.location.href = '/login';

@@ -234,6 +234,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     username: username,
                     password: password
@@ -291,7 +292,7 @@
     // 页面加载时检查登录状态
     document.addEventListener('DOMContentLoaded', async function() {
         try {
-            const response = await fetch('/api/auth/status');
+            const response = await fetch('/api/auth/status', { credentials: 'include' });
             const result = await response.json();
             if (result.success && result.data === true) {
                 // 已登录，直接跳转到首页

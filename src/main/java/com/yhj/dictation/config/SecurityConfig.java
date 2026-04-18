@@ -40,7 +40,9 @@ public class SecurityConfig {
                 // 禁用 HTTP Basic 认证
                 .httpBasic(AbstractHttpConfigurer::disable)
                 // 禁用登出处理（使用自定义登出）
-                .logout(AbstractHttpConfigurer::disable);
+                .logout(AbstractHttpConfigurer::disable)
+                // 禁用 Spring Security 的 Session 管理，但保留 Session 功能
+                .sessionManagement(session -> session.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
