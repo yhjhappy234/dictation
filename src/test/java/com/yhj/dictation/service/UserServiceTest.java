@@ -203,7 +203,7 @@ class UserServiceTest {
             when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
             when(userRepository.save(any(User.class))).thenReturn(testUser);
 
-            User result = userService.updateAvatar(1L, "avatar2.png");
+            User result = userService.updateAvatar(1L, "avatar2.svg");
 
             assertNotNull(result);
             verify(userRepository).save(any(User.class));
@@ -347,7 +347,7 @@ class UserServiceTest {
 
             assertNotNull(avatar);
             assertTrue(avatar.startsWith("avatar"));
-            assertTrue(avatar.endsWith(".png"));
+            assertTrue(avatar.endsWith(".svg"));
         }
 
         @Test

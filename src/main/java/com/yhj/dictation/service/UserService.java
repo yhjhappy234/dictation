@@ -26,10 +26,10 @@ public class UserService {
 
     // 内置头像列表
     private static final String[] AVATARS = {
-            "avatar1.png", "avatar2.png", "avatar3.png", "avatar4.png", "avatar5.png",
-            "avatar6.png", "avatar7.png", "avatar8.png", "avatar9.png", "avatar10.png",
-            "avatar11.png", "avatar12.png", "avatar13.png", "avatar14.png", "avatar15.png",
-            "avatar16.png", "avatar17.png", "avatar18.png", "avatar19.png", "avatar20.png"
+            "avatar1.svg", "avatar2.svg", "avatar3.svg", "avatar4.svg", "avatar5.svg",
+            "avatar6.svg", "avatar7.svg", "avatar8.svg", "avatar9.svg", "avatar10.svg",
+            "avatar11.svg", "avatar12.svg", "avatar13.svg", "avatar14.svg", "avatar15.svg",
+            "avatar16.svg", "avatar17.svg", "avatar18.svg", "avatar19.svg", "avatar20.svg"
     };
 
     /**
