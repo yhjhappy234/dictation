@@ -141,8 +141,8 @@
                             <button class="btn btn-outline-warning btn-action" onclick="toggleAutoDictation()" id="autoDictationBtn">
                                 <i class="bi bi-robot me-2"></i>自动听写 <small class="text-muted">(A)</small>
                             </button>
-                            <button class="btn btn-outline-primary btn-action" id="answerBtn" onclick="toggleAnswer()">
-                                <i class="bi bi-eye me-2"></i>显示答案 <small class="text-muted">(↓)</small>
+                            <button class="btn btn-outline-secondary btn-action" id="answerBtn" onclick="toggleAnswer()">
+                                <i class="bi bi-eye-slash me-2"></i>隐藏答案 <small class="text-muted">(↓)</small>
                             </button>
                         </div>
                     </div>
@@ -632,7 +632,8 @@
 
         const word = words[currentIndex];
         document.getElementById('currentIndex').textContent = currentIndex + 1;
-        document.getElementById('wordDisplay').innerHTML = '<i class="bi bi-volume-up-fill text-primary" style="font-size: 3rem;"></i>';
+        // 默认显示答案
+        document.getElementById('wordDisplay').innerHTML = `<i class="bi bi-volume-up-fill text-primary" style="font-size: 3rem;"></i><span class="ms-3 badge bg-success fs-3 px-4 py-2">${word}</span>`;
 
         // 更新实时统计
         updateRealTimeStats();
@@ -640,10 +641,10 @@
         // 高亮当前词语
         highlightCurrentWord(currentIndex);
 
-        // 重置答案按钮为"显示答案"状态
+        // 重置答案按钮为"隐藏答案"状态（因为默认已显示）
         const answerBtn = document.getElementById('answerBtn');
-        answerBtn.innerHTML = '<i class="bi bi-eye me-2"></i>显示答案';
-        answerBtn.className = 'btn btn-outline-primary btn-action';
+        answerBtn.innerHTML = '<i class="bi bi-eye-slash me-2"></i>隐藏答案';
+        answerBtn.className = 'btn btn-outline-secondary btn-action';
 
         // 检查是否是最后一个词语，改变"下一个"按钮
         const nextBtn = document.getElementById('nextBtn');
