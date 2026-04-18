@@ -4,6 +4,8 @@
 <body>
 <!-- 导航栏 -->
 <nav th:replace="~{layout :: navbar('tasks')}"></nav>
+<!-- 模态框 -->
+<div th:replace="~{layout :: modals}"></div>
 
 <div class="main-container">
     <!-- 创建听写任务按钮 -->
@@ -639,7 +641,7 @@
 
         try {
             // 加载完整文件获取单元
-            const response = await fetch(`/api/preset/${gradeId}`);
+            const response = await fetch(`/api/v1/preset/${gradeId}`);
             const result = await response.json();
 
             if (result.success && result.data && result.data.units) {

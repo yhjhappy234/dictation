@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,32 +24,31 @@ class SecurityConfigTest {
     class PasswordEncoderTests {
 
         @Test
-        @DisplayName("创建 BCrypt 密码加密器")
+        @DisplayName("创建 MD5 密码加密器")
         void passwordEncoder() {
-            BCryptPasswordEncoder encoder = securityConfig.passwordEncoder();
+            PasswordEncoder encoder = securityConfig.passwordEncoder();
 
             assertNotNull(encoder);
-            assertTrue(encoder instanceof BCryptPasswordEncoder);
         }
 
         @Test
         @DisplayName("加密密码")
         void encodePassword() {
-            BCryptPasswordEncoder encoder = securityConfig.passwordEncoder();
+            PasswordEncoder encoder = securityConfig.passwordEncoder();
 
-            String rawPassword = "testPassword";
+            String rawPassword = "123456";
             String encodedPassword = encoder.encode(rawPassword);
 
             assertNotNull(encodedPassword);
-            assertTrue(encoder.matches(rawPassword, encodedPassword));
+            assertEquals("e10adc3949ba59abbe56e057f20f883e", encodedPassword);
         }
 
         @Test
         @DisplayName("验证密码 - 正确")
         void matchesCorrectPassword() {
-            BCryptPasswordEncoder encoder = securityConfig.passwordEncoder();
+            PasswordEncoder encoder = securityConfig.passwordEncoder();
 
-            String rawPassword = "testPassword";
+            String rawPassword = "123456";
             String encodedPassword = encoder.encode(rawPassword);
 
             assertTrue(encoder.matches(rawPassword, encodedPassword));
@@ -58,9 +57,9 @@ class SecurityConfigTest {
         @Test
         @DisplayName("验证密码 - 错误")
         void matchesWrongPassword() {
-            BCryptPasswordEncoder encoder = securityConfig.passwordEncoder();
+            PasswordEncoder encoder = securityConfig.passwordEncoder();
 
-            String rawPassword = "testPassword";
+            String rawPassword = "123456";
             String encodedPassword = encoder.encode(rawPassword);
 
             assertFalse(encoder.matches("wrongPassword", encodedPassword));

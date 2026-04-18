@@ -383,10 +383,14 @@
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                        <img id="userAvatar" src="/images/avatars/avatar1.png" class="rounded-circle me-2" width="32" height="32" alt="头像">
-                        <span id="currentUsername">用户</span>
+                        <img id="userAvatar" src="/images/avatars/avatar1.png" class="rounded-circle" width="32" height="32" alt="头像">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li class="dropdown-header text-center">
+                            <img id="userAvatarLarge" src="/images/avatars/avatar1.png" class="rounded-circle mb-2" width="48" height="48" alt="头像">
+                            <div id="currentUsername" class="fw-bold">用户</div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#avatarModal">
                                 <i class="bi bi-image me-1"></i>更换头像
@@ -407,45 +411,47 @@
 </nav>
 
 <!-- 更换头像模态框 -->
-<div class="modal fade" id="avatarModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-image me-2"></i>更换头像</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row" id="avatarGrid">
-                    <!-- 头像列表将通过JS动态生成 -->
+<div th:fragment="modals">
+    <div class="modal fade" id="avatarModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-image me-2"></i>更换头像</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row" id="avatarGrid">
+                        <!-- 头像列表将通过JS动态生成 -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- 修改密码模态框 -->
-<div class="modal fade" id="passwordModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-key me-2"></i>修改密码</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="passwordForm">
-                    <div class="mb-3">
-                        <label class="form-label">新密码</label>
-                        <input type="password" class="form-control" id="newPassword" required minlength="6">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">确认密码</label>
-                        <input type="password" class="form-control" id="confirmPassword" required minlength="6">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" onclick="changePassword()">保存</button>
+    <!-- 修改密码模态框 -->
+    <div class="modal fade" id="passwordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-key me-2"></i>修改密码</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="passwordForm">
+                        <div class="mb-3">
+                            <label class="form-label">新密码</label>
+                            <input type="password" class="form-control" id="newPassword" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">确认密码</label>
+                            <input type="password" class="form-control" id="confirmPassword" required minlength="6">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="changePassword()">保存</button>
+                </div>
             </div>
         </div>
     </div>
@@ -470,9 +476,10 @@
                 const result = await response.json();
                 if (result.success && result.data) {
                     document.getElementById('currentUsername').textContent = result.data.username;
-                    // 设置头像
+                    // 设置头像（导航栏小头像和下拉菜单大头像）
                     if (result.data.avatar) {
                         document.getElementById('userAvatar').src = '/images/avatars/' + result.data.avatar;
+                        document.getElementById('userAvatarLarge').src = '/images/avatars/' + result.data.avatar;
                     }
                     // 显示用户管理菜单（管理员）
                     if (result.data.role === 'ADMIN') {
