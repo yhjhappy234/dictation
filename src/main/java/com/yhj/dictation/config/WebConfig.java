@@ -24,6 +24,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/login",                    // 登录页面
                         "/api/auth/login",           // 登录 API
                         "/api/auth/status",          // 登录状态检查
+                        "/api/preset/**",            // 预设内容 API
                         "/static/**",                // 静态资源
                         "/css/**",                   // CSS
                         "/js/**",                    // JavaScript

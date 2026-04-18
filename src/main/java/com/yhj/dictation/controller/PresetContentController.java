@@ -8,6 +8,7 @@ import com.yhj.dictation.service.DictationBatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -44,22 +45,23 @@ public class PresetContentController {
 
     /**
      * 获取预设内容详情
+     * 直接返回 JSON 字符串，避免 JsonNode 序列化问题
      */
-    @GetMapping("/{id}")
-    public ApiResponse<JsonNode> getPresetContent(@PathVariable String id) {
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getPresetContent(@PathVariable String id) {
         try {
             ClassPathResource resource = new ClassPathResource("preset-content/" + id + ".json");
             if (!resource.exists()) {
-                return ApiResponse.error("预设内容不存在: " + id);
+                return "{\"success\":false,\"message\":\"预设内容不存在: " + id + "\",\"data\":null}";
             }
-            
+
             String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            JsonNode jsonNode = objectMapper.readTree(content);
-            
-            return ApiResponse.success(jsonNode);
+
+            // 直接包装成 ApiResponse 格式返回
+            return "{\"success\":true,\"message\":\"操作成功\",\"data\":" + content + "}";
         } catch (IOException e) {
             log.error("Failed to read preset content: {}", id, e);
-            return ApiResponse.error("读取预设内容失败: " + e.getMessage());
+            return "{\"success\":false,\"message\":\"读取预设内容失败: " + e.getMessage() + "\",\"data\":null}";
         }
     }
 

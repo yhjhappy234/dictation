@@ -25,50 +25,41 @@
                 <div class="card-body">
                     <!-- 快速导入预设内容 -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">二年级下册人教版生字（按单元）：</label>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('grade2-unit1')">
-                                <i class="bi bi-book me-1"></i>第一单元
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('grade2-unit2')">
-                                <i class="bi bi-book me-1"></i>第二单元
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('grade2-unit3')">
-                                <i class="bi bi-book me-1"></i>第三单元
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('grade2-unit4')">
-                                <i class="bi bi-book me-1"></i>第四单元
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('grade2-unit5')">
-                                <i class="bi bi-book me-1"></i>第五单元
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('grade2-unit6')">
-                                <i class="bi bi-book me-1"></i>第六单元
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('grade2-unit7')">
-                                <i class="bi bi-book me-1"></i>第七单元
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('grade2-unit8')">
-                                <i class="bi bi-book me-1"></i>第八单元
-                            </button>
-                        </div>
-                    </div>
+                        <label class="form-label fw-bold">预设内容：</label>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">其他预设内容：</label>
-                        <div class="d-flex flex-wrap gap-2">
+                        <!-- 第一级：分类选择 -->
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button class="btn btn-outline-primary btn-sm category-btn" onclick="showGradeList()">
+                                <i class="bi bi-book me-1"></i>小学语文教科书
+                            </button>
                             <button class="btn btn-outline-success btn-sm" onclick="importPreset('common-words-50')">
                                 <i class="bi bi-book me-1"></i>50个常用词
                             </button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="importPreset('common-idioms-50')">
+                            <button class="btn btn-outline-info btn-sm" onclick="importPreset('common-idioms-50')">
                                 <i class="bi bi-chat-quote me-1"></i>50个成语
                             </button>
-                            <button class="btn btn-outline-info btn-sm" onclick="importPreset('common-poems-20')">
+                            <button class="btn btn-outline-warning btn-sm" onclick="importPreset('common-poems-20')">
                                 <i class="bi bi-feather me-1"></i>20首古诗
                             </button>
-                            <button class="btn btn-outline-warning btn-sm" onclick="importPreset('classics-5')">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="importPreset('classics-5')">
                                 <i class="bi bi-scroll me-1"></i>5篇古文
                             </button>
+                        </div>
+
+                        <!-- 第二级：年级选择（默认隐藏） -->
+                        <div id="gradeListContainer" class="mb-3" style="display: none;">
+                            <label class="form-label text-muted small">选择年级：</label>
+                            <div class="d-flex flex-wrap gap-2" id="gradeList">
+                                <!-- 动态填充 -->
+                            </div>
+                        </div>
+
+                        <!-- 第三级：单元选择（默认隐藏） -->
+                        <div id="unitListContainer" class="mb-3" style="display: none;">
+                            <label class="form-label text-muted small">选择单元：</label>
+                            <div class="d-flex flex-wrap gap-2" id="unitList">
+                                <!-- 动态填充 -->
+                            </div>
                         </div>
                     </div>
 
@@ -206,6 +197,23 @@
 
 <script>
     let currentFilter = 'all';
+
+    // 年级配置
+    const gradeConfig = {
+        'grade1-up': { name: '一年级上册', hasUnits: true },
+        'grade1-down': { name: '一年级下册', hasUnits: true },
+        'grade2-up': { name: '二年级上册', hasUnits: true },
+        'grade2-down': { name: '二年级下册', hasSeparateUnits: true, unitFiles: ['grade2-unit1', 'grade2-unit2', 'grade2-unit3', 'grade2-unit4', 'grade2-unit5', 'grade2-unit6', 'grade2-unit7', 'grade2-unit8'] },
+        'grade3-up': { name: '三年级上册', hasUnits: true },
+        'grade3-down': { name: '三年级下册', hasUnits: true },
+        'grade4-up': { name: '四年级上册', hasUnits: true },
+        'grade4-down': { name: '四年级下册', hasUnits: true },
+        'grade5-up': { name: '五年级上册', hasUnits: true },
+        'grade5-down': { name: '五年级下册', hasUnits: true }
+    };
+
+    // 缓存年级数据
+    let gradeDataCache = {};
 
     // 页面加载完成
     document.addEventListener('DOMContentLoaded', function() {
@@ -549,6 +557,165 @@
         document.getElementById('createTaskWords').value = '';
     }
 
+    // 显示年级列表
+    async function showGradeList() {
+        // 先打开创建任务面板
+        const panel = document.getElementById('createTaskPanel');
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+        }
+
+        // 显示年级列表容器，隐藏单元列表
+        document.getElementById('gradeListContainer').style.display = 'block';
+        document.getElementById('unitListContainer').style.display = 'none';
+
+        const gradeListDiv = document.getElementById('gradeList');
+        gradeListDiv.innerHTML = '';
+
+        // 添加年级按钮
+        for (const [gradeId, config] of Object.entries(gradeConfig)) {
+            gradeListDiv.innerHTML += `
+                <button class="btn btn-outline-primary btn-sm grade-btn" onclick="selectGrade('${gradeId}')">
+                    <i class="bi bi-book me-1"></i>${config.name}
+                </button>
+            `;
+        }
+    }
+
+    // 选择年级，显示单元列表
+    async function selectGrade(gradeId) {
+        const config = gradeConfig[gradeId];
+
+        // 更新按钮状态
+        document.querySelectorAll('.grade-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        // 显示单元列表容器
+        document.getElementById('unitListContainer').style.display = 'block';
+
+        const unitListDiv = document.getElementById('unitList');
+        unitListDiv.innerHTML = '<span class="text-muted">加载中...</span>';
+
+        try {
+            // 二年级下册使用单独的单元文件
+            if (config.hasSeparateUnits) {
+                unitListDiv.innerHTML = '';
+                config.unitFiles.forEach((unitId, index) => {
+                    unitListDiv.innerHTML += `
+                        <button class="btn btn-outline-success btn-sm" onclick="loadUnitWords('${unitId}')">
+                            <i class="bi bi-journal-text me-1"></i>第${index + 1}单元
+                        </button>
+                    `;
+                });
+                return;
+            }
+
+            // 其他年级需要加载完整文件获取单元
+            const response = await fetch(`/api/preset/${gradeId}`);
+            const result = await response.json();
+
+            if (result.success && result.data && result.data.units) {
+                // 缓存数据
+                gradeDataCache[gradeId] = result.data;
+
+                unitListDiv.innerHTML = '';
+                result.data.units.forEach(unit => {
+                    // 收集单元所有词语
+                    let allWords = [];
+                    if (unit.lessons) {
+                        unit.lessons.forEach(lesson => {
+                            if (lesson.words) {
+                                allWords = allWords.concat(lesson.words);
+                            }
+                        });
+                    }
+
+                    unitListDiv.innerHTML += `
+                        <button class="btn btn-outline-success btn-sm" onclick="fillWordsFromUnit('${gradeId}', '${unit.name}')">
+                            <i class="bi bi-journal-text me-1"></i>${unit.name}
+                        </button>
+                    `;
+                });
+            } else {
+                unitListDiv.innerHTML = '<span class="text-danger">加载失败，请重试</span>';
+            }
+        } catch (error) {
+            console.error('加载年级数据失败:', error);
+            unitListDiv.innerHTML = '<span class="text-danger">加载失败，请检查网络</span>';
+        }
+    }
+
+    // 从单元填充词语
+    function fillWordsFromUnit(gradeId, unitName) {
+        const gradeData = gradeDataCache[gradeId];
+        if (!gradeData || !gradeData.units) {
+            showToast('数据未加载，请重新选择年级', 'warning');
+            return;
+        }
+
+        // 找到对应的单元
+        const unit = gradeData.units.find(u => u.name === unitName);
+        if (!unit || !unit.lessons) {
+            showToast('单元数据不存在', 'warning');
+            return;
+        }
+
+        // 收集所有词语
+        let allWords = [];
+        unit.lessons.forEach(lesson => {
+            if (lesson.words) {
+                allWords = allWords.concat(lesson.words);
+            }
+        });
+
+        // 填充到输入框
+        if (allWords.length > 0) {
+            document.getElementById('createTaskWords').value = allWords.join('\n');
+            document.getElementById('createTaskName').value = `${gradeData.grade || gradeConfig[gradeId].name} - ${unitName}`;
+            showToast(`已填充 ${allWords.length} 个词语，请点击"保存任务"完成创建`, 'success');
+        } else {
+            showToast('该单元没有词语', 'warning');
+        }
+    }
+
+    // 加载单独单元文件的词语（二年级下册）
+    async function loadUnitWords(unitId) {
+        try {
+            const response = await fetch(`/api/preset/${unitId}`);
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const data = result.data;
+                let allWords = [];
+
+                // 收集词语
+                if (data.words && Array.isArray(data.words)) {
+                    allWords = data.words;
+                } else if (data.lessons) {
+                    data.lessons.forEach(lesson => {
+                        if (lesson.words) {
+                            allWords = allWords.concat(lesson.words);
+                        }
+                    });
+                }
+
+                // 填充到输入框
+                if (allWords.length > 0) {
+                    document.getElementById('createTaskWords').value = allWords.join('\n');
+                    document.getElementById('createTaskName').value = data.name || unitId;
+                    showToast(`已填充 ${allWords.length} 个词语，请点击"保存任务"完成创建`, 'success');
+                } else {
+                    showToast('没有词语数据', 'warning');
+                }
+            } else {
+                showToast('加载失败，请重试', 'warning');
+            }
+        } catch (error) {
+            console.error('加载单元数据失败:', error);
+            showToast('加载失败，请检查网络', 'warning');
+        }
+    }
+
     // 导入预设内容
     async function importPreset(presetId) {
         try {
@@ -558,57 +725,68 @@
                 panel.style.display = 'block';
             }
 
-            const response = await fetch(`/api/preset/import/${presetId}`, {
-                method: 'POST'
-            });
+            // 隐藏年级和单元选择（如果显示的话）
+            document.getElementById('gradeListContainer').style.display = 'none';
+            document.getElementById('unitListContainer').style.display = 'none';
+
+            const response = await fetch(`/api/preset/${presetId}`);
 
             if (!response.ok) {
-                showToast('导入失败，请重试', 'warning');
+                showToast('获取预设内容失败，请重试', 'warning');
                 return;
             }
 
             const result = await response.json();
 
-            if (result.success) {
-                // 获取预设内容详情
-                const detailResponse = await fetch(`/api/preset/${presetId}`);
-                const detailResult = await detailResponse.json();
+            if (result.success && result.data) {
+                const data = result.data;
 
-                if (!detailResult.success || !detailResult.data) {
-                    showToast('获取预设内容详情失败', 'warning');
-                    return;
-                }
+                // 收集词语
+                let allWords = [];
 
-                const detailData = detailResult.data;
-
-                // 填充词语到输入框
-                if (detailData.words && Array.isArray(detailData.words)) {
-                    document.getElementById('createTaskWords').value = detailData.words.join('\n');
-                } else if (detailData.items && Array.isArray(detailData.items)) {
+                // 处理不同格式
+                if (data.words && Array.isArray(data.words)) {
+                    // 简单词语列表格式
+                    allWords = data.words;
+                } else if (data.items && Array.isArray(data.items)) {
                     // 古诗/古文格式
-                    let allContent = [];
-                    detailData.items.forEach(item => {
+                    data.items.forEach(item => {
                         if (item.content) {
                             const parts = item.content.split(/[，。！？、；：]/);
                             parts.forEach(part => {
                                 if (part.trim()) {
-                                    allContent.push(part.trim());
+                                    allWords.push(part.trim());
                                 }
                             });
                         }
                     });
-                    document.getElementById('createTaskWords').value = allContent.join('\n');
+                } else if (data.units && Array.isArray(data.units)) {
+                    // 年级格式（有单元）
+                    data.units.forEach(unit => {
+                        if (unit.lessons) {
+                            unit.lessons.forEach(lesson => {
+                                if (lesson.words) {
+                                    allWords = allWords.concat(lesson.words);
+                                }
+                            });
+                        }
+                    });
                 }
 
-                // 填充任务名称
-                document.getElementById('createTaskName').value = detailData.name || '';
-                showToast(`已填充：${detailData.name || '预设内容'}，请点击"保存任务"完成创建`, 'success');
+                // 填充到输入框
+                if (allWords.length > 0) {
+                    document.getElementById('createTaskWords').value = allWords.join('\n');
+                    document.getElementById('createTaskName').value = data.name || presetId;
+                    showToast(`已填充 ${allWords.length} 个词语，请点击"保存任务"完成创建`, 'success');
+                } else {
+                    showToast('预设内容中没有词语', 'warning');
+                }
             } else {
-                showToast(result.message || '导入失败', 'warning');
+                showToast(result.message || '获取预设内容失败', 'warning');
             }
         } catch (error) {
-            console.error('导入预设内容失败:', error);
-            showToast('导入失败，请检查网络连接', 'warning');
+            console.error('获取预设内容失败:', error);
+            showToast('获取失败，请检查网络连接', 'warning');
         }
     }
 
