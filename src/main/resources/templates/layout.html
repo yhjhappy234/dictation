@@ -3,6 +3,10 @@
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="version" content="v1.3.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title th:text="${title}">听写小助手</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -305,6 +309,15 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.08);
         }
 
+        .version-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+
         @media (max-width: 768px) {
             .word-display {
                 font-size: 2.5rem;
@@ -331,8 +344,8 @@
 <!-- 导航栏fragment -->
 <nav th:fragment="navbar(activePage)" class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/">
-            <i class="bi bi-book-half me-2"></i>听写小助手
+        <a class="navbar-brand" href="/" id="navBrand">
+            <i class="bi bi-book-half me-2"></i>听写小助手 <small class="version-text"></small>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
@@ -340,44 +353,44 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" th:classappend="${activePage == 'index'} ? 'active'" href="/">
+                    <a class="nav-link" th:classappend="${activePage == 'index'} ? 'active'" href="/" id="navIndex">
                         <i class="bi bi-house-door me-1"></i>首页
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:classappend="${activePage == 'tasks'} ? 'active'" href="/tasks">
+                    <a class="nav-link" th:classappend="${activePage == 'tasks'} ? 'active'" href="/tasks" id="navTasks">
                         <i class="bi bi-list-check me-1"></i>任务管理
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:classappend="${activePage == 'history'} ? 'active'" href="/history">
+                    <a class="nav-link" th:classappend="${activePage == 'history'} ? 'active'" href="/history" id="navHistory">
                         <i class="bi bi-clock-history me-1"></i>历史记录
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:classappend="${activePage == 'difficult'} ? 'active'" href="/difficult-words">
+                    <a class="nav-link" th:classappend="${activePage == 'difficult'} ? 'active'" href="/difficult-words" id="navDifficultWords">
                         <i class="bi bi-star me-1"></i>生词本
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:classappend="${activePage == 'dictators'} ? 'active'" href="/dictators">
+                    <a class="nav-link" th:classappend="${activePage == 'dictators'} ? 'active'" href="/dictators" id="navDictators">
                         <i class="bi bi-people me-1"></i>听写人
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:classappend="${activePage == 'reports'} ? 'active'" href="/reports">
+                    <a class="nav-link" th:classappend="${activePage == 'reports'} ? 'active'" href="/reports" id="navReports">
                         <i class="bi bi-graph-up me-1"></i>报表
                     </a>
                 </li>
                 <!-- 用户管理（管理员可见） -->
                 <li class="nav-item" id="userManagementNavItem" style="display: none;">
-                    <a class="nav-link" th:classappend="${activePage == 'user-management'} ? 'active'" href="/user-management">
+                    <a class="nav-link" th:classappend="${activePage == 'user-management'} ? 'active'" href="/user-management" id="navUserManagement">
                         <i class="bi bi-person-badge me-1"></i>用户管理
                     </a>
                 </li>
                 <!-- 审计日志（管理员可见） -->
                 <li class="nav-item" id="auditLogsNavItem" style="display: none;">
-                    <a class="nav-link" th:classappend="${activePage == 'audit-logs'} ? 'active'" href="/audit-logs">
+                    <a class="nav-link" th:classappend="${activePage == 'audit-logs'} ? 'active'" href="/audit-logs" id="navAuditLogs">
                         <i class="bi bi-journal-text me-1"></i>审计日志
                     </a>
                 </li>
@@ -460,7 +473,7 @@
 <!-- 页脚fragment -->
 <footer th:fragment="footer" class="text-center py-4 mt-5">
     <p class="text-muted mb-0">
-        <small>听写小助手 - 让学习更有趣</small>
+        <small>听写小助手 - 让学习更有趣 <span class="version-badge">v1.3.0</span></small>
     </p>
 </footer>
 
@@ -469,6 +482,66 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // 全局版本变量
+        let appVersion = '';
+        let appTimestamp = 0;
+
+        // 获取版本信息并更新导航链接
+        async function loadVersion() {
+            try {
+                const response = await fetch('/api/v1/system/version');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    appVersion = result.data.version;
+                    appTimestamp = result.data.timestamp;
+
+                    // 更新版本显示
+                    document.querySelectorAll('.version-text').forEach(el => {
+                        el.textContent = appVersion;
+                    });
+                    document.querySelectorAll('.version-badge').forEach(el => {
+                        el.textContent = appVersion;
+                    });
+
+                    // 更新所有导航链接，添加spv参数
+                    const navLinks = [
+                        'navBrand', 'navIndex', 'navTasks', 'navHistory',
+                        'navDifficultWords', 'navDictators', 'navReports',
+                        'navUserManagement', 'navAuditLogs'
+                    ];
+                    navLinks.forEach(id => {
+                        const link = document.getElementById(id);
+                        if (link) {
+                            const originalHref = link.getAttribute('href');
+                            if (originalHref && !originalHref.includes('spv=')) {
+                                link.setAttribute('href', originalHref + '?spv=' + appTimestamp);
+                            }
+                        }
+                    });
+
+                    // 检查版本变化，清除缓存（保留登录相关数据）
+                    const storedTimestamp = localStorage.getItem('app_timestamp');
+                    if (storedTimestamp && parseInt(storedTimestamp) !== appTimestamp) {
+                        console.log('版本更新，清除非登录缓存');
+                        // 只清除版本相关数据，保留登录状态
+                        const keysToPreserve = ['app_version', 'app_timestamp'];
+                        const allKeys = Object.keys(localStorage);
+                        allKeys.forEach(key => {
+                            if (!keysToPreserve.includes(key) && !key.startsWith('user_')) {
+                                localStorage.removeItem(key);
+                            }
+                        });
+                    }
+                    localStorage.setItem('app_version', appVersion);
+                    localStorage.setItem('app_timestamp', appTimestamp.toString());
+
+                    console.log('应用版本:', appVersion, '时间戳:', appTimestamp);
+                }
+            } catch (error) {
+                console.error('获取版本信息失败:', error);
+            }
+        }
+
         // 获取当前用户信息
         async function loadCurrentUser() {
             try {
@@ -614,8 +687,11 @@
 
         // 页面加载时
         document.addEventListener('DOMContentLoaded', async function() {
+            await loadVersion();  // 先加载版本信息
             await loadCurrentUser();
             await loadAvatars();
+            // 显示版本信息
+            console.log('听写小助手 ' + appVersion + ' - 页面已加载');
         });
     </script>
 </div>

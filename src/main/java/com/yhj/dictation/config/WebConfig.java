@@ -27,6 +27,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/auth/status",          // 登录状态检查 (旧路径)
                         "/api/v1/auth/status",       // 登录状态检查 (v1路径)
                         "/api/v1/auth/avatars",      // 头像列表
+                        "/api/v1/system/version",    // 版本信息
                         "/api/preset/**",            // 预设内容 API (旧路径)
                         "/api/v1/preset/**",         // 预设内容 API (v1路径)
                         "/static/**",                // 静态资源
