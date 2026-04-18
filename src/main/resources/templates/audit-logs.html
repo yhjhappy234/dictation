@@ -93,12 +93,12 @@
                     </div>
 
                     <!-- 分页 -->
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div class="text-muted">
-                            显示 <span id="showingFrom">0</span> - <span id="showingTo">0</span> 条，共 <span id="totalLogs">0</span> 条
+                    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                        <div class="text-muted small">
+                            共 <strong id="totalLogs">0</strong> 条记录，当前第 <strong id="currentPageNum">1</strong>/<strong id="totalPagesNum">1</strong> 页
                         </div>
                         <nav id="pagination">
-                            <ul class="pagination">
+                            <ul class="pagination pagination-sm mb-0">
                             </ul>
                         </nav>
                     </div>
@@ -278,8 +278,8 @@
 
         // 更新统计显示
         document.getElementById('totalLogs').textContent = pageData.totalElements;
-        document.getElementById('showingFrom').textContent = pageData.number * pageSize + 1;
-        document.getElementById('showingTo').textContent = Math.min((pageData.number + 1) * pageSize, pageData.totalElements);
+        document.getElementById('currentPageNum').textContent = pageData.number + 1;
+        document.getElementById('totalPagesNum').textContent = pageData.totalPages;
 
         // 计算成功/失败数量
         let successNum = 0, failNum = 0;
@@ -337,7 +337,7 @@
 
         // 上一页
         html += `<li class="page-item ${pageData.first ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="goToPage(${pageData.number - 1})">上一页</a>
+            <a class="page-link" href="#" onclick="goToPage(${pageData.number - 1})"><i class="bi bi-chevron-left"></i></a>
         </li>`;
 
         // 页码
@@ -352,7 +352,7 @@
 
         // 下一页
         html += `<li class="page-item ${pageData.last ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="goToPage(${pageData.number + 1})">下一页</a>
+            <a class="page-link" href="#" onclick="goToPage(${pageData.number + 1})"><i class="bi bi-chevron-right"></i></a>
         </li>`;
 
         pagination.innerHTML = html;
