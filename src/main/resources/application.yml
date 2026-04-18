@@ -10,7 +10,7 @@ spring:
     name: dictation
 
   datasource:
-    url: jdbc:sqlite:src/main/resources/dictation.db
+    url: jdbc:sqlite:${user.dir}/src/main/resources/dictation.db
     driver-class-name: org.sqlite.JDBC
 
   jpa:

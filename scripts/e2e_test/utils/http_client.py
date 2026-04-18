@@ -14,14 +14,15 @@ from config import BASE_URL, TIMEOUT, RETRY_COUNT, RETRY_DELAY
 class HttpClient:
     """HTTP请求封装类"""
 
-    def __init__(self, base_url: str = BASE_URL):
+    def __init__(self, base_url: str = BASE_URL, timeout: int = None):
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
+        self.default_timeout = timeout or TIMEOUT["request"]
 
     def _request(self, method: str, endpoint: str, **kwargs) -> requests.Response:
         """发送HTTP请求"""
         url = f"{self.base_url}{endpoint}"
-        kwargs.setdefault("timeout", TIMEOUT["request"])
+        kwargs.setdefault("timeout", self.default_timeout)
 
         for attempt in range(RETRY_COUNT):
             try:

@@ -3,11 +3,11 @@ E2E测试主程序 - 全面覆盖所有API功能
 """
 import pytest
 import time
+import os
 from datetime import date, timedelta
 from typing import Generator
 
 from config.base_config import (
-    BASE_URL,
     API_ENDPOINTS,
     PAGE_ROUTES,
     TIMEOUT,
@@ -20,6 +20,9 @@ from utils.http_client import (
     wait_for_server,
     cleanup_test_data,
 )
+
+# 动态获取BASE_URL
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080")
 
 
 # ==================== Fixtures ====================

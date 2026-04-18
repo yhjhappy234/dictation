@@ -22,12 +22,13 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")  // 拦截所有路径
                 .excludePathPatterns(
                         "/login",                    // 登录页面
-                        "/api/auth/login",           // 登录 API
-                        "/api/auth/status",          // 登录状态检查
-                        "/api/v1/auth/login",        // 登录 API (v1)
-                        "/api/v1/auth/status",       // 登录状态检查 (v1)
-                        "/api/preset/**",            // 预设内容 API
-                        "/api/v1/preset/**",         // 预设内容 API (v1)
+                        "/api/auth/login",           // 登录 API (旧路径)
+                        "/api/v1/auth/login",        // 登录 API (v1路径)
+                        "/api/auth/status",          // 登录状态检查 (旧路径)
+                        "/api/v1/auth/status",       // 登录状态检查 (v1路径)
+                        "/api/v1/auth/avatars",      // 头像列表
+                        "/api/preset/**",            // 预设内容 API (旧路径)
+                        "/api/v1/preset/**",         // 预设内容 API (v1路径)
                         "/static/**",                // 静态资源
                         "/css/**",                   // CSS
                         "/js/**",                    // JavaScript
