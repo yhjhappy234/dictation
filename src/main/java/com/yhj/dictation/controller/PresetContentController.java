@@ -35,10 +35,10 @@ public class PresetContentController {
     public ApiResponse<List<PresetContentDTO>> getPresetList() {
         List<PresetContentDTO> presets = new ArrayList<>();
         
-        presets.add(new PresetContentDTO("common-words-50", "小学最常用50个单词", "单词", 50));
-        presets.add(new PresetContentDTO("common-idioms-50", "小学最常用50个成语", "成语", 50));
-        presets.add(new PresetContentDTO("common-poems-20", "小学最常用20首古诗", "古诗", 20));
-        presets.add(new PresetContentDTO("classics-5", "小学最常用5篇古文", "古文", 5));
+        presets.add(new PresetContentDTO("common-words-50", "常用词语分类", "常用词", 300));
+        presets.add(new PresetContentDTO("common-idioms-50", "常用成语分类", "成语", 150));
+        presets.add(new PresetContentDTO("common-poems-20", "常用古诗分类", "古诗", 80));
+        presets.add(new PresetContentDTO("classics-5", "常用古文分类", "古文", 60));
         
         return ApiResponse.success(presets);
     }
@@ -81,12 +81,26 @@ public class PresetContentController {
             
             // 提取词语列表
             List<String> words = new ArrayList<>();
-            
+
             if (jsonNode.has("words")) {
                 // 简单词语列表格式
                 JsonNode wordsNode = jsonNode.get("words");
                 for (JsonNode word : wordsNode) {
                     words.add(word.asText());
+                }
+            } else if (jsonNode.has("units")) {
+                // 年级/分类格式（有单元）
+                JsonNode unitsNode = jsonNode.get("units");
+                for (JsonNode unit : unitsNode) {
+                    if (unit.has("lessons")) {
+                        for (JsonNode lesson : unit.get("lessons")) {
+                            if (lesson.has("words")) {
+                                for (JsonNode word : lesson.get("words")) {
+                                    words.add(word.asText());
+                                }
+                            }
+                        }
+                    }
                 }
             } else if (jsonNode.has("items")) {
                 // 古诗/古文格式 - 按句子拆分

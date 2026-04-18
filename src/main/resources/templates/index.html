@@ -135,9 +135,25 @@
 
                     <!-- 答案显示 -->
                     <div class="text-center" id="answerArea" style="display: none;">
-                        <button class="btn btn-outline-primary btn-action" id="answerBtn" onclick="toggleAnswer()">
-                            <i class="bi bi-eye me-2"></i>显示答案 <small class="text-muted">(↓)</small>
-                        </button>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap mb-3">
+                            <button class="btn btn-outline-warning btn-action" onclick="toggleAutoDictation()" id="autoDictationBtn">
+                                <i class="bi bi-robot me-2"></i>自动听写 <small class="text-muted">(A)</small>
+                            </button>
+                            <button class="btn btn-outline-primary btn-action" id="answerBtn" onclick="toggleAnswer()">
+                                <i class="bi bi-eye me-2"></i>显示答案 <small class="text-muted">(↓)</small>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 实时统计信息 -->
+                    <div class="text-center mb-3" id="realTimeStats" style="display: none;">
+                        <div class="d-flex justify-content-center gap-3 flex-wrap">
+                            <span class="badge bg-info fs-6"><i class="bi bi-clock me-1"></i>耗时: <span id="dictationTime">00:00</span></span>
+                            <span class="badge bg-success fs-6"><i class="bi bi-check-circle me-1"></i>正确: <span id="realTimeCorrect">0</span></span>
+                            <span class="badge bg-danger fs-6"><i class="bi bi-x-circle me-1"></i>错误: <span id="realTimeWrong">0</span></span>
+                            <span class="badge bg-primary fs-6"><i class="bi bi-bar-chart me-1"></i><span id="realTimeProgress">0</span>/<span id="realTimeTotal">0</span></span>
+                            <span class="badge bg-secondary fs-6"><i class="bi bi-percent me-1"></i><span id="realTimePercent">0%</span></span>
+                        </div>
                     </div>
 
                     <!-- 结果按钮 -->
@@ -145,8 +161,11 @@
                         <button class="btn btn-success btn-action me-3" onclick="markCorrect()">
                             <i class="bi bi-check-circle me-2"></i>正确
                         </button>
-                        <button class="btn btn-danger btn-action" onclick="markWrong()">
+                        <button class="btn btn-danger btn-action me-3" onclick="markWrong()">
                             <i class="bi bi-x-circle me-2"></i>错误
+                        </button>
+                        <button class="btn btn-outline-info btn-action" onclick="saveProgress()" id="saveProgressBtn">
+                            <i class="bi bi-save me-2"></i>保存进度
                         </button>
                     </div>
 
@@ -219,6 +238,16 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- 自动朗读间隔设置 -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">自动听写间隔：</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="number" class="form-control" id="autoInterval" min="1" max="60" value="3" style="width: 80px;">
+                        <span class="text-muted">秒</span>
+                    </div>
+                    <small class="text-muted">自动听写模式下，每隔指定秒数自动执行下一个词语（1-60秒）</small>
+                </div>
+
                 <!-- 语速设置 -->
                 <div class="mb-4">
                     <label class="form-label fw-bold">语速：</label>
@@ -282,6 +311,16 @@
     let batchId = null;
     let selectedTaskId = null;
 
+    // 自动听写相关变量
+    let autoDictationEnabled = false;
+    let autoDictationTimer = null;
+    let autoInterval = 3;  // 默认3秒
+
+    // 计时器相关变量
+    let dictationTimer = null;
+    let dictationStartTime = null;
+    let elapsedSeconds = 0;
+
     // 语音合成
     const synth = window.speechSynthesis;
     let currentUtterance = null;
@@ -310,9 +349,14 @@
         wrongCount = 0;
         wrongWords = [];
         isDictating = true;
+        elapsedSeconds = 0;
+
+        // 启动计时器
+        startTimer();
 
         // 更新统计
         updateStats();
+        updateRealTimeStats();
 
         // 显示听写区域
         document.getElementById('progressContainer').style.display = 'block';
@@ -320,6 +364,7 @@
         document.getElementById('controlButtons').style.display = 'flex';
         document.getElementById('answerArea').style.display = 'block';
         document.getElementById('resultButtons').style.display = 'flex';
+        document.getElementById('realTimeStats').style.display = 'block';
         document.getElementById('completeArea').style.display = 'none';
         document.getElementById('wrongWordsSection').style.display = 'none';
         document.getElementById('startBtn').disabled = true;
@@ -345,6 +390,10 @@
         }
 
         isDictating = true;
+        elapsedSeconds = 0;
+
+        // 启动计时器
+        startTimer();
 
         // 获取保存的进度
         fetch(`/api/tasks/${selectedTaskId}`).then(response => response.json())
@@ -361,6 +410,7 @@
                     document.getElementById('controlButtons').style.display = 'flex';
                     document.getElementById('answerArea').style.display = 'block';
                     document.getElementById('resultButtons').style.display = 'flex';
+                    document.getElementById('realTimeStats').style.display = 'block';
                     document.getElementById('completeArea').style.display = 'none';
                     document.getElementById('startBtn').disabled = true;
 
@@ -368,6 +418,7 @@
                     highlightCurrentWord(currentIndex);
 
                     updateStats();
+                    updateRealTimeStats();
                     showCurrentWord();
 
                     showToast(`继续听写，从第${currentIndex + 1}个词语开始`, 'success');
@@ -435,6 +486,141 @@
         progressBar.textContent = Math.round(progress) + '%';
     }
 
+    // 更新实时统计信息
+    function updateRealTimeStats() {
+        document.getElementById('realTimeCorrect').textContent = correctCount;
+        document.getElementById('realTimeWrong').textContent = wrongCount;
+        document.getElementById('realTimeProgress').textContent = currentIndex;
+        document.getElementById('realTimeTotal').textContent = words.length;
+        const percent = words.length > 0 ? Math.round((currentIndex / words.length) * 100) : 0;
+        document.getElementById('realTimePercent').textContent = percent + '%';
+    }
+
+    // 启动计时器
+    function startTimer() {
+        dictationStartTime = Date.now();
+        elapsedSeconds = 0;
+        updateTimerDisplay();
+        dictationTimer = setInterval(() => {
+            elapsedSeconds = Math.floor((Date.now() - dictationStartTime) / 1000);
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    // 停止计时器
+    function stopTimer() {
+        if (dictationTimer) {
+            clearInterval(dictationTimer);
+            dictationTimer = null;
+        }
+    }
+
+    // 更新计时器显示
+    function updateTimerDisplay() {
+        const minutes = Math.floor(elapsedSeconds / 60);
+        const seconds = elapsedSeconds % 60;
+        document.getElementById('dictationTime').textContent =
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // 切换自动听写模式
+    function toggleAutoDictation() {
+        autoDictationEnabled = !autoDictationEnabled;
+        const btn = document.getElementById('autoDictationBtn');
+
+        if (autoDictationEnabled) {
+            btn.innerHTML = '<i class="bi bi-robot me-2"></i>停止自动 <small class="text-muted">(A)</small>';
+            btn.className = 'btn btn-warning btn-action';
+            showToast(`已开启自动听写，每${autoInterval}秒自动执行下一个`, 'info');
+            startAutoDictation();
+        } else {
+            btn.innerHTML = '<i class="bi bi-robot me-2"></i>自动听写 <small class="text-muted">(A)</small>';
+            btn.className = 'btn btn-outline-warning btn-action';
+            stopAutoDictation();
+            showToast('已关闭自动听写', 'info');
+        }
+    }
+
+    // 启动自动听写
+    function startAutoDictation() {
+        if (!isDictating || currentIndex >= words.length) {
+            autoDictationEnabled = false;
+            toggleAutoDictation();
+            return;
+        }
+
+        // 设置定时器
+        autoDictationTimer = setInterval(async () => {
+            if (!isDictating || currentIndex >= words.length || !autoDictationEnabled) {
+                stopAutoDictation();
+                return;
+            }
+
+            // 自动执行下一个词语（默认正确）
+            await nextWord();
+        }, autoInterval * 1000);
+    }
+
+    // 停止自动听写
+    function stopAutoDictation() {
+        if (autoDictationTimer) {
+            clearInterval(autoDictationTimer);
+            autoDictationTimer = null;
+        }
+        autoDictationEnabled = false;
+    }
+
+    // 保存听写进度
+    async function saveProgress() {
+        if (!selectedTaskId) {
+            showToast('请先选择任务', 'warning');
+            return;
+        }
+
+        try {
+            // 更新进度
+            const response = await fetch(`/api/tasks/${selectedTaskId}/progress`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentIndex: currentIndex,
+                    correctCount: correctCount,
+                    wrongCount: wrongCount
+                })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('听写进度已保存', 'success');
+
+                // 停止自动听写和计时器
+                stopAutoDictation();
+                stopTimer();
+                isDictating = false;
+
+                // 隐藏听写控制区域，显示继续按钮
+                document.getElementById('controlButtons').style.display = 'none';
+                document.getElementById('answerArea').style.display = 'none';
+                document.getElementById('resultButtons').style.display = 'none';
+                document.getElementById('realTimeStats').style.display = 'none';
+                document.getElementById('completeArea').style.display = 'none';
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('continueBtn').style.display = 'inline-block';
+
+                // 重置自动听写按钮状态
+                const btn = document.getElementById('autoDictationBtn');
+                btn.innerHTML = '<i class="bi bi-robot me-2"></i>自动听写 <small class="text-muted">(A)</small>';
+                btn.className = 'btn btn-outline-warning btn-action';
+            } else {
+                showToast(result.message || '保存失败', 'warning');
+            }
+        } catch (error) {
+            console.error('保存进度失败:', error);
+            showToast('保存失败，请检查网络', 'warning');
+        }
+    }
+
     // 显示当前词语
     function showCurrentWord() {
         if (currentIndex >= words.length) {
@@ -445,6 +631,9 @@
         const word = words[currentIndex];
         document.getElementById('currentIndex').textContent = currentIndex + 1;
         document.getElementById('wordDisplay').innerHTML = '<i class="bi bi-volume-up-fill text-primary" style="font-size: 3rem;"></i>';
+
+        // 更新实时统计
+        updateRealTimeStats();
 
         // 高亮当前词语
         highlightCurrentWord(currentIndex);
@@ -607,6 +796,9 @@
             currentIndex++;
             correctCount++;
 
+            // 更新实时统计
+            updateRealTimeStats();
+
             if (currentIndex >= words.length) {
                 await finishDictation();
             } else {
@@ -672,6 +864,9 @@
 
         currentIndex++;
 
+        // 更新实时统计
+        updateRealTimeStats();
+
         if (currentIndex >= words.length) {
             await finishDictation();
         } else {
@@ -683,6 +878,8 @@
     // 完成听写
     async function finishDictation() {
         isDictating = false;
+        stopAutoDictation();
+        stopTimer();
 
         // 完成最后一个词语的听写记录（如果还未完成）
         if (currentIndex < words.length && selectedTaskId) {
@@ -690,6 +887,9 @@
             await completeWordRecord(selectedTaskId, lastWord, true);
             correctCount++;
         }
+
+        // 最终更新实时统计
+        updateRealTimeStats();
 
         // 设置进度条为100%
         const progressBar = document.getElementById('progressBar');
@@ -700,6 +900,7 @@
         document.getElementById('controlButtons').style.display = 'none';
         document.getElementById('answerArea').style.display = 'none';
         document.getElementById('resultButtons').style.display = 'none';
+        document.getElementById('realTimeStats').style.display = 'none';
         document.getElementById('completeArea').style.display = 'block';
         document.getElementById('correctCount').textContent = correctCount;
         document.getElementById('wrongCount').textContent = wrongCount;
@@ -805,6 +1006,7 @@
         document.getElementById('controlButtons').style.display = 'none';
         document.getElementById('answerArea').style.display = 'none';
         document.getElementById('resultButtons').style.display = 'none';
+        document.getElementById('realTimeStats').style.display = 'none';
         document.getElementById('completeArea').style.display = 'none';
         document.getElementById('wrongWordsSection').style.display = 'none';
         document.getElementById('startBtn').disabled = false;
@@ -816,6 +1018,10 @@
         wrongCount = 0;
         wrongWords = [];
         isDictating = false;
+        elapsedSeconds = 0;
+
+        stopAutoDictation();
+        stopTimer();
     }
 
     // 保存批次到后端
@@ -1090,7 +1296,7 @@
             if (!isDictating) return;
 
             // 阻止默认行为
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'a' || e.key === 'A') {
                 e.preventDefault();
             }
 
@@ -1114,6 +1320,11 @@
                 case 'ArrowDown':
                     // 显示/隐藏答案
                     toggleAnswer();
+                    break;
+                case 'a':
+                case 'A':
+                    // 切换自动听写
+                    toggleAutoDictation();
                     break;
             }
         });
@@ -1179,6 +1390,7 @@
         const savedRate = localStorage.getItem('speechRate');
         const savedVolume = localStorage.getItem('speechVolume');
         const savedVoice = localStorage.getItem('speechVoice');
+        const savedAutoInterval = localStorage.getItem('autoInterval');
 
         if (savedRate) {
             speechRate = parseFloat(savedRate);
@@ -1195,6 +1407,11 @@
         if (savedVoice) {
             selectedVoice = savedVoice;
             document.getElementById('speechVoice').value = selectedVoice;
+        }
+
+        if (savedAutoInterval) {
+            autoInterval = parseInt(savedAutoInterval);
+            document.getElementById('autoInterval').value = autoInterval;
         }
     }
 
@@ -1226,10 +1443,16 @@
         speechRate = parseFloat(document.getElementById('speechRate').value);
         speechVolume = parseFloat(document.getElementById('speechVolume').value);
         selectedVoice = document.getElementById('speechVoice').value;
+        autoInterval = parseInt(document.getElementById('autoInterval').value);
+
+        // 验证自动间隔范围
+        if (autoInterval < 1) autoInterval = 1;
+        if (autoInterval > 60) autoInterval = 60;
 
         localStorage.setItem('speechRate', speechRate);
         localStorage.setItem('speechVolume', speechVolume);
         localStorage.setItem('speechVoice', selectedVoice);
+        localStorage.setItem('autoInterval', autoInterval);
 
         showToast('设置已保存', 'success');
 

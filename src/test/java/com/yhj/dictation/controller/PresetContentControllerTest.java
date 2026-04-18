@@ -110,7 +110,7 @@ class PresetContentControllerTest {
         void importPresetContentWordsSuccess() throws Exception {
             when(batchService.createBatch(any(BatchCreateRequest.class))).thenReturn(testBatch);
 
-            mockMvc.perform(post("/api/v1/preset/import/common-words-50"))
+            mockMvc.perform(post("/api/v1/preset/import/common-idioms-50"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("导入成功"))
