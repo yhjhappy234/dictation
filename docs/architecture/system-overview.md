@@ -19,7 +19,8 @@
 │  ├── DifficultWordController ← 生词本                        │
 │  ├── PresetContentController ← 预设内容                      │
 │  ├── SuggestionController  ← 建议管理                        │
-│  └── DictationRecordController ← 记录管理                    │
+│  ├── DictationRecordController ← 记录管理                    │
+│  └── AuditLogController    ← 审计日志(管理员)                │
 ├─────────────────────────────────────────────────────────────┤
 │  Service层                                                   │
 │  ├── UserService            ← 用户服务                       │
@@ -28,7 +29,8 @@
 │  ├── WordService            ← 词语服务                       │
 │  ├── DifficultWordService   ← 生词服务                       │
 │  ├── SuggestionService      ← 建议服务                       │
-│  └── TaskRecordService      ← 记录服务                       │
+│  ├── TaskRecordService      ← 记录服务                       │
+│  └── AuditLogService        ← 审计日志服务                   │
 ├─────────────────────────────────────────────────────────────┤
 │  Repository层 (Spring Data JPA)                              │
 │  ├── UserRepository                                         │
@@ -68,3 +70,4 @@
 | 预设内容 | 教材词语预设导入 |
 | 建议模块 | 学习建议生成 |
 | 记录模块 | 听写过程记录、结果统计 |
+| 审计日志 | 操作日志记录与查询(管理员) |

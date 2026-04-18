@@ -106,10 +106,11 @@
 | user_id | INTEGER | 用户ID |
 | username | VARCHAR(255) | 用户名 |
 | operation | VARCHAR(255) | 操作类型 |
+| method | VARCHAR(255) | 调用方法名 |
 | params | VARCHAR(2000) | 操作参数 |
 | result | VARCHAR(2000) | 操作结果 |
 | success | BOOLEAN | 是否成功 |
 | error_message | VARCHAR(1000) | 错误信息 |
 | ip_address | VARCHAR(255) | IP地址 |
-| duration_ms | INTEGER | 耗时 |
-| timestamp | TIMESTAMP | 时间戳 |
+| duration_ms | INTEGER | 执行耗时(毫秒) |
+| timestamp | TIMESTAMP | 操作时间戳 |

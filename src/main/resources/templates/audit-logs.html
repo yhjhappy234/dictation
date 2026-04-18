@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head th:replace="~{layout :: head('听写小助手 - 审计日志')}"></head>
+<body>
+<!-- 导航栏 -->
+<nav th:replace="~{layout :: navbar('audit-logs')}"></nav>
+
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <i class="bi bi-journal-text me-2"></i>审计日志管理
+                </div>
+                <div class="card-body">
+                    <!-- 篩选条件 -->
+                    <div class="filter-section">
+                        <form class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">用户名</label>
+                                <select class="form-select" id="filterUsername">
+                                    <option value="">全部用户</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">操作类型</label>
+                                <select class="form-select" id="filterOperation">
+                                    <option value="">全部操作</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">开始时间</label>
+                                <input type="datetime-local" class="form-control" id="startTime">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">结束时间</label>
+                                <input type="datetime-local" class="form-control" id="endTime">
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="button" class="btn btn-primary me-2" onclick="searchLogs()">
+                                    <i class="bi bi-search me-1"></i>搜索
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="resetFilters()">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>重置
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 统计卡片 -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalCount">0</div>
+                                <div class="stat-label">总日志数</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="stat-number text-success" id="successCount">0</div>
+                                <div class="stat-label">成功操作</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="stat-number text-danger" id="failCount">0</div>
+                                <div class="stat-label">失败操作</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 日志表格 -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户名</th>
+                                    <th>操作</th>
+                                    <th>方法</th>
+                                    <th>IP地址</th>
+                                    <th>耗时(ms)</th>
+                                    <th>状态</th>
+                                    <th>时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logList">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页 -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted">
+                            显示 <span id="showingFrom">0</span> - <span id="showingTo">0</span> 条，共 <span id="totalLogs">0</span> 条
+                        </div>
+                        <nav id="pagination">
+                            <ul class="pagination">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 日志详情模态框 -->
+<div class="modal fade" id="logDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>日志详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">日志ID</label>
+                        <p id="detailId" class="form-control-static"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">用户名</label>
+                        <p id="detailUsername" class="form-control-static"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">操作类型</label>
+                        <p id="detailOperation" class="form-control-static"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">调用方法</label>
+                        <p id="detailMethod" class="form-control-static"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">IP地址</label>
+                        <p id="detailIpAddress" class="form-control-static"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">执行耗时</label>
+                        <p id="detailDuration" class="form-control-static"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">执行状态</label>
+                        <p id="detailStatus" class="form-control-static"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">执行时间</label>
+                        <p id="detailTimestamp" class="form-control-static"></p>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold">请求参数</label>
+                        <pre id="detailParams" class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;"></pre>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold">执行结果</label>
+                        <pre id="detailResult" class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;"></pre>
+                    </div>
+                    <div class="col-12 mb-3" id="errorSection" style="display: none;">
+                        <label class="form-label fw-bold text-danger">错误信息</label>
+                        <pre id="detailError" class="bg-danger bg-opacity-10 p-3 rounded text-danger" style="max-height: 200px; overflow-y: auto;"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页脚 -->
+<footer th:replace="~{layout :: footer}"></footer>
+
+<!-- 脚本 -->
+<div th:replace="~{layout :: scripts}"></div>
+
+<script>
+    let currentPage = 0;
+    let pageSize = 20;
+    let totalPages = 0;
+
+    // 页面加载完成
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUsernames();
+        loadOperations();
+        loadLogs();
+        loadStatistics();
+    });
+
+    // 加载用户名列表（筛选下拉框）
+    async function loadUsernames() {
+        try {
+            const response = await fetch('/api/v1/audit-logs/usernames', { credentials: 'include' });
+            const result = await response.json();
+            if (result.success && result.data) {
+                const select = document.getElementById('filterUsername');
+                result.data.forEach(username => {
+                    if (username) {
+                        select.innerHTML += `<option value="${username}">${username}</option>`;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('加载用户名列表失败:', error);
+        }
+    }
+
+    // 加载操作类型列表（筛选下拉框）
+    async function loadOperations() {
+        try {
+            const response = await fetch('/api/v1/audit-logs/operations', { credentials: 'include' });
+            const result = await response.json();
+            if (result.success && result.data) {
+                const select = document.getElementById('filterOperation');
+                result.data.forEach(operation => {
+                    if (operation) {
+                        select.innerHTML += `<option value="${operation}">${operation}</option>`;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('加载操作类型列表失败:', error);
+        }
+    }
+
+    // 加载统计数据
+    async function loadStatistics() {
+        try {
+            const response = await fetch('/api/v1/audit-logs/count', { credentials: 'include' });
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('totalCount').textContent = result.data || 0;
+            }
+        } catch (error) {
+            console.error('加载统计数据失败:', error);
+        }
+    }
+
+    // 加载日志列表
+    async function loadLogs() {
+        try {
+            const username = document.getElementById('filterUsername').value;
+            const operation = document.getElementById('filterOperation').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+
+            let url = `/api/v1/audit-logs/search?page=${currentPage}&size=${pageSize}`;
+
+            if (username) url += `&username=${encodeURIComponent(username)}`;
+            if (operation) url += `&operation=${encodeURIComponent(operation)}`;
+            if (startTime) url += `&startTime=${encodeURIComponent(startTime.replace('T', ' '))}`;
+            if (endTime) url += `&endTime=${encodeURIComponent(endTime.replace('T', ' '))}`;
+
+            const response = await fetch(url, { credentials: 'include' });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                renderLogs(result.data);
+            } else {
+                showToast(result.message || '加载失败', 'warning');
+            }
+        } catch (error) {
+            console.error('加载日志失败:', error);
+            showToast('加载失败', 'warning');
+        }
+    }
+
+    // 渲染日志列表
+    function renderLogs(pageData) {
+        const tbody = document.getElementById('logList');
+        tbody.innerHTML = '';
+
+        totalPages = pageData.totalPages;
+        const logs = pageData.content;
+
+        // 更新统计显示
+        document.getElementById('totalLogs').textContent = pageData.totalElements;
+        document.getElementById('showingFrom').textContent = pageData.number * pageSize + 1;
+        document.getElementById('showingTo').textContent = Math.min((pageData.number + 1) * pageSize, pageData.totalElements);
+
+        // 计算成功/失败数量
+        let successNum = 0, failNum = 0;
+        logs.forEach(log => {
+            if (log.success) successNum++;
+            else failNum++;
+        });
+        document.getElementById('successCount').textContent = successNum;
+        document.getElementById('failCount').textContent = failNum;
+
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">暂无日志数据</td></tr>';
+            return;
+        }
+
+        logs.forEach(log => {
+            const statusBadge = log.success
+                ? '<span class="badge bg-success badge-status">成功</span>'
+                : '<span class="badge bg-danger badge-status">失败</span>';
+
+            const durationDisplay = log.durationMs ? log.durationMs + 'ms' : '-';
+            const timeDisplay = formatDateTime(log.timestamp);
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${log.id}</td>
+                    <td>${log.username || '-'}</td>
+                    <td>${log.operation || '-'}</td>
+                    <td><small>${log.method || '-'}</small></td>
+                    <td>${log.ipAddress || '-'}</td>
+                    <td>${durationDisplay}</td>
+                    <td>${statusBadge}</td>
+                    <td><small>${timeDisplay}</small></td>
+                    <td>
+                        <button class="btn btn-outline-info btn-sm" onclick="showDetail(${log.id})" title="查看详情">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // 渲染分页
+        renderPagination(pageData);
+    }
+
+    // 渲染分页
+    function renderPagination(pageData) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        if (pageData.totalPages <= 1) return;
+
+        let html = '';
+
+        // 上一页
+        html += `<li class="page-item ${pageData.first ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToPage(${pageData.number - 1})">上一页</a>
+        </li>`;
+
+        // 页码
+        const startPage = Math.max(0, pageData.number - 2);
+        const endPage = Math.min(pageData.totalPages - 1, pageData.number + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<li class="page-item ${i === pageData.number ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="goToPage(${i})">${i + 1}</a>
+            </li>`;
+        }
+
+        // 下一页
+        html += `<li class="page-item ${pageData.last ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToPage(${pageData.number + 1})">下一页</a>
+        </li>`;
+
+        pagination.innerHTML = html;
+    }
+
+    // 跳转到指定页
+    function goToPage(page) {
+        currentPage = page;
+        loadLogs();
+    }
+
+    // 搜索
+    function searchLogs() {
+        currentPage = 0;
+        loadLogs();
+    }
+
+    // 重置筛选
+    function resetFilters() {
+        document.getElementById('filterUsername').value = '';
+        document.getElementById('filterOperation').value = '';
+        document.getElementById('startTime').value = '';
+        document.getElementById('endTime').value = '';
+        currentPage = 0;
+        loadLogs();
+    }
+
+    // 显示详情
+    async function showDetail(logId) {
+        try {
+            const response = await fetch(`/api/v1/audit-logs/${logId}`, { credentials: 'include' });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const log = result.data;
+
+                document.getElementById('detailId').textContent = log.id;
+                document.getElementById('detailUsername').textContent = log.username || '-';
+                document.getElementById('detailOperation').textContent = log.operation || '-';
+                document.getElementById('detailMethod').textContent = log.method || '-';
+                document.getElementById('detailIpAddress').textContent = log.ipAddress || '-';
+                document.getElementById('detailDuration').textContent = log.durationMs ? log.durationMs + 'ms' : '-';
+                document.getElementById('detailStatus').innerHTML = log.success
+                    ? '<span class="badge bg-success">成功</span>'
+                    : '<span class="badge bg-danger">失败</span>';
+                document.getElementById('detailTimestamp').textContent = formatDateTime(log.timestamp);
+                document.getElementById('detailParams').textContent = log.params || '无';
+                document.getElementById('detailResult').textContent = log.result || '无';
+
+                // 错误信息
+                if (log.errorMessage) {
+                    document.getElementById('errorSection').style.display = 'block';
+                    document.getElementById('detailError').textContent = log.errorMessage;
+                } else {
+                    document.getElementById('errorSection').style.display = 'none';
+                }
+
+                const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+                modal.show();
+            } else {
+                showToast(result.message || '获取详情失败', 'warning');
+            }
+        } catch (error) {
+            console.error('获取日志详情失败:', error);
+            showToast('获取详情失败', 'warning');
+        }
+    }
+
+    // 格式化日期时间
+    function formatDateTime(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+</script>
+</body>
+</html>

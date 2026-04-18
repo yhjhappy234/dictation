@@ -375,6 +375,12 @@
                         <i class="bi bi-person-badge me-1"></i>用户管理
                     </a>
                 </li>
+                <!-- 审计日志（管理员可见） -->
+                <li class="nav-item" id="auditLogsNavItem" style="display: none;">
+                    <a class="nav-link" th:classappend="${activePage == 'audit-logs'} ? 'active'" href="/audit-logs">
+                        <i class="bi bi-journal-text me-1"></i>审计日志
+                    </a>
+                </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
                         <img id="userAvatar" src="/images/avatars/avatar1.png" class="rounded-circle me-2" width="32" height="32" alt="头像">
@@ -471,6 +477,7 @@
                     // 显示用户管理菜单（管理员）
                     if (result.data.role === 'ADMIN') {
                         document.getElementById('userManagementNavItem').style.display = 'block';
+                        document.getElementById('auditLogsNavItem').style.display = 'block';
                     }
                 }
             } catch (error) {

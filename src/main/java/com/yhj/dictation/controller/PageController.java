@@ -74,10 +74,18 @@ public class PageController {
     }
 
     /**
-     * 听写人管理页面
+ * 听写人管理页面
      */
     @GetMapping("/dictators")
     public String dictators() {
         return "dictators";
+    }
+
+    /**
+     * 审计日志页面（管理员）
+     */
+    @GetMapping("/audit-logs")
+    public String auditLogs() {
+        return "audit-logs";
     }
 }
