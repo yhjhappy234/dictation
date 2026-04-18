@@ -155,6 +155,10 @@ public class AuditAspect {
                 if (ip != null && ip.contains(",")) {
                     ip = ip.split(",")[0].trim();
                 }
+                // 将IPv6格式的localhost转换为IPv4格式
+                if (ip != null && "0:0:0:0:0:0:0:1".equals(ip)) {
+                    ip = "127.0.0.1";
+                }
                 return ip;
             }
         } catch (Exception e) {
