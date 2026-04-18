@@ -728,7 +728,7 @@
         unitListDiv.innerHTML = '<span class="text-muted">加载中...</span>';
 
         try {
-            const response = await fetch(`/api/preset/${presetId}`);
+            const response = await fetch(`/api/v1/preset/${presetId}`);
             const result = await response.json();
 
             if (result.success && result.data && result.data.units) {
@@ -798,7 +798,7 @@
             document.getElementById('gradeListContainer').style.display = 'none';
             document.getElementById('unitListContainer').style.display = 'none';
 
-            const response = await fetch(`/api/preset/${presetId}`);
+            const response = await fetch(`/api/v1/preset/${presetId}`);
 
             if (!response.ok) {
                 showToast('获取预设内容失败，请重试', 'warning');
