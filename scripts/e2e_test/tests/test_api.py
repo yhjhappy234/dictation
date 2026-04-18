@@ -6,14 +6,14 @@ import time
 from datetime import date, timedelta
 from typing import Generator
 
-from config import (
+from config.base_config import (
     BASE_URL,
     API_ENDPOINTS,
     PAGE_ROUTES,
     TIMEOUT,
     TEST_DATA,
 )
-from utils import (
+from utils.http_client import (
     HttpClient,
     AssertUtil,
     DataGenerator,
