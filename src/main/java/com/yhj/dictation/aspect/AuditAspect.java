@@ -39,9 +39,9 @@ public class AuditAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         AuditLog annotation = signature.getMethod().getAnnotation(AuditLog.class);
 
-        // 获取用户信息
-        Long userId = UserContext.getCurrentUserId();
-        String username = UserContext.getCurrentUsername();
+        // 获取用户信息（方法执行前，用于登出等操作）
+        Long userIdBefore = UserContext.getCurrentUserId();
+        String usernameBefore = UserContext.getCurrentUsername();
 
         // 获取IP地址
         String ipAddress = getIpAddress();
@@ -93,6 +93,14 @@ public class AuditAspect {
             // 记录结束时间
             long endTime = System.currentTimeMillis();
             long durationMs = endTime - startTime;
+
+            // 方法执行后重新获取用户信息（登录操作在执行后才设置用户信息）
+            Long userIdAfter = UserContext.getCurrentUserId();
+            String usernameAfter = UserContext.getCurrentUsername();
+
+            // 优先使用执行后的用户信息（登录操作），如果为空则使用执行前的信息（登出操作）
+            Long userId = userIdAfter != null ? userIdAfter : userIdBefore;
+            String username = usernameAfter != null ? usernameAfter : usernameBefore;
 
             // 获取结果
             String resultStr = null;
