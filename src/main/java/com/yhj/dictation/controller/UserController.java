@@ -9,6 +9,8 @@ import com.yhj.dictation.dto.PasswordUpdateRequest;
 import com.yhj.dictation.entity.User;
 import com.yhj.dictation.service.UserService;
 import com.yhj.dictation.util.UserContext;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +23,9 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@Tag(name = "用户管理", description = "用户创建、查询、更新、删除等接口")
 public class UserController {
 
     private final UserService userService;
@@ -31,6 +34,7 @@ public class UserController {
      * 获取所有用户（仅管理员）
      */
     @GetMapping
+    @Operation(summary = "获取所有用户", description = "获取系统所有用户列表（仅管理员可访问）")
     public ApiResponse<List<UserInfoDTO>> getAllUsers() {
         // 检查是否是管理员
         if (!UserContext.isAdmin()) {

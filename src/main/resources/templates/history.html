@@ -157,7 +157,7 @@
     // 加载任务历史
     async function loadTaskHistory() {
         try {
-            const response = await fetch('/api/tasks/status/COMPLETED');
+            const response = await fetch('/api/v1/tasks/status/COMPLETED');
             const result = await response.json();
 
             if (result.success && result.data) {

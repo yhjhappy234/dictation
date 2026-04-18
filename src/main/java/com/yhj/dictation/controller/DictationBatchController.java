@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/batches")
+@RequestMapping("/api/v1/batches")
 @RequiredArgsConstructor
 public class DictationBatchController {
 

@@ -73,7 +73,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 when(userService.getAllUsers()).thenReturn(List.of(testUser));
 
-                mockMvc.perform(get("/api/users"))
+                mockMvc.perform(get("/api/v1/users"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.data").isArray());
@@ -86,7 +86,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(false);
 
-                mockMvc.perform(get("/api/users"))
+                mockMvc.perform(get("/api/v1/users"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false))
                         .andExpect(jsonPath("$.message").value("权限不足，只有管理员可以查看用户列表"));
@@ -110,7 +110,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 when(userService.createUser(anyString(), anyString(), any())).thenReturn(testUser);
 
-                mockMvc.perform(post("/api/users")
+                mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -128,7 +128,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(false);
 
-                mockMvc.perform(post("/api/users")
+                mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -149,7 +149,7 @@ class UserControllerTest {
                 when(userService.createUser(anyString(), anyString(), any()))
                         .thenThrow(new IllegalArgumentException("用户名已存在"));
 
-                mockMvc.perform(post("/api/users")
+                mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -173,7 +173,7 @@ class UserControllerTest {
                 testUser.setPassword("newEncodedPassword");
                 when(userService.updatePassword(anyLong(), anyString())).thenReturn(testUser);
 
-                mockMvc.perform(post("/api/users/me/password")
+                mockMvc.perform(post("/api/v1/users/me/password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -190,7 +190,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(null);
 
-                mockMvc.perform(post("/api/users/me/password")
+                mockMvc.perform(post("/api/v1/users/me/password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -212,7 +212,7 @@ class UserControllerTest {
                 mockedUserContext.when(() -> UserContext.updateAvatar(anyString())).thenAnswer(invocation -> null);
                 when(userService.updateAvatar(anyLong(), anyString())).thenReturn(testUser);
 
-                mockMvc.perform(post("/api/users/me/avatar?avatar=avatar2.png"))
+                mockMvc.perform(post("/api/v1/users/me/avatar?avatar=avatar2.png"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true));
             }
@@ -224,7 +224,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(null);
 
-                mockMvc.perform(post("/api/users/me/avatar?avatar=avatar2.png"))
+                mockMvc.perform(post("/api/v1/users/me/avatar?avatar=avatar2.png"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false))
                         .andExpect(jsonPath("$.message").value("未登录"));
@@ -242,7 +242,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
 
-                mockMvc.perform(get("/api/users/me/is-admin"))
+                mockMvc.perform(get("/api/v1/users/me/is-admin"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data").value(true));
             }
@@ -254,7 +254,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(false);
 
-                mockMvc.perform(get("/api/users/me/is-admin"))
+                mockMvc.perform(get("/api/v1/users/me/is-admin"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data").value(false));
             }
@@ -273,7 +273,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(2L); // 不是自己
                 doNothing().when(userService).deleteUser(anyLong());
 
-                mockMvc.perform(delete("/api/users/1"))
+                mockMvc.perform(delete("/api/v1/users/1"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true));
             }
@@ -286,7 +286,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L); // 是自己
 
-                mockMvc.perform(delete("/api/users/1"))
+                mockMvc.perform(delete("/api/v1/users/1"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false))
                         .andExpect(jsonPath("$.message").value("不能删除自己"));
@@ -299,7 +299,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(false);
 
-                mockMvc.perform(delete("/api/users/1"))
+                mockMvc.perform(delete("/api/v1/users/1"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false));
             }
@@ -313,7 +313,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(2L);
                 doThrow(new IllegalArgumentException("用户不存在")).when(userService).deleteUser(anyLong());
 
-                mockMvc.perform(delete("/api/users/999"))
+                mockMvc.perform(delete("/api/v1/users/999"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false));
             }
@@ -334,7 +334,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
 
-                mockMvc.perform(post("/api/users")
+                mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -353,7 +353,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
 
-                mockMvc.perform(post("/api/users")
+                mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -373,7 +373,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
 
-                mockMvc.perform(post("/api/users")
+                mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -394,7 +394,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 when(userService.createUser(anyString(), anyString(), any())).thenReturn(testUser);
 
-                mockMvc.perform(post("/api/users")
+                mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -414,7 +414,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 when(userService.getUserById(anyLong())).thenReturn(java.util.Optional.of(testUser));
 
-                mockMvc.perform(get("/api/users/1"))
+                mockMvc.perform(get("/api/v1/users/1"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true));
             }
@@ -426,7 +426,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(false);
 
-                mockMvc.perform(get("/api/users/1"))
+                mockMvc.perform(get("/api/v1/users/1"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false));
             }
@@ -439,7 +439,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 when(userService.getUserById(anyLong())).thenReturn(java.util.Optional.empty());
 
-                mockMvc.perform(get("/api/users/999"))
+                mockMvc.perform(get("/api/v1/users/999"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false));
             }
@@ -459,7 +459,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
 
-                mockMvc.perform(post("/api/users/me/password")
+                mockMvc.perform(post("/api/v1/users/me/password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -478,7 +478,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
                 when(userService.updatePassword(anyLong(), anyString())).thenThrow(new IllegalArgumentException("用户不存在"));
 
-                mockMvc.perform(post("/api/users/me/password")
+                mockMvc.perform(post("/api/v1/users/me/password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -498,7 +498,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
                 when(userService.updateAvatar(anyLong(), anyString())).thenThrow(new IllegalArgumentException("头像不存在"));
 
-                mockMvc.perform(post("/api/users/me/avatar?avatar=invalid.png"))
+                mockMvc.perform(post("/api/v1/users/me/avatar?avatar=invalid.png"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false));
             }
@@ -520,7 +520,7 @@ class UserControllerTest {
                 when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
                 when(userService.updateRole(anyLong(), any())).thenReturn(testUser);
 
-                mockMvc.perform(put("/api/users/1")
+                mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -539,7 +539,7 @@ class UserControllerTest {
                 when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
                 when(userService.enableUser(anyLong())).thenReturn(testUser);
 
-                mockMvc.perform(put("/api/users/1")
+                mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -558,7 +558,7 @@ class UserControllerTest {
                 when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
                 when(userService.disableUser(anyLong())).thenReturn(testUser);
 
-                mockMvc.perform(put("/api/users/1")
+                mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -577,7 +577,7 @@ class UserControllerTest {
                 when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
                 when(userService.updateAvatar(anyLong(), anyString())).thenReturn(testUser);
 
-                mockMvc.perform(put("/api/users/1")
+                mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -595,7 +595,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 when(userService.getUserById(anyLong())).thenReturn(java.util.Optional.empty());
 
-                mockMvc.perform(put("/api/users/999")
+                mockMvc.perform(put("/api/v1/users/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -612,7 +612,7 @@ class UserControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(false);
 
-                mockMvc.perform(put("/api/users/1")
+                mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -630,7 +630,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
 
-                mockMvc.perform(put("/api/users/1")
+                mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -648,7 +648,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
 
-                mockMvc.perform(put("/api/users/1")
+                mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
@@ -665,7 +665,7 @@ class UserControllerTest {
                 mockedUserContext.when(UserContext::isAdmin).thenReturn(true);
                 when(userService.getUserById(1L)).thenReturn(java.util.Optional.of(testUser));
 
-                mockMvc.perform(put("/api/users/1")
+                mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())

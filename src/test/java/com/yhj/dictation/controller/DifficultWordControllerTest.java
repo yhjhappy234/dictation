@@ -83,7 +83,7 @@ class DifficultWordControllerTest {
             when(difficultWordService.getDifficultWords()).thenReturn(Arrays.asList(testDTO));
 
             // When & Then
-            mockMvc.perform(get("/api/difficult-words"))
+            mockMvc.perform(get("/api/v1/difficult-words"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
@@ -97,7 +97,7 @@ class DifficultWordControllerTest {
             when(difficultWordService.getDifficultWords()).thenReturn(Collections.emptyList());
 
             // When & Then
-            mockMvc.perform(get("/api/difficult-words"))
+            mockMvc.perform(get("/api/v1/difficult-words"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isEmpty());
         }
@@ -115,7 +115,7 @@ class DifficultWordControllerTest {
                     .thenReturn(Arrays.asList(testDifficultWord));
 
             // When & Then
-            mockMvc.perform(get("/api/difficult-words/dictator/小明"))
+            mockMvc.perform(get("/api/v1/difficult-words/dictator/小明"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -134,7 +134,7 @@ class DifficultWordControllerTest {
                     .thenReturn(Arrays.asList(testDifficultWord));
 
             // When & Then
-            mockMvc.perform(get("/api/difficult-words/difficult")
+            mockMvc.perform(get("/api/v1/difficult-words/difficult")
                     .param("maxMasteryLevel", "3"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -149,7 +149,7 @@ class DifficultWordControllerTest {
                     .thenReturn(Collections.emptyList());
 
             // When & Then
-            mockMvc.perform(get("/api/difficult-words/difficult"))
+            mockMvc.perform(get("/api/v1/difficult-words/difficult"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isEmpty());
         }
@@ -167,7 +167,7 @@ class DifficultWordControllerTest {
                     .thenReturn(Arrays.asList(testDifficultWord));
 
             // When & Then
-            mockMvc.perform(get("/api/difficult-words/recommended")
+            mockMvc.perform(get("/api/v1/difficult-words/recommended")
                     .param("minErrors", "3")
                     .param("minDuration", "10"))
                     .andExpect(status().isOk())
@@ -182,7 +182,7 @@ class DifficultWordControllerTest {
                     .thenReturn(Collections.emptyList());
 
             // When & Then
-            mockMvc.perform(get("/api/difficult-words/recommended"))
+            mockMvc.perform(get("/api/v1/difficult-words/recommended"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isEmpty());
         }
@@ -203,7 +203,7 @@ class DifficultWordControllerTest {
             when(difficultWordService.addDifficultWordDTO(anyString(), anyString())).thenReturn(testDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/difficult-words")
+            mockMvc.perform(post("/api/v1/difficult-words")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -222,7 +222,7 @@ class DifficultWordControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/difficult-words")
+            mockMvc.perform(post("/api/v1/difficult-words")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -243,7 +243,7 @@ class DifficultWordControllerTest {
             when(difficultWordService.getDifficultWordByText("测试")).thenReturn(Optional.of(testDifficultWord));
 
             // When & Then
-            mockMvc.perform(put("/api/difficult-words/1/mastery")
+            mockMvc.perform(put("/api/v1/difficult-words/1/mastery")
                     .param("level", "3"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
@@ -256,7 +256,7 @@ class DifficultWordControllerTest {
             when(difficultWordService.getDifficultWordById(any())).thenReturn(Optional.empty());
 
             // When & Then
-            mockMvc.perform(put("/api/difficult-words/999/mastery")
+            mockMvc.perform(put("/api/v1/difficult-words/999/mastery")
                     .param("level", "3"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
@@ -271,7 +271,7 @@ class DifficultWordControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(put("/api/difficult-words/1/mastery")
+            mockMvc.perform(put("/api/v1/difficult-words/1/mastery")
                     .param("level", "3"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
@@ -289,7 +289,7 @@ class DifficultWordControllerTest {
             doNothing().when(difficultWordService).handlePracticeSuccessByText("测试");
 
             // When & Then
-            mockMvc.perform(post("/api/difficult-words/text/测试/success"))
+            mockMvc.perform(post("/api/v1/difficult-words/text/测试/success"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("练习成功"));
@@ -302,7 +302,7 @@ class DifficultWordControllerTest {
             doThrow(new RuntimeException("Database error")).when(difficultWordService).handlePracticeSuccessByText(anyString());
 
             // When & Then
-            mockMvc.perform(post("/api/difficult-words/text/测试/success"))
+            mockMvc.perform(post("/api/v1/difficult-words/text/测试/success"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -319,7 +319,7 @@ class DifficultWordControllerTest {
             doNothing().when(difficultWordService).handlePracticeFailureByText("测试", "小明");
 
             // When & Then
-            mockMvc.perform(post("/api/difficult-words/text/测试/failure")
+            mockMvc.perform(post("/api/v1/difficult-words/text/测试/failure")
                     .param("dictator", "小明"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -333,7 +333,7 @@ class DifficultWordControllerTest {
             doThrow(new RuntimeException("Database error")).when(difficultWordService).handlePracticeFailureByText(anyString(), anyString());
 
             // When & Then
-            mockMvc.perform(post("/api/difficult-words/text/测试/failure")
+            mockMvc.perform(post("/api/v1/difficult-words/text/测试/failure")
                     .param("dictator", "小明"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
@@ -351,7 +351,7 @@ class DifficultWordControllerTest {
             doNothing().when(difficultWordService).removeDifficultWord(1L);
 
             // When & Then
-            mockMvc.perform(delete("/api/difficult-words/1"))
+            mockMvc.perform(delete("/api/v1/difficult-words/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("已从生词本移除"));
@@ -364,7 +364,7 @@ class DifficultWordControllerTest {
             doThrow(new RuntimeException("Database error")).when(difficultWordService).removeDifficultWord(any());
 
             // When & Then
-            mockMvc.perform(delete("/api/difficult-words/999"))
+            mockMvc.perform(delete("/api/v1/difficult-words/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }

@@ -822,7 +822,7 @@
     async function saveBatch() {
         const batchName = document.getElementById('batchName').value || `听写_${new Date().toLocaleDateString()}`;
         try {
-            const response = await fetch('/api/batches', {
+            const response = await fetch('/api/v1/batches', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -861,7 +861,7 @@
     async function saveWrongWords() {
         const dictator = document.getElementById('dictatorInput').value.trim() || '凡凡';
         try {
-            await fetch('/api/difficult-words/batch?dictator=' + encodeURIComponent(dictator), {
+            await fetch('/api/v1/difficult-words/batch?dictator=' + encodeURIComponent(dictator), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -898,7 +898,7 @@
     // 刷新听写任务列表（只加载未完成的任务）
     async function refreshTasks() {
         try {
-            const response = await fetch('/api/tasks/uncompleted');
+            const response = await fetch('/api/v1/tasks/uncompleted');
             const result = await response.json();
 
             if (result.success && result.data) {

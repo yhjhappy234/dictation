@@ -114,7 +114,7 @@
     // 加载用户列表
     async function loadUsers() {
         try {
-            const response = await fetch('/api/users', { credentials: 'include' });
+            const response = await fetch('/api/v1/users', { credentials: 'include' });
             const result = await response.json();
             if (result.success && result.data) {
                 const tbody = document.getElementById('userTableBody');
@@ -175,7 +175,7 @@
         }
 
         try {
-            const response = await fetch('/api/users', {
+            const response = await fetch('/api/v1/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -210,7 +210,7 @@
         const status = document.getElementById('editUserStatus').value;
 
         try {
-            const response = await fetch('/api/users/' + id, {
+            const response = await fetch('/api/v1/users/' + id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -237,7 +237,7 @@
         }
 
         try {
-            const response = await fetch('/api/users/' + id, {
+            const response = await fetch('/api/v1/users/' + id, {
                 method: 'DELETE',
                 credentials: 'include'
             });

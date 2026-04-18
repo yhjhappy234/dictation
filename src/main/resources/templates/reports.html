@@ -230,7 +230,7 @@
     // 加载听写人列表
     async function loadDictators() {
         try {
-            const response = await fetch('/api/tasks/dictators');
+            const response = await fetch('/api/v1/tasks/dictators');
             const result = await response.json();
 
             if (result.success && result.data) {
@@ -299,7 +299,7 @@
     // 加载所有已完成任务
     async function loadTasks() {
         try {
-            const response = await fetch('/api/tasks/status/COMPLETED');
+            const response = await fetch('/api/v1/tasks/status/COMPLETED');
             const result = await response.json();
 
             if (result.success && result.data) {

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/difficult-words")
+@RequestMapping("/api/v1/difficult-words")
 @RequiredArgsConstructor
 public class DifficultWordController {
 

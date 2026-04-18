@@ -90,7 +90,7 @@ class DictationBatchControllerTest {
             when(batchService.createBatchResponse(any(BatchCreateRequest.class))).thenReturn(testBatchResponse);
 
             // When & Then
-            mockMvc.perform(post("/api/batches")
+            mockMvc.perform(post("/api/v1/batches")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -110,7 +110,7 @@ class DictationBatchControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/batches")
+            mockMvc.perform(post("/api/v1/batches")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -131,7 +131,7 @@ class DictationBatchControllerTest {
             when(batchService.getAllBatchResponses()).thenReturn(batches);
 
             // When & Then
-            mockMvc.perform(get("/api/batches"))
+            mockMvc.perform(get("/api/v1/batches"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
@@ -145,7 +145,7 @@ class DictationBatchControllerTest {
             when(batchService.getAllBatchResponses()).thenReturn(Collections.emptyList());
 
             // When & Then
-            mockMvc.perform(get("/api/batches"))
+            mockMvc.perform(get("/api/v1/batches"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isArray())
                     .andExpect(jsonPath("$.data").isEmpty());
@@ -163,7 +163,7 @@ class DictationBatchControllerTest {
             when(batchService.getBatchResponseById(1L)).thenReturn(testBatchResponse);
 
             // When & Then
-            mockMvc.perform(get("/api/batches/1"))
+            mockMvc.perform(get("/api/v1/batches/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").value(1));
@@ -177,7 +177,7 @@ class DictationBatchControllerTest {
                     .thenThrow(new IllegalArgumentException("Batch not found"));
 
             // When & Then
-            mockMvc.perform(get("/api/batches/999"))
+            mockMvc.perform(get("/api/v1/batches/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").exists());
@@ -198,7 +198,7 @@ class DictationBatchControllerTest {
             when(batchService.toBatchResponse(any(DictationBatch.class))).thenReturn(testBatchResponse);
 
             // When & Then
-            mockMvc.perform(post("/api/batches/1/start"))
+            mockMvc.perform(post("/api/v1/batches/1/start"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("批次开始成功"));
@@ -212,7 +212,7 @@ class DictationBatchControllerTest {
                     .thenThrow(new IllegalArgumentException("Batch not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/batches/999/start"))
+            mockMvc.perform(post("/api/v1/batches/999/start"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -232,7 +232,7 @@ class DictationBatchControllerTest {
             when(batchService.toBatchResponse(any(DictationBatch.class))).thenReturn(testBatchResponse);
 
             // When & Then
-            mockMvc.perform(post("/api/batches/1/complete"))
+            mockMvc.perform(post("/api/v1/batches/1/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("批次完成"));
@@ -246,7 +246,7 @@ class DictationBatchControllerTest {
                     .thenThrow(new IllegalArgumentException("Batch not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/batches/999/complete"))
+            mockMvc.perform(post("/api/v1/batches/999/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -266,7 +266,7 @@ class DictationBatchControllerTest {
             when(batchService.toBatchResponse(any(DictationBatch.class))).thenReturn(testBatchResponse);
 
             // When & Then
-            mockMvc.perform(post("/api/batches/1/cancel"))
+            mockMvc.perform(post("/api/v1/batches/1/cancel"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("批次已取消"));
@@ -280,7 +280,7 @@ class DictationBatchControllerTest {
                     .thenThrow(new IllegalArgumentException("Batch not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/batches/999/cancel"))
+            mockMvc.perform(post("/api/v1/batches/999/cancel"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -297,7 +297,7 @@ class DictationBatchControllerTest {
             doNothing().when(batchService).deleteBatch(1L);
 
             // When & Then
-            mockMvc.perform(delete("/api/batches/1"))
+            mockMvc.perform(delete("/api/v1/batches/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("批次删除成功"));
@@ -310,7 +310,7 @@ class DictationBatchControllerTest {
             doThrow(new RuntimeException("Database error")).when(batchService).deleteBatch(anyLong());
 
             // When & Then
-            mockMvc.perform(delete("/api/batches/999"))
+            mockMvc.perform(delete("/api/v1/batches/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -334,7 +334,7 @@ class DictationBatchControllerTest {
             when(wordService.getWordsByBatchId(1L)).thenReturn(Arrays.asList(word));
 
             // When & Then
-            mockMvc.perform(get("/api/batches/1/words"))
+            mockMvc.perform(get("/api/v1/batches/1/words"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -347,7 +347,7 @@ class DictationBatchControllerTest {
             when(wordService.getWordsByBatchId(anyLong())).thenReturn(Collections.emptyList());
 
             // When & Then
-            mockMvc.perform(get("/api/batches/999/words"))
+            mockMvc.perform(get("/api/v1/batches/999/words"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isEmpty());
         }
@@ -364,7 +364,7 @@ class DictationBatchControllerTest {
             doNothing().when(wordService).resetBatchWords(1L);
 
             // When & Then
-            mockMvc.perform(post("/api/batches/1/reset"))
+            mockMvc.perform(post("/api/v1/batches/1/reset"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("词语状态已重置"));
@@ -377,7 +377,7 @@ class DictationBatchControllerTest {
             doThrow(new RuntimeException("Database error")).when(wordService).resetBatchWords(anyLong());
 
             // When & Then
-            mockMvc.perform(post("/api/batches/999/reset"))
+            mockMvc.perform(post("/api/v1/batches/999/reset"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }

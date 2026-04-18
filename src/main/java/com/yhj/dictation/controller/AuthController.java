@@ -7,6 +7,8 @@ import com.yhj.dictation.dto.UserInfoDTO;
 import com.yhj.dictation.entity.User;
 import com.yhj.dictation.service.UserService;
 import com.yhj.dictation.util.UserContext;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +20,9 @@ import jakarta.servlet.http.HttpSession;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Tag(name = "认证管理", description = "用户登录、登出、状态检查等接口")
 public class AuthController {
 
     private final UserService userService;
@@ -28,6 +31,7 @@ public class AuthController {
      * 用户登录
      */
     @PostMapping("/login")
+    @Operation(summary = "用户登录", description = "使用用户名和密码登录系统")
     @AuditLog(operation = "用户登录", recordParams = true, recordResult = false)
     public ApiResponse<UserInfoDTO> login(@RequestBody LoginRequest request, HttpSession session) {
         if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
@@ -60,6 +64,7 @@ public class AuthController {
      * 用户登出
      */
     @PostMapping("/logout")
+    @Operation(summary = "用户登出", description = "退出登录状态")
     @AuditLog(operation = "用户登出", recordParams = false)
     public ApiResponse<Void> logout(HttpSession session) {
         String username = UserContext.getCurrentUsername();
@@ -72,6 +77,7 @@ public class AuthController {
      * 获取当前登录用户信息
      */
     @GetMapping("/current")
+    @Operation(summary = "获取当前用户", description = "获取当前登录用户的信息")
     public ApiResponse<UserInfoDTO> getCurrentUser() {
         Long userId = UserContext.getCurrentUserId();
         String username = UserContext.getCurrentUsername();
@@ -98,6 +104,7 @@ public class AuthController {
      * 检查登录状态
      */
     @GetMapping("/status")
+    @Operation(summary = "检查登录状态", description = "检查用户是否已登录")
     public ApiResponse<Boolean> checkLoginStatus() {
         boolean isLoggedIn = UserContext.isLoggedIn();
         return ApiResponse.success(isLoggedIn);
@@ -107,6 +114,7 @@ public class AuthController {
      * 获取所有可用头像列表
      */
     @GetMapping("/avatars")
+    @Operation(summary = "获取头像列表", description = "获取系统内置的所有头像文件列表")
     public ApiResponse<java.util.List<String>> getAllAvatars() {
         return ApiResponse.success(userService.getAllAvatars());
     }

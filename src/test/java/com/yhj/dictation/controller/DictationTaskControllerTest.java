@@ -100,7 +100,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks")
+            mockMvc.perform(post("/api/v1/tasks")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -117,7 +117,7 @@ class DictationTaskControllerTest {
             request.setWords("词语");
 
             // When & Then
-            mockMvc.perform(post("/api/tasks")
+            mockMvc.perform(post("/api/v1/tasks")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -134,7 +134,7 @@ class DictationTaskControllerTest {
             request.setWords("");
 
             // When & Then
-            mockMvc.perform(post("/api/tasks")
+            mockMvc.perform(post("/api/v1/tasks")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -154,7 +154,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks")
+            mockMvc.perform(post("/api/v1/tasks")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -174,7 +174,7 @@ class DictationTaskControllerTest {
             when(taskService.getAllTaskDTOs()).thenReturn(tasks);
 
             // When & Then
-            mockMvc.perform(get("/api/tasks"))
+            mockMvc.perform(get("/api/v1/tasks"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -187,7 +187,7 @@ class DictationTaskControllerTest {
             when(taskService.getAllTaskDTOs()).thenReturn(Collections.emptyList());
 
             // When & Then
-            mockMvc.perform(get("/api/tasks"))
+            mockMvc.perform(get("/api/v1/tasks"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isEmpty());
         }
@@ -199,7 +199,7 @@ class DictationTaskControllerTest {
             when(taskService.getAllTaskDTOs()).thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks"))
+            mockMvc.perform(get("/api/v1/tasks"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -217,7 +217,7 @@ class DictationTaskControllerTest {
             when(taskService.getUncompletedTaskDTOs()).thenReturn(tasks);
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/uncompleted"))
+            mockMvc.perform(get("/api/v1/tasks/uncompleted"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -230,7 +230,7 @@ class DictationTaskControllerTest {
             when(taskService.getUncompletedTaskDTOs()).thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/uncompleted"))
+            mockMvc.perform(get("/api/v1/tasks/uncompleted"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -248,7 +248,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/1"))
+            mockMvc.perform(get("/api/v1/tasks/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").value(1));
@@ -261,7 +261,7 @@ class DictationTaskControllerTest {
             when(taskService.getTaskById(anyLong())).thenReturn(Optional.empty());
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/999"))
+            mockMvc.perform(get("/api/v1/tasks/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -273,7 +273,7 @@ class DictationTaskControllerTest {
             when(taskService.getTaskById(anyLong())).thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/1"))
+            mockMvc.perform(get("/api/v1/tasks/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -295,7 +295,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(put("/api/tasks/1")
+            mockMvc.perform(put("/api/v1/tasks/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -313,7 +313,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(put("/api/tasks/999")
+            mockMvc.perform(put("/api/v1/tasks/999")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -331,7 +331,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(put("/api/tasks/1")
+            mockMvc.perform(put("/api/v1/tasks/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -350,7 +350,7 @@ class DictationTaskControllerTest {
             doNothing().when(taskService).deleteTask(1L);
 
             // When & Then
-            mockMvc.perform(delete("/api/tasks/1"))
+            mockMvc.perform(delete("/api/v1/tasks/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -362,7 +362,7 @@ class DictationTaskControllerTest {
             doThrow(new RuntimeException("Database error")).when(taskService).deleteTask(anyLong());
 
             // When & Then
-            mockMvc.perform(delete("/api/tasks/999"))
+            mockMvc.perform(delete("/api/v1/tasks/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -382,7 +382,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/start"))
+            mockMvc.perform(post("/api/v1/tasks/1/start"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -395,7 +395,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/999/start"))
+            mockMvc.perform(post("/api/v1/tasks/999/start"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -408,7 +408,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/start"))
+            mockMvc.perform(post("/api/v1/tasks/1/start"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -428,7 +428,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/complete"))
+            mockMvc.perform(post("/api/v1/tasks/1/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -441,7 +441,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/999/complete"))
+            mockMvc.perform(post("/api/v1/tasks/999/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -454,7 +454,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/complete"))
+            mockMvc.perform(post("/api/v1/tasks/1/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -474,7 +474,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/dictator?dictator=小明"))
+            mockMvc.perform(post("/api/v1/tasks/1/dictator?dictator=小明"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -487,7 +487,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/999/dictator?dictator=小明"))
+            mockMvc.perform(post("/api/v1/tasks/999/dictator?dictator=小明"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -500,7 +500,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/dictator?dictator=小明"))
+            mockMvc.perform(post("/api/v1/tasks/1/dictator?dictator=小明"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -518,7 +518,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/reset-progress"))
+            mockMvc.perform(post("/api/v1/tasks/1/reset-progress"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -531,7 +531,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/999/reset-progress"))
+            mockMvc.perform(post("/api/v1/tasks/999/reset-progress"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -544,7 +544,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/reset-progress"))
+            mockMvc.perform(post("/api/v1/tasks/1/reset-progress"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -568,7 +568,7 @@ class DictationTaskControllerTest {
             when(taskRecordService.getRecordsByTaskId(1L)).thenReturn(Arrays.asList(record));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/1/records"))
+            mockMvc.perform(get("/api/v1/tasks/1/records"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -582,7 +582,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/1/records"))
+            mockMvc.perform(get("/api/v1/tasks/1/records"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -605,7 +605,7 @@ class DictationTaskControllerTest {
             when(taskRecordService.startWord(eq(1L), anyString())).thenReturn(record);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/start-word?word=词语1"))
+            mockMvc.perform(post("/api/v1/tasks/1/start-word?word=词语1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -618,7 +618,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/start-word?word=词语1"))
+            mockMvc.perform(post("/api/v1/tasks/1/start-word?word=词语1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -641,7 +641,7 @@ class DictationTaskControllerTest {
             when(taskRecordService.incrementReadCountByWord(eq(1L), anyString())).thenReturn(record);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/read-word?word=词语1"))
+            mockMvc.perform(post("/api/v1/tasks/1/read-word?word=词语1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -653,7 +653,7 @@ class DictationTaskControllerTest {
             when(taskRecordService.incrementReadCountByWord(anyLong(), anyString())).thenReturn(null);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/read-word?word=词语"))
+            mockMvc.perform(post("/api/v1/tasks/1/read-word?word=词语"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -666,7 +666,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/read-word?word=词语1"))
+            mockMvc.perform(post("/api/v1/tasks/1/read-word?word=词语1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -689,7 +689,7 @@ class DictationTaskControllerTest {
             when(taskRecordService.completeWord(eq(1L), anyString(), eq(true))).thenReturn(record);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/complete-word?word=词语1&isCorrect=true"))
+            mockMvc.perform(post("/api/v1/tasks/1/complete-word?word=词语1&isCorrect=true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -707,7 +707,7 @@ class DictationTaskControllerTest {
             when(taskRecordService.completeWord(eq(1L), anyString(), eq(false))).thenReturn(record);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/complete-word?word=词语1&isCorrect=false"))
+            mockMvc.perform(post("/api/v1/tasks/1/complete-word?word=词语1&isCorrect=false"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -720,7 +720,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/complete-word?word=词语1&isCorrect=true"))
+            mockMvc.perform(post("/api/v1/tasks/1/complete-word?word=词语1&isCorrect=true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -740,7 +740,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/status/COMPLETED"))
+            mockMvc.perform(get("/api/v1/tasks/status/COMPLETED"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -754,7 +754,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/status/COMPLETED"))
+            mockMvc.perform(get("/api/v1/tasks/status/COMPLETED"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -774,7 +774,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/favorites"))
+            mockMvc.perform(get("/api/v1/tasks/favorites"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -786,7 +786,7 @@ class DictationTaskControllerTest {
             when(taskService.getFavoriteTasks()).thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/favorites"))
+            mockMvc.perform(get("/api/v1/tasks/favorites"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -806,7 +806,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/favorite?isFavorite=true"))
+            mockMvc.perform(post("/api/v1/tasks/1/favorite?isFavorite=true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -819,7 +819,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/999/favorite?isFavorite=true"))
+            mockMvc.perform(post("/api/v1/tasks/999/favorite?isFavorite=true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -832,7 +832,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/favorite?isFavorite=true"))
+            mockMvc.perform(post("/api/v1/tasks/1/favorite?isFavorite=true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -849,7 +849,7 @@ class DictationTaskControllerTest {
             when(taskService.getAllDictators()).thenReturn(Arrays.asList("小明", "小红"));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/dictators"))
+            mockMvc.perform(get("/api/v1/tasks/dictators"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -862,7 +862,7 @@ class DictationTaskControllerTest {
             when(taskService.getAllDictators()).thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(get("/api/tasks/dictators"))
+            mockMvc.perform(get("/api/v1/tasks/dictators"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -882,7 +882,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(put("/api/tasks/1/status?status=COMPLETED"))
+            mockMvc.perform(put("/api/v1/tasks/1/status?status=COMPLETED"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -895,7 +895,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(put("/api/tasks/999/status?status=COMPLETED"))
+            mockMvc.perform(put("/api/v1/tasks/999/status?status=COMPLETED"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -908,7 +908,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(put("/api/tasks/1/status?status=COMPLETED"))
+            mockMvc.perform(put("/api/v1/tasks/1/status?status=COMPLETED"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -928,7 +928,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/reset"))
+            mockMvc.perform(post("/api/v1/tasks/1/reset"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -941,7 +941,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/999/reset"))
+            mockMvc.perform(post("/api/v1/tasks/999/reset"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -954,7 +954,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/reset"))
+            mockMvc.perform(post("/api/v1/tasks/1/reset"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -977,7 +977,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/progress")
+            mockMvc.perform(post("/api/v1/tasks/1/progress")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -995,7 +995,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/999/progress")
+            mockMvc.perform(post("/api/v1/tasks/999/progress")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -1013,7 +1013,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/progress")
+            mockMvc.perform(post("/api/v1/tasks/1/progress")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -1033,7 +1033,7 @@ class DictationTaskControllerTest {
             when(taskService.toTaskDTO(any(DictationTask.class))).thenReturn(testTaskDTO);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/record?word=词语1&isCorrect=true"))
+            mockMvc.perform(post("/api/v1/tasks/1/record?word=词语1&isCorrect=true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -1046,7 +1046,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new IllegalArgumentException("Task not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/999/record?word=词语&isCorrect=true"))
+            mockMvc.perform(post("/api/v1/tasks/999/record?word=词语&isCorrect=true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -1059,7 +1059,7 @@ class DictationTaskControllerTest {
                     .thenThrow(new RuntimeException("Database error"));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/record?word=词语&isCorrect=true"))
+            mockMvc.perform(post("/api/v1/tasks/1/record?word=词语&isCorrect=true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -1082,7 +1082,7 @@ class DictationTaskControllerTest {
             when(batchService.startBatch(1L)).thenReturn(batch);
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/dictation"))
+            mockMvc.perform(post("/api/v1/tasks/1/dictation"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -1094,7 +1094,7 @@ class DictationTaskControllerTest {
             when(taskService.getTaskById(anyLong())).thenReturn(Optional.empty());
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/999/dictation"))
+            mockMvc.perform(post("/api/v1/tasks/999/dictation"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -1107,7 +1107,7 @@ class DictationTaskControllerTest {
             when(taskService.getTaskById(1L)).thenReturn(Optional.of(testTask));
 
             // When & Then
-            mockMvc.perform(post("/api/tasks/1/dictation"))
+            mockMvc.perform(post("/api/v1/tasks/1/dictation"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }

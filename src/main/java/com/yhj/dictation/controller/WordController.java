@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/words")
+@RequestMapping("/api/v1/words")
 @RequiredArgsConstructor
 public class WordController {
 

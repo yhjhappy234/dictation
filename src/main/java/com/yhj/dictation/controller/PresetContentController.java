@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/preset")
+@RequestMapping("/api/v1/preset")
 @RequiredArgsConstructor
 public class PresetContentController {
 

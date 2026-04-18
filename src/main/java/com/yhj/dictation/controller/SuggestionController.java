@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/suggestions")
+@RequestMapping("/api/v1/suggestions")
 @RequiredArgsConstructor
 public class SuggestionController {
 

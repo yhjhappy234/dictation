@@ -84,7 +84,7 @@ class DictationRecordControllerTest {
         void startRecord() throws Exception {
             when(recordService.startRecord(anyLong(), anyLong())).thenReturn(testRecord);
 
-            mockMvc.perform(post("/api/records/start?wordId=1&batchId=1"))
+            mockMvc.perform(post("/api/v1/records/start?wordId=1&batchId=1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("开始听写"));
@@ -97,7 +97,7 @@ class DictationRecordControllerTest {
         void startRecordFail() throws Exception {
             when(recordService.startRecord(anyLong(), anyLong())).thenThrow(new RuntimeException("失败"));
 
-            mockMvc.perform(post("/api/records/start?wordId=1&batchId=1"))
+            mockMvc.perform(post("/api/v1/records/start?wordId=1&batchId=1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -114,7 +114,7 @@ class DictationRecordControllerTest {
             when(wordService.getWordById(anyLong())).thenReturn(Optional.of(testWord));
             doNothing().when(difficultWordService).handlePracticeSuccessByText(any());
 
-            mockMvc.perform(post("/api/records/1/complete"))
+            mockMvc.perform(post("/api/v1/records/1/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("听写完成"));
@@ -128,7 +128,7 @@ class DictationRecordControllerTest {
         void completeRecordNotFound() throws Exception {
             when(recordService.completeRecord(anyLong())).thenThrow(new IllegalArgumentException("记录不存在"));
 
-            mockMvc.perform(post("/api/records/999/complete"))
+            mockMvc.perform(post("/api/v1/records/999/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -139,7 +139,7 @@ class DictationRecordControllerTest {
             when(recordService.completeRecord(anyLong())).thenReturn(testRecord);
             when(wordService.getWordById(anyLong())).thenReturn(Optional.empty());
 
-            mockMvc.perform(post("/api/records/1/complete"))
+            mockMvc.perform(post("/api/v1/records/1/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
 
@@ -161,7 +161,7 @@ class DictationRecordControllerTest {
             CompleteRequest request = new CompleteRequest();
             request.setDuration(30);
 
-            mockMvc.perform(post("/api/records/complete/1")
+            mockMvc.perform(post("/api/v1/records/complete/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"duration\":30}"))
                     .andExpect(status().isOk())
@@ -175,7 +175,7 @@ class DictationRecordControllerTest {
             when(wordService.getWordById(anyLong())).thenReturn(Optional.of(testWord));
             doNothing().when(difficultWordService).handlePracticeSuccessByText(any());
 
-            mockMvc.perform(post("/api/records/complete/1")
+            mockMvc.perform(post("/api/v1/records/complete/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{}"))
                     .andExpect(status().isOk())
@@ -187,7 +187,7 @@ class DictationRecordControllerTest {
         void completeByWordIdFail() throws Exception {
             when(recordService.completeByWordId(anyLong(), any())).thenThrow(new IllegalArgumentException("词语不存在"));
 
-            mockMvc.perform(post("/api/records/complete/999")
+            mockMvc.perform(post("/api/v1/records/complete/999")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{}"))
                     .andExpect(status().isOk())
@@ -204,7 +204,7 @@ class DictationRecordControllerTest {
         void endDictation() throws Exception {
             doNothing().when(suggestionService).generateSuggestions(anyLong());
 
-            mockMvc.perform(post("/api/records/end/1"))
+            mockMvc.perform(post("/api/v1/records/end/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("听写结束"));
@@ -217,7 +217,7 @@ class DictationRecordControllerTest {
         void endDictationFail() throws Exception {
             doThrow(new RuntimeException("失败")).when(suggestionService).generateSuggestions(anyLong());
 
-            mockMvc.perform(post("/api/records/end/1"))
+            mockMvc.perform(post("/api/v1/records/end/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -235,7 +235,7 @@ class DictationRecordControllerTest {
             when(wordService.getWordById(anyLong())).thenReturn(Optional.of(testWord));
             doNothing().when(difficultWordService).handlePracticeFailureByText(any(), any());
 
-            mockMvc.perform(post("/api/records/1/skip"))
+            mockMvc.perform(post("/api/v1/records/1/skip"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("已跳过"));
@@ -248,7 +248,7 @@ class DictationRecordControllerTest {
         void skipRecordNotFound() throws Exception {
             when(recordService.skipRecord(anyLong())).thenThrow(new IllegalArgumentException("记录不存在"));
 
-            mockMvc.perform(post("/api/records/999/skip"))
+            mockMvc.perform(post("/api/v1/records/999/skip"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -264,7 +264,7 @@ class DictationRecordControllerTest {
             testRecord.setRepeatCount(1);
             when(recordService.incrementRepeatCount(anyLong())).thenReturn(testRecord);
 
-            mockMvc.perform(post("/api/records/1/repeat"))
+            mockMvc.perform(post("/api/v1/records/1/repeat"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -274,7 +274,7 @@ class DictationRecordControllerTest {
         void incrementRepeatCountNotFound() throws Exception {
             when(recordService.incrementRepeatCount(anyLong())).thenThrow(new IllegalArgumentException("记录不存在"));
 
-            mockMvc.perform(post("/api/records/999/repeat"))
+            mockMvc.perform(post("/api/v1/records/999/repeat"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -289,7 +289,7 @@ class DictationRecordControllerTest {
         void getRecordById() throws Exception {
             when(recordService.getRecordById(anyLong())).thenReturn(Optional.of(testRecord));
 
-            mockMvc.perform(get("/api/records/1"))
+            mockMvc.perform(get("/api/v1/records/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -299,7 +299,7 @@ class DictationRecordControllerTest {
         void getRecordByIdNotFound() throws Exception {
             when(recordService.getRecordById(anyLong())).thenReturn(Optional.empty());
 
-            mockMvc.perform(get("/api/records/999"))
+            mockMvc.perform(get("/api/v1/records/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -314,7 +314,7 @@ class DictationRecordControllerTest {
         void getRecordsByBatchId() throws Exception {
             when(recordService.getRecordsByBatchId(anyLong())).thenReturn(List.of(testRecord));
 
-            mockMvc.perform(get("/api/records/batch/1"))
+            mockMvc.perform(get("/api/v1/records/batch/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -330,7 +330,7 @@ class DictationRecordControllerTest {
         void getTodayRecords() throws Exception {
             when(recordService.getTodayRecords()).thenReturn(List.of(testRecord));
 
-            mockMvc.perform(get("/api/records/today"))
+            mockMvc.perform(get("/api/v1/records/today"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -346,7 +346,7 @@ class DictationRecordControllerTest {
         void getRecordsByDateRange() throws Exception {
             when(recordService.getRecordsByDateRange(any(), any())).thenReturn(List.of(testRecord));
 
-            mockMvc.perform(get("/api/records/range?start=2024-01-01&end=2024-01-31"))
+            mockMvc.perform(get("/api/v1/records/range?start=2024-01-01&end=2024-01-31"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -362,7 +362,7 @@ class DictationRecordControllerTest {
         void getTodayReport() throws Exception {
             when(recordService.getTodayRecords()).thenReturn(List.of(testRecord));
 
-            mockMvc.perform(get("/api/records/report/today"))
+            mockMvc.perform(get("/api/v1/records/report/today"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -377,7 +377,7 @@ class DictationRecordControllerTest {
 
             when(recordService.getTodayRecords()).thenReturn(List.of(testRecord, skippedRecord));
 
-            mockMvc.perform(get("/api/records/report/today"))
+            mockMvc.perform(get("/api/v1/records/report/today"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -389,7 +389,7 @@ class DictationRecordControllerTest {
 
             when(recordService.getTodayRecords()).thenReturn(List.of(testRecord));
 
-            mockMvc.perform(get("/api/records/report/today"))
+            mockMvc.perform(get("/api/v1/records/report/today"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -399,7 +399,7 @@ class DictationRecordControllerTest {
         void getTodayReport_emptyList() throws Exception {
             when(recordService.getTodayRecords()).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/records/report/today"))
+            mockMvc.perform(get("/api/v1/records/report/today"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -414,7 +414,7 @@ class DictationRecordControllerTest {
         void getBatchReport() throws Exception {
             when(recordService.getRecordsByBatchId(anyLong())).thenReturn(List.of(testRecord));
 
-            mockMvc.perform(get("/api/records/report/batch/1"))
+            mockMvc.perform(get("/api/v1/records/report/batch/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -429,7 +429,7 @@ class DictationRecordControllerTest {
 
             when(recordService.getRecordsByBatchId(anyLong())).thenReturn(List.of(testRecord, skippedRecord));
 
-            mockMvc.perform(get("/api/records/report/batch/1"))
+            mockMvc.perform(get("/api/v1/records/report/batch/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -444,7 +444,7 @@ class DictationRecordControllerTest {
         void finishBatchWithSuggestions() throws Exception {
             doNothing().when(suggestionService).generateSuggestions(anyLong());
 
-            mockMvc.perform(post("/api/records/batch/1/finish"))
+            mockMvc.perform(post("/api/v1/records/batch/1/finish"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
 
@@ -456,7 +456,7 @@ class DictationRecordControllerTest {
         void finishBatchWithSuggestionsFail() throws Exception {
             doThrow(new RuntimeException("失败")).when(suggestionService).generateSuggestions(anyLong());
 
-            mockMvc.perform(post("/api/records/batch/1/finish"))
+            mockMvc.perform(post("/api/v1/records/batch/1/finish"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -471,7 +471,7 @@ class DictationRecordControllerTest {
         void deleteRecord() throws Exception {
             doNothing().when(recordService).deleteRecord(anyLong());
 
-            mockMvc.perform(delete("/api/records/1"))
+            mockMvc.perform(delete("/api/v1/records/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
 
@@ -483,7 +483,7 @@ class DictationRecordControllerTest {
         void deleteRecordFail() throws Exception {
             doThrow(new RuntimeException("失败")).when(recordService).deleteRecord(anyLong());
 
-            mockMvc.perform(delete("/api/records/1"))
+            mockMvc.perform(delete("/api/v1/records/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }

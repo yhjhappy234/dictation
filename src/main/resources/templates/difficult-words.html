@@ -195,7 +195,7 @@
     // 加载生词
     async function loadDifficultWords() {
         try {
-            const response = await fetch('/api/difficult-words');
+            const response = await fetch('/api/v1/difficult-words');
             if (response.ok) {
                 const result = await response.json();
                 if (result.success && result.data) {
@@ -473,7 +473,7 @@
 
         // 尝试保存到后端
         try {
-            await fetch('/api/difficult-words/' + id, {
+            await fetch('/api/v1/difficult-words/' + id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ masteryLevel: mastery, note: note })
@@ -494,7 +494,7 @@
         selectedIds = selectedIds.filter(function(sid) { return sid !== id; });
 
         try {
-            await fetch('/api/difficult-words/' + id, { method: 'DELETE' });
+            await fetch('/api/v1/difficult-words/' + id, { method: 'DELETE' });
         } catch (error) {
             console.error('删除失败:', error);
         }
@@ -525,7 +525,7 @@
         selectedIds = [];
 
         try {
-            await fetch('/api/difficult-words/batch', {
+            await fetch('/api/v1/difficult-words/batch', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: selectedIds })

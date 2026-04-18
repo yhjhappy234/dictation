@@ -60,7 +60,7 @@ class PresetContentControllerTest {
         @Test
         @DisplayName("获取预设内容列表")
         void getPresetList() throws Exception {
-            mockMvc.perform(get("/api/preset/list"))
+            mockMvc.perform(get("/api/v1/preset/list"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
@@ -75,7 +75,7 @@ class PresetContentControllerTest {
         @Test
         @DisplayName("获取预设内容详情 - 不存在")
         void getPresetContentNotFound() throws Exception {
-            mockMvc.perform(get("/api/preset/nonexistent"))
+            mockMvc.perform(get("/api/v1/preset/nonexistent"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").value("预设内容不存在: nonexistent"));
@@ -85,7 +85,7 @@ class PresetContentControllerTest {
         @DisplayName("获取预设内容详情 - 成功返回JSON数据")
         void getPresetContentReturnsJson() throws Exception {
             // 使用一个真实存在的预设内容测试
-            mockMvc.perform(get("/api/preset/common-words-50"))
+            mockMvc.perform(get("/api/v1/preset/common-words-50"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").exists());
@@ -99,7 +99,7 @@ class PresetContentControllerTest {
         @Test
         @DisplayName("导入预设内容 - 不存在")
         void importPresetContentNotFound() throws Exception {
-            mockMvc.perform(post("/api/preset/import/nonexistent"))
+            mockMvc.perform(post("/api/v1/preset/import/nonexistent"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").value("预设内容不存在: nonexistent"));
@@ -110,7 +110,7 @@ class PresetContentControllerTest {
         void importPresetContentWordsSuccess() throws Exception {
             when(batchService.createBatch(any(BatchCreateRequest.class))).thenReturn(testBatch);
 
-            mockMvc.perform(post("/api/preset/import/common-words-50"))
+            mockMvc.perform(post("/api/v1/preset/import/common-words-50"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("导入成功"))
@@ -127,7 +127,7 @@ class PresetContentControllerTest {
             poemBatch.setBatchName("小学最常用20首古诗");
             when(batchService.createBatch(any(BatchCreateRequest.class))).thenReturn(poemBatch);
 
-            mockMvc.perform(post("/api/preset/import/common-poems-20"))
+            mockMvc.perform(post("/api/v1/preset/import/common-poems-20"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").value(2));
@@ -138,7 +138,7 @@ class PresetContentControllerTest {
         @Test
         @DisplayName("导入预设内容 - 空词语列表")
         void importPresetContentEmptyWords() throws Exception {
-            mockMvc.perform(post("/api/preset/import/test-empty"))
+            mockMvc.perform(post("/api/v1/preset/import/test-empty"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").value("预设内容中没有可听写的词语"));

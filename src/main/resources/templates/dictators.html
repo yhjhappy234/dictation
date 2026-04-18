@@ -78,7 +78,7 @@
     async function loadDictators() {
         try {
             // 获取所有听写人
-            const dictatorsResponse = await fetch('/api/tasks/dictators');
+            const dictatorsResponse = await fetch('/api/v1/tasks/dictators');
             const dictatorsResult = await dictatorsResponse.json();
 
             if (dictatorsResult.success && dictatorsResult.data) {
@@ -88,7 +88,7 @@
             }
 
             // 获取所有任务统计
-            const tasksResponse = await fetch('/api/tasks');
+            const tasksResponse = await fetch('/api/v1/tasks');
             const tasksResult = await tasksResponse.json();
 
             if (tasksResult.success && tasksResult.data) {

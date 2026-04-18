@@ -74,7 +74,7 @@ class AuthControllerTest {
 
             when(userService.login("testuser", "password")).thenReturn(testUser);
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -89,7 +89,7 @@ class AuthControllerTest {
             request.setUsername("");
             request.setPassword("password");
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -104,7 +104,7 @@ class AuthControllerTest {
             request.setUsername("testuser");
             request.setPassword("");
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -121,7 +121,7 @@ class AuthControllerTest {
 
             when(userService.login(anyString(), anyString())).thenReturn(null);
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -137,7 +137,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("登出成功")
         void logout_success() throws Exception {
-            mockMvc.perform(post("/api/auth/logout"))
+            mockMvc.perform(post("/api/v1/auth/logout"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("登出成功"));
@@ -153,7 +153,7 @@ class AuthControllerTest {
         void getAllAvatars_success() throws Exception {
             when(userService.getAllAvatars()).thenReturn(java.util.List.of("avatar1.png", "avatar2.png"));
 
-            mockMvc.perform(get("/api/auth/avatars"))
+            mockMvc.perform(get("/api/v1/auth/avatars"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -174,7 +174,7 @@ class AuthControllerTest {
                 mockedUserContext.when(UserContext::getCurrentUserAvatar).thenReturn("avatar1.png");
                 when(userService.getUserById(anyLong())).thenReturn(Optional.of(testUser));
 
-                mockMvc.perform(get("/api/auth/current"))
+                mockMvc.perform(get("/api/v1/auth/current"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.data.id").value(1))
@@ -189,7 +189,7 @@ class AuthControllerTest {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(null);
                 mockedUserContext.when(UserContext::getCurrentUsername).thenReturn("testuser");
 
-                mockMvc.perform(get("/api/auth/current"))
+                mockMvc.perform(get("/api/v1/auth/current"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false))
                         .andExpect(jsonPath("$.message").value("未登录"));
@@ -203,7 +203,7 @@ class AuthControllerTest {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
                 mockedUserContext.when(UserContext::getCurrentUsername).thenReturn(null);
 
-                mockMvc.perform(get("/api/auth/current"))
+                mockMvc.perform(get("/api/v1/auth/current"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(false))
                         .andExpect(jsonPath("$.message").value("未登录"));
@@ -220,7 +220,7 @@ class AuthControllerTest {
                 mockedUserContext.when(UserContext::getCurrentUserAvatar).thenReturn("avatar1.png");
                 when(userService.getUserById(anyLong())).thenReturn(Optional.empty());
 
-                mockMvc.perform(get("/api/auth/current"))
+                mockMvc.perform(get("/api/v1/auth/current"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.data.username").value("testuser"));
@@ -239,7 +239,7 @@ class AuthControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isLoggedIn).thenReturn(true);
 
-                mockMvc.perform(get("/api/auth/status"))
+                mockMvc.perform(get("/api/v1/auth/status"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.data").value(true));
@@ -252,7 +252,7 @@ class AuthControllerTest {
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::isLoggedIn).thenReturn(false);
 
-                mockMvc.perform(get("/api/auth/status"))
+                mockMvc.perform(get("/api/v1/auth/status"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.data").value(false));
@@ -271,7 +271,7 @@ class AuthControllerTest {
             request.setUsername(null);
             request.setPassword("password");
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -286,7 +286,7 @@ class AuthControllerTest {
             request.setUsername("testuser");
             request.setPassword(null);
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -301,7 +301,7 @@ class AuthControllerTest {
             request.setUsername("   ");
             request.setPassword("password");
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -316,7 +316,7 @@ class AuthControllerTest {
             request.setUsername("testuser");
             request.setPassword("   ");
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -334,7 +334,7 @@ class AuthControllerTest {
 
             when(userService.login("admin", "password")).thenReturn(testUser);
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())

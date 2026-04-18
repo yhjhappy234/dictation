@@ -78,7 +78,7 @@ class SuggestionControllerTest {
             when(suggestionService.getAllSuggestionDTOs()).thenReturn(Arrays.asList(testDTO));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions"))
+            mockMvc.perform(get("/api/v1/suggestions"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
@@ -92,7 +92,7 @@ class SuggestionControllerTest {
             when(suggestionService.getAllSuggestionDTOs()).thenReturn(Collections.emptyList());
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions"))
+            mockMvc.perform(get("/api/v1/suggestions"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isEmpty());
         }
@@ -110,7 +110,7 @@ class SuggestionControllerTest {
                     .thenReturn(Arrays.asList(testSuggestion));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/type/REVIEW_NEEDED"))
+            mockMvc.perform(get("/api/v1/suggestions/type/REVIEW_NEEDED"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -120,7 +120,7 @@ class SuggestionControllerTest {
         @DisplayName("获取指定类型建议 - 无效类型")
         void getSuggestionsByType_invalidType() throws Exception {
             // When & Then
-            mockMvc.perform(get("/api/suggestions/type/INVALID_TYPE"))
+            mockMvc.perform(get("/api/v1/suggestions/type/INVALID_TYPE"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").exists());
@@ -136,7 +136,7 @@ class SuggestionControllerTest {
                     .thenReturn(Arrays.asList(highDifficulty));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/type/HIGH_DIFFICULTY"))
+            mockMvc.perform(get("/api/v1/suggestions/type/HIGH_DIFFICULTY"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -151,7 +151,7 @@ class SuggestionControllerTest {
                     .thenReturn(Arrays.asList(frequentError));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/type/FREQUENT_ERROR"))
+            mockMvc.perform(get("/api/v1/suggestions/type/FREQUENT_ERROR"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -166,7 +166,7 @@ class SuggestionControllerTest {
                     .thenReturn(Arrays.asList(longDuration));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/type/LONG_DURATION"))
+            mockMvc.perform(get("/api/v1/suggestions/type/LONG_DURATION"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -181,7 +181,7 @@ class SuggestionControllerTest {
                     .thenReturn(Arrays.asList(newWord));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/type/NEW_WORD"))
+            mockMvc.perform(get("/api/v1/suggestions/type/NEW_WORD"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -198,7 +198,7 @@ class SuggestionControllerTest {
             when(suggestionService.getSuggestionsByWordId(1L)).thenReturn(Arrays.asList(testSuggestion));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/word/1"))
+            mockMvc.perform(get("/api/v1/suggestions/word/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -211,7 +211,7 @@ class SuggestionControllerTest {
             when(suggestionService.getSuggestionsByWordId(anyLong())).thenReturn(Collections.emptyList());
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/word/999"))
+            mockMvc.perform(get("/api/v1/suggestions/word/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isEmpty());
         }
@@ -228,7 +228,7 @@ class SuggestionControllerTest {
             when(suggestionService.getReviewNeededSuggestions()).thenReturn(Arrays.asList(testSuggestion));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/review"))
+            mockMvc.perform(get("/api/v1/suggestions/review"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray());
@@ -241,7 +241,7 @@ class SuggestionControllerTest {
             when(suggestionService.getReviewNeededSuggestions()).thenReturn(Collections.emptyList());
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/review"))
+            mockMvc.perform(get("/api/v1/suggestions/review"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isEmpty());
         }
@@ -260,7 +260,7 @@ class SuggestionControllerTest {
             when(suggestionService.getHighDifficultySuggestions()).thenReturn(Arrays.asList(highDifficulty));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/high-difficulty"))
+            mockMvc.perform(get("/api/v1/suggestions/high-difficulty"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -279,7 +279,7 @@ class SuggestionControllerTest {
             when(suggestionService.getFrequentErrorSuggestions()).thenReturn(Arrays.asList(frequentError));
 
             // When & Then
-            mockMvc.perform(get("/api/suggestions/frequent-error"))
+            mockMvc.perform(get("/api/v1/suggestions/frequent-error"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -296,7 +296,7 @@ class SuggestionControllerTest {
             when(suggestionService.updatePriority(1L, 4)).thenReturn(testSuggestion);
 
             // When & Then
-            mockMvc.perform(put("/api/suggestions/1/priority")
+            mockMvc.perform(put("/api/v1/suggestions/1/priority")
                     .param("priority", "4"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -311,7 +311,7 @@ class SuggestionControllerTest {
                     .thenThrow(new IllegalArgumentException("Suggestion not found"));
 
             // When & Then
-            mockMvc.perform(put("/api/suggestions/999/priority")
+            mockMvc.perform(put("/api/v1/suggestions/999/priority")
                     .param("priority", "3"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
@@ -329,7 +329,7 @@ class SuggestionControllerTest {
             doNothing().when(suggestionService).deleteSuggestion(1L);
 
             // When & Then
-            mockMvc.perform(delete("/api/suggestions/1"))
+            mockMvc.perform(delete("/api/v1/suggestions/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("建议已删除"));
@@ -342,7 +342,7 @@ class SuggestionControllerTest {
             doThrow(new RuntimeException("Database error")).when(suggestionService).deleteSuggestion(anyLong());
 
             // When & Then
-            mockMvc.perform(delete("/api/suggestions/999"))
+            mockMvc.perform(delete("/api/v1/suggestions/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -359,7 +359,7 @@ class SuggestionControllerTest {
             doNothing().when(suggestionService).deleteSuggestionsByWordId(1L);
 
             // When & Then
-            mockMvc.perform(delete("/api/suggestions/word/1"))
+            mockMvc.perform(delete("/api/v1/suggestions/word/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("词语建议已清空"));
@@ -372,7 +372,7 @@ class SuggestionControllerTest {
             doThrow(new RuntimeException("Database error")).when(suggestionService).deleteSuggestionsByWordId(anyLong());
 
             // When & Then
-            mockMvc.perform(delete("/api/suggestions/word/999"))
+            mockMvc.perform(delete("/api/v1/suggestions/word/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }

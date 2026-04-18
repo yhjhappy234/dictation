@@ -460,7 +460,7 @@
         // 获取当前用户信息
         async function loadCurrentUser() {
             try {
-                const response = await fetch('/api/auth/current', { credentials: 'include' });
+                const response = await fetch('/api/v1/auth/current', { credentials: 'include' });
                 const result = await response.json();
                 if (result.success && result.data) {
                     document.getElementById('currentUsername').textContent = result.data.username;
@@ -481,7 +481,7 @@
         // 加载头像列表
         async function loadAvatars() {
             try {
-                const response = await fetch('/api/auth/avatars', { credentials: 'include' });
+                const response = await fetch('/api/v1/auth/avatars', { credentials: 'include' });
                 const result = await response.json();
                 if (result.success && result.data) {
                     const grid = document.getElementById('avatarGrid');
@@ -507,7 +507,7 @@
         // 选择头像
         async function selectAvatar(avatar) {
             try {
-                const response = await fetch('/api/users/me/avatar?avatar=' + avatar, {
+                const response = await fetch('/api/v1/users/me/avatar?avatar=' + avatar, {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -541,7 +541,7 @@
             }
 
             try {
-                const response = await fetch('/api/users/me/password', {
+                const response = await fetch('/api/v1/users/me/password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -565,7 +565,7 @@
         // 登出
         async function logout() {
             try {
-                const response = await fetch('/api/auth/logout', {
+                const response = await fetch('/api/v1/auth/logout', {
                     method: 'POST',
                     credentials: 'include'
                 });

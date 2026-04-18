@@ -223,7 +223,7 @@
     // 加载任务列表
     async function loadTasks() {
         try {
-            let url = '/api/tasks';
+            let url = '/api/v1/tasks';
             if (currentFilter !== 'all') {
                 url = `/api/tasks/status/${currentFilter}`;
             }
@@ -527,7 +527,7 @@
         }
 
         try {
-            const response = await fetch('/api/tasks', {
+            const response = await fetch('/api/v1/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

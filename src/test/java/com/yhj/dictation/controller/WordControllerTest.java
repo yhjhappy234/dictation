@@ -80,7 +80,7 @@ class WordControllerTest {
             when(wordService.getWordById(1L)).thenReturn(Optional.of(testWord));
 
             // When & Then
-            mockMvc.perform(get("/api/words/1"))
+            mockMvc.perform(get("/api/v1/words/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").value(1))
@@ -94,7 +94,7 @@ class WordControllerTest {
             when(wordService.getWordById(anyLong())).thenReturn(Optional.empty());
 
             // When & Then
-            mockMvc.perform(get("/api/words/999"))
+            mockMvc.perform(get("/api/v1/words/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").exists());
@@ -119,7 +119,7 @@ class WordControllerTest {
             when(wordService.updateWordStatus(1L, Word.WordStatus.COMPLETED)).thenReturn(completedWord);
 
             // When & Then
-            mockMvc.perform(put("/api/words/1/status")
+            mockMvc.perform(put("/api/v1/words/1/status")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -135,7 +135,7 @@ class WordControllerTest {
             request.setStatus("INVALID_STATUS");
 
             // When & Then
-            mockMvc.perform(put("/api/words/1/status")
+            mockMvc.perform(put("/api/v1/words/1/status")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -154,7 +154,7 @@ class WordControllerTest {
                     .thenThrow(new IllegalArgumentException("Word not found"));
 
             // When & Then
-            mockMvc.perform(put("/api/words/999/status")
+            mockMvc.perform(put("/api/v1/words/999/status")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -180,7 +180,7 @@ class WordControllerTest {
             when(wordService.updateWordPinyin(1L, "newpinyin")).thenReturn(updatedWord);
 
             // When & Then
-            mockMvc.perform(put("/api/words/1/pinyin")
+            mockMvc.perform(put("/api/v1/words/1/pinyin")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -199,7 +199,7 @@ class WordControllerTest {
                     .thenThrow(new IllegalArgumentException("Word not found"));
 
             // When & Then
-            mockMvc.perform(put("/api/words/999/pinyin")
+            mockMvc.perform(put("/api/v1/words/999/pinyin")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -222,7 +222,7 @@ class WordControllerTest {
             when(wordService.markAsCompleted(1L)).thenReturn(completedWord);
 
             // When & Then
-            mockMvc.perform(post("/api/words/1/complete"))
+            mockMvc.perform(post("/api/v1/words/1/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("词语已完成"));
@@ -236,7 +236,7 @@ class WordControllerTest {
                     .thenThrow(new IllegalArgumentException("Word not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/words/999/complete"))
+            mockMvc.perform(post("/api/v1/words/999/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -257,7 +257,7 @@ class WordControllerTest {
             when(wordService.markAsSkipped(1L)).thenReturn(skippedWord);
 
             // When & Then
-            mockMvc.perform(post("/api/words/1/skip"))
+            mockMvc.perform(post("/api/v1/words/1/skip"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("词语已跳过"));
@@ -271,7 +271,7 @@ class WordControllerTest {
                     .thenThrow(new IllegalArgumentException("Word not found"));
 
             // When & Then
-            mockMvc.perform(post("/api/words/999/skip"))
+            mockMvc.perform(post("/api/v1/words/999/skip"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }
@@ -293,7 +293,7 @@ class WordControllerTest {
             when(wordService.getNextWord(1L, 1)).thenReturn(Optional.of(nextWord));
 
             // When & Then
-            mockMvc.perform(get("/api/words/batch/1/next")
+            mockMvc.perform(get("/api/v1/words/batch/1/next")
                     .param("currentOrder", "1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -307,7 +307,7 @@ class WordControllerTest {
             when(wordService.getNextWord(anyLong(), anyInt())).thenReturn(Optional.empty());
 
             // When & Then
-            mockMvc.perform(get("/api/words/batch/1/next")
+            mockMvc.perform(get("/api/v1/words/batch/1/next")
                     .param("currentOrder", "5"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false))
@@ -331,7 +331,7 @@ class WordControllerTest {
             when(wordService.getPreviousWord(1L, 2)).thenReturn(Optional.of(prevWord));
 
             // When & Then
-            mockMvc.perform(get("/api/words/batch/1/previous")
+            mockMvc.perform(get("/api/v1/words/batch/1/previous")
                     .param("currentOrder", "2"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
@@ -344,7 +344,7 @@ class WordControllerTest {
             when(wordService.getPreviousWord(anyLong(), anyInt())).thenReturn(Optional.empty());
 
             // When & Then
-            mockMvc.perform(get("/api/words/batch/1/previous")
+            mockMvc.perform(get("/api/v1/words/batch/1/previous")
                     .param("currentOrder", "1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
@@ -362,7 +362,7 @@ class WordControllerTest {
             when(wordService.getFirstWord(1L)).thenReturn(Optional.of(testWord));
 
             // When & Then
-            mockMvc.perform(get("/api/words/batch/1/first"))
+            mockMvc.perform(get("/api/v1/words/batch/1/first"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -374,7 +374,7 @@ class WordControllerTest {
             when(wordService.getFirstWord(anyLong())).thenReturn(Optional.empty());
 
             // When & Then
-            mockMvc.perform(get("/api/words/batch/999/first"))
+            mockMvc.perform(get("/api/v1/words/batch/999/first"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").value("批次中没有词语"));
@@ -392,7 +392,7 @@ class WordControllerTest {
             doNothing().when(wordService).deleteWord(1L);
 
             // When & Then
-            mockMvc.perform(delete("/api/words/1"))
+            mockMvc.perform(delete("/api/v1/words/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("词语删除成功"));
@@ -405,7 +405,7 @@ class WordControllerTest {
             doThrow(new RuntimeException("Database error")).when(wordService).deleteWord(anyLong());
 
             // When & Then
-            mockMvc.perform(delete("/api/words/999"))
+            mockMvc.perform(delete("/api/v1/words/999"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(false));
         }

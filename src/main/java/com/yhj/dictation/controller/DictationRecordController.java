@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/records")
+@RequestMapping("/api/v1/records")
 @RequiredArgsConstructor
 public class DictationRecordController {
 
