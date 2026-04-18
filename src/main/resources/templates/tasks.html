@@ -250,7 +250,7 @@
         try {
             let url = '/api/v1/tasks';
             if (currentFilter !== 'all') {
-                url = `/api/tasks/status/${currentFilter}`;
+                url = `/api/v1/tasks/status/${currentFilter}`;
             }
 
             const response = await fetch(url);
@@ -379,7 +379,7 @@
     // 查看词语
     async function viewWords(taskId) {
         try {
-            const response = await fetch(`/api/tasks/${taskId}`);
+            const response = await fetch(`/api/v1/tasks/${taskId}`);
             const result = await response.json();
 
             if (result.success && result.data) {
@@ -404,7 +404,7 @@
     // 编辑任务
     async function editTask(taskId) {
         try {
-            const response = await fetch(`/api/tasks/${taskId}`);
+            const response = await fetch(`/api/v1/tasks/${taskId}`);
             const result = await response.json();
 
             if (result.success && result.data) {
@@ -441,7 +441,7 @@
 
         try {
             // 更新任务内容
-            const updateResponse = await fetch(`/api/tasks/${taskId}`, {
+            const updateResponse = await fetch(`/api/v1/tasks/${taskId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -454,7 +454,7 @@
 
             if (updateResult.success) {
                 // 更新状态
-                await fetch(`/api/tasks/${taskId}/status?status=${status}`, {
+                await fetch(`/api/v1/tasks/${taskId}/status?status=${status}`, {
                     method: 'PUT'
                 });
 
@@ -474,7 +474,7 @@
     // 更改状态
     async function changeStatus(taskId, status) {
         try {
-            const response = await fetch(`/api/tasks/${taskId}/status?status=${status}`, {
+            const response = await fetch(`/api/v1/tasks/${taskId}/status?status=${status}`, {
                 method: 'PUT'
             });
 
@@ -495,7 +495,7 @@
     // 切换收藏
     async function toggleFavorite(taskId, isFavorite) {
         try {
-            const response = await fetch(`/api/tasks/${taskId}/favorite?isFavorite=${isFavorite}`, {
+            const response = await fetch(`/api/v1/tasks/${taskId}/favorite?isFavorite=${isFavorite}`, {
                 method: 'POST'
             });
 
@@ -520,7 +520,7 @@
         }
 
         try {
-            const response = await fetch(`/api/tasks/${taskId}`, {
+            const response = await fetch(`/api/v1/tasks/${taskId}`, {
                 method: 'DELETE'
             });
 

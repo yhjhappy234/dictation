@@ -236,7 +236,7 @@
     // 显示任务详情
     async function showTaskDetail(taskId) {
         try {
-            const response = await fetch(`/api/tasks/${taskId}`);
+            const response = await fetch(`/api/v1/tasks/${taskId}`);
             const result = await response.json();
 
             if (result.success && result.data) {
@@ -260,7 +260,7 @@
                 wordListBody.innerHTML = '';
 
                 // 获取词语记录
-                const recordResponse = await fetch(`/api/tasks/${taskId}/records`);
+                const recordResponse = await fetch(`/api/v1/tasks/${taskId}/records`);
                 const recordResult = await recordResponse.json();
 
                 if (recordResult.success && recordResult.data && recordResult.data.length > 0) {
@@ -414,13 +414,13 @@
         }
 
         try {
-            const response = await fetch(`/api/tasks/${currentTaskId}`);
+            const response = await fetch(`/api/v1/tasks/${currentTaskId}`);
             const result = await response.json();
 
             if (result.success && result.data) {
                 const task = result.data;
                 // 重置任务进度
-                await fetch(`/api/tasks/${currentTaskId}/reset-progress`, { method: 'POST' });
+                await fetch(`/api/v1/tasks/${currentTaskId}/reset-progress`, { method: 'POST' });
                 // 跳转到首页
                 window.location.href = '/';
             }

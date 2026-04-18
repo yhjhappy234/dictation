@@ -17,9 +17,11 @@
   - 更新单元测试适配MD5加密
 
 #### Bug修复
-- **预设内容API路径修复**：
-  - tasks.html中预设内容API路径改为/api/v1/preset/
-  - 解决常用词语、常用古诗等点击加载失败问题
+- **全量修复前端API路径**：
+  - history.html: 5处 /api/tasks/ -> /api/v1/tasks/
+  - tasks.html: 10处 /api/tasks/ -> /api/v1/tasks/
+  - index.html: 13处旧路径 -> /api/v1/路径
+  - 解决一年级下册、三年级下册、六年级上/下册等所有预设内容加载失败问题
 - **Modal组件显示修复**：
   - 创建独立的modals fragment
   - 所有页面正确引入头像和密码修改模态框

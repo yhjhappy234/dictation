@@ -398,7 +398,7 @@
         startTimer();
 
         // 获取保存的进度
-        fetch(`/api/tasks/${selectedTaskId}`).then(response => response.json())
+        fetch(`/api/v1/tasks/${selectedTaskId}`).then(response => response.json())
             .then(result => {
                 if (result.success && result.data) {
                     const task = result.data;
@@ -437,7 +437,7 @@
         }
 
         try {
-            const response = await fetch(`/api/tasks/${selectedTaskId}/reset-progress`, {
+            const response = await fetch(`/api/v1/tasks/${selectedTaskId}/reset-progress`, {
                 method: 'POST'
             });
             const result = await response.json();
@@ -458,12 +458,12 @@
     async function startDictationFromTask(taskId, dictator) {
         try {
             // 先保存听写人
-            await fetch(`/api/tasks/${taskId}/dictator?dictator=${encodeURIComponent(dictator)}`, {
+            await fetch(`/api/v1/tasks/${taskId}/dictator?dictator=${encodeURIComponent(dictator)}`, {
                 method: 'POST'
             });
 
             // 开始听写
-            const response = await fetch(`/api/tasks/${taskId}/dictation`, {
+            const response = await fetch(`/api/v1/tasks/${taskId}/dictation`, {
                 method: 'POST'
             });
             const result = await response.json();
@@ -581,7 +581,7 @@
 
         try {
             // 更新进度
-            const response = await fetch(`/api/tasks/${selectedTaskId}/progress`, {
+            const response = await fetch(`/api/v1/tasks/${selectedTaskId}/progress`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -669,7 +669,7 @@
     // 开始听写词语（调用API）
     async function startWordRecord(taskId, word) {
         try {
-            await fetch(`/api/tasks/${taskId}/start-word?word=${encodeURIComponent(word)}`, {
+            await fetch(`/api/v1/tasks/${taskId}/start-word?word=${encodeURIComponent(word)}`, {
                 method: 'POST'
             });
         } catch (error) {
@@ -768,7 +768,7 @@
     // 增加朗读次数（调用API）
     async function incrementReadCount(taskId, word) {
         try {
-            await fetch(`/api/tasks/${taskId}/read-word?word=${encodeURIComponent(word)}`, {
+            await fetch(`/api/v1/tasks/${taskId}/read-word?word=${encodeURIComponent(word)}`, {
                 method: 'POST'
             });
         } catch (error) {
@@ -813,7 +813,7 @@
     // 完成词语听写（调用API）
     async function completeWordRecord(taskId, word, isCorrect) {
         try {
-            await fetch(`/api/tasks/${taskId}/complete-word?word=${encodeURIComponent(word)}&isCorrect=${isCorrect}`, {
+            await fetch(`/api/v1/tasks/${taskId}/complete-word?word=${encodeURIComponent(word)}&isCorrect=${isCorrect}`, {
                 method: 'POST'
             });
         } catch (error) {
@@ -948,7 +948,7 @@
 
         try {
             // 先更新进度统计数据
-            const progressResponse = await fetch(`/api/tasks/${selectedTaskId}/progress`, {
+            const progressResponse = await fetch(`/api/v1/tasks/${selectedTaskId}/progress`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -959,7 +959,7 @@
             });
 
             // 然后标记任务完成
-            const response = await fetch(`/api/tasks/${selectedTaskId}/complete`, {
+            const response = await fetch(`/api/v1/tasks/${selectedTaskId}/complete`, {
                 method: 'POST'
             });
 
@@ -1054,7 +1054,7 @@
     async function updateBatchStatus() {
         if (!batchId) return;
         try {
-            await fetch(`/api/batches/${batchId}/complete`, {
+            await fetch(`/api/v1/batches/${batchId}/complete`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1171,7 +1171,7 @@
         selectedTaskId = taskId;
 
         try {
-            const response = await fetch(`/api/tasks/${taskId}`);
+            const response = await fetch(`/api/v1/tasks/${taskId}`);
             const result = await response.json();
 
             if (result.success && result.data) {
