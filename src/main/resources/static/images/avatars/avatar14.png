@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="#be1b53"/><circle cx="50" cy="35" r="20" fill="#fff"/><ellipse cx="50" cy="75" rx="30" ry="25" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="40" fill="#DDA0DD"/>
+  <path d="M25 30 Q40 50 25 70 Q50 90 75 70 Q60 50 75 30 Q50 10 25 30" fill="#DDA0DD"/>
+  <circle cx="40" cy="42" r="6" fill="#333"/>
+  <circle cx="60" cy="42" r="6" fill="#333"/>
+  <path d="M45 55 Q50 60 55 55" stroke="#333" fill="none" stroke-width="2"/>
+</svg>

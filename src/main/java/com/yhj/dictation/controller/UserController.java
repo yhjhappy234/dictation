@@ -196,11 +196,14 @@ public class UserController {
         }
 
         try {
+            if (request.getOldPassword() == null || request.getOldPassword().trim().isEmpty()) {
+                return ApiResponse.error("旧密码不能为空");
+            }
             if (request.getNewPassword() == null || request.getNewPassword().trim().isEmpty()) {
                 return ApiResponse.error("新密码不能为空");
             }
 
-            userService.updatePassword(userId, request.getNewPassword());
+            userService.updatePasswordWithVerify(userId, request.getOldPassword(), request.getNewPassword());
             return ApiResponse.success("密码修改成功", null);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());

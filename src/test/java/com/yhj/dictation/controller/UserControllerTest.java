@@ -166,12 +166,13 @@ class UserControllerTest {
         @DisplayName("修改密码成功")
         void updateMyPassword_success() throws Exception {
             PasswordUpdateRequest request = new PasswordUpdateRequest();
+            request.setOldPassword("oldPassword");
             request.setNewPassword("newPassword123");
 
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
                 testUser.setPassword("newEncodedPassword");
-                when(userService.updatePassword(anyLong(), anyString())).thenReturn(testUser);
+                when(userService.updatePasswordWithVerify(anyLong(), anyString(), anyString())).thenReturn(testUser);
 
                 mockMvc.perform(post("/api/v1/users/me/password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -185,6 +186,7 @@ class UserControllerTest {
         @DisplayName("未登录")
         void updateMyPassword_notLoggedIn() throws Exception {
             PasswordUpdateRequest request = new PasswordUpdateRequest();
+            request.setOldPassword("oldPassword");
             request.setNewPassword("newPassword123");
 
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
@@ -451,9 +453,29 @@ class UserControllerTest {
     class UpdatePasswordValidationTests {
 
         @Test
-        @DisplayName("新密码为空")
-        void updateMyPassword_emptyPassword() throws Exception {
+        @DisplayName("旧密码为空")
+        void updateMyPassword_emptyOldPassword() throws Exception {
             PasswordUpdateRequest request = new PasswordUpdateRequest();
+            request.setOldPassword("");
+            request.setNewPassword("newPassword");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
+
+                mockMvc.perform(post("/api/v1/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.message").value("旧密码不能为空"));
+            }
+        }
+
+        @Test
+        @DisplayName("新密码为空")
+        void updateMyPassword_emptyNewPassword() throws Exception {
+            PasswordUpdateRequest request = new PasswordUpdateRequest();
+            request.setOldPassword("oldPassword");
             request.setNewPassword("");
 
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
@@ -469,14 +491,37 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("修改密码失败")
-        void updateMyPassword_fail() throws Exception {
+        @DisplayName("旧密码不正确")
+        void updateMyPassword_wrongOldPassword() throws Exception {
             PasswordUpdateRequest request = new PasswordUpdateRequest();
+            request.setOldPassword("wrongPassword");
             request.setNewPassword("newPassword");
 
             try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
                 mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
-                when(userService.updatePassword(anyLong(), anyString())).thenThrow(new IllegalArgumentException("用户不存在"));
+                when(userService.updatePasswordWithVerify(anyLong(), anyString(), anyString()))
+                        .thenThrow(new IllegalArgumentException("旧密码不正确"));
+
+                mockMvc.perform(post("/api/v1/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.message").value("旧密码不正确"));
+            }
+        }
+
+        @Test
+        @DisplayName("修改密码失败 - 用户不存在")
+        void updateMyPassword_fail() throws Exception {
+            PasswordUpdateRequest request = new PasswordUpdateRequest();
+            request.setOldPassword("oldPassword");
+            request.setNewPassword("newPassword");
+
+            try (MockedStatic<UserContext> mockedUserContext = mockStatic(UserContext.class)) {
+                mockedUserContext.when(UserContext::getCurrentUserId).thenReturn(1L);
+                when(userService.updatePasswordWithVerify(anyLong(), anyString(), anyString()))
+                        .thenThrow(new IllegalArgumentException("用户不存在"));
 
                 mockMvc.perform(post("/api/v1/users/me/password")
                         .contentType(MediaType.APPLICATION_JSON)

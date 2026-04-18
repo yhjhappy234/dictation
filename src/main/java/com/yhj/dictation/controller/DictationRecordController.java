@@ -1,5 +1,6 @@
 package com.yhj.dictation.controller;
 
+import com.yhj.dictation.annotation.AuditLog;
 import com.yhj.dictation.dto.ApiResponse;
 import com.yhj.dictation.dto.CompleteRequest;
 import com.yhj.dictation.dto.DictationResponse;
@@ -138,6 +139,7 @@ public class DictationRecordController {
      * 获取记录详情
      */
     @GetMapping("/{id}")
+    @AuditLog(operation = "获取听写记录详情")
     public ApiResponse<DictationResponse> getRecordById(@PathVariable Long id) {
         return recordService.getRecordById(id)
                 .map(this::toDictationResponse)
@@ -149,6 +151,7 @@ public class DictationRecordController {
      * 获取批次的所有记录
      */
     @GetMapping("/batch/{batchId}")
+    @AuditLog(operation = "获取批次记录")
     public ApiResponse<List<DictationResponse>> getRecordsByBatchId(@PathVariable Long batchId) {
         List<DictationResponse> records = recordService.getRecordsByBatchId(batchId)
                 .stream()
@@ -161,6 +164,7 @@ public class DictationRecordController {
      * 获取今日记录
      */
     @GetMapping("/today")
+    @AuditLog(operation = "获取今日记录")
     public ApiResponse<List<DictationResponse>> getTodayRecords() {
         List<DictationResponse> records = recordService.getTodayRecords()
                 .stream()
@@ -173,6 +177,7 @@ public class DictationRecordController {
      * 获取指定日期范围的记录
      */
     @GetMapping("/range")
+    @AuditLog(operation = "获取日期范围记录")
     public ApiResponse<List<DictationResponse>> getRecordsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
@@ -191,6 +196,7 @@ public class DictationRecordController {
      * 获取今日统计报告
      */
     @GetMapping("/report/today")
+    @AuditLog(operation = "获取今日统计报告")
     public ApiResponse<ReportDTO> getTodayReport() {
         List<DictationRecord> records = recordService.getTodayRecords();
         ReportDTO report = buildReport(records);
@@ -201,6 +207,7 @@ public class DictationRecordController {
      * 获取批次统计报告
      */
     @GetMapping("/report/batch/{batchId}")
+    @AuditLog(operation = "获取批次统计报告")
     public ApiResponse<ReportDTO> getBatchReport(@PathVariable Long batchId) {
         List<DictationRecord> records = recordService.getRecordsByBatchId(batchId);
         ReportDTO report = buildReport(records);

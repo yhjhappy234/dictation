@@ -60,6 +60,7 @@ public class DictationTaskController {
      * 获取所有任务模板
      */
     @GetMapping
+    @AuditLog(operation = "获取任务列表")
     public ApiResponse<List<TaskDTO>> getAllTasks() {
         try {
             List<TaskDTO> tasks = taskService.getAllTaskDTOs();
@@ -74,6 +75,7 @@ public class DictationTaskController {
      * 获取未完成的任务（未开始+进行中）- 用于首页下拉
      */
     @GetMapping("/uncompleted")
+    @AuditLog(operation = "获取未完成任务")
     public ApiResponse<List<TaskDTO>> getUncompletedTasks() {
         try {
             List<TaskDTO> tasks = taskService.getUncompletedTaskDTOs();
@@ -88,6 +90,7 @@ public class DictationTaskController {
      * 根据ID获取任务模板
      */
     @GetMapping("/{id}")
+    @AuditLog(operation = "获取任务详情")
     public ApiResponse<TaskDTO> getTaskById(@PathVariable Long id) {
         try {
             Optional<DictationTask> taskOpt = taskService.getTaskById(id);
@@ -239,6 +242,7 @@ public class DictationTaskController {
      * 获取指定状态的任务
      */
     @GetMapping("/status/{status}")
+    @AuditLog(operation = "获取状态任务")
     public ApiResponse<List<TaskDTO>> getTasksByStatus(@PathVariable TaskStatus status) {
         try {
             List<DictationTask> tasks = taskService.getTasksByStatus(status);
@@ -347,6 +351,7 @@ public class DictationTaskController {
      * 获取收藏的任务模板
      */
     @GetMapping("/favorites")
+    @AuditLog(operation = "获取收藏任务")
     public ApiResponse<List<TaskDTO>> getFavoriteTasks() {
         try {
             List<DictationTask> tasks = taskService.getFavoriteTasks();
@@ -364,6 +369,7 @@ public class DictationTaskController {
      * 获取任务的听写记录
      */
     @GetMapping("/{id}/records")
+    @AuditLog(operation = "获取听写记录")
     public ApiResponse<List<TaskRecord>> getTaskRecords(@PathVariable Long id) {
         try {
             List<TaskRecord> records = taskRecordService.getRecordsByTaskId(id);
@@ -378,6 +384,7 @@ public class DictationTaskController {
      * 获取所有听写人列表
      */
     @GetMapping("/dictators")
+    @AuditLog(operation = "获取听写人列表")
     public ApiResponse<List<String>> getDictators() {
         try {
             List<String> dictators = taskService.getAllDictators();

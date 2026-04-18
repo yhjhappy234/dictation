@@ -1,5 +1,6 @@
 package com.yhj.dictation.controller;
 
+import com.yhj.dictation.annotation.AuditLog;
 import com.yhj.dictation.dto.ApiResponse;
 import com.yhj.dictation.dto.BatchCreateRequest;
 import com.yhj.dictation.dto.BatchResponse;
@@ -46,6 +47,7 @@ public class DictationBatchController {
      * 获取所有批次
      */
     @GetMapping
+    @AuditLog(operation = "获取批次列表")
     public ApiResponse<List<BatchResponse>> getAllBatches() {
         List<BatchResponse> batches = batchService.getAllBatchResponses();
         return ApiResponse.success(batches);
@@ -55,6 +57,7 @@ public class DictationBatchController {
      * 获取今日批次
      */
     @GetMapping("/today")
+    @AuditLog(operation = "获取今日批次")
     public ApiResponse<List<BatchResponse>> getTodayBatches() {
         List<BatchResponse> batches = batchService.getTodayBatchResponses();
         return ApiResponse.success(batches);
@@ -64,6 +67,7 @@ public class DictationBatchController {
      * 获取日期范围内的批次
      */
     @GetMapping("/range")
+    @AuditLog(operation = "获取批次范围")
     public ApiResponse<List<BatchResponse>> getBatchesByRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
@@ -75,6 +79,7 @@ public class DictationBatchController {
      * 获取批次详情
      */
     @GetMapping("/{id}")
+    @AuditLog(operation = "获取批次详情")
     public ApiResponse<BatchResponse> getBatchById(@PathVariable Long id) {
         try {
             BatchResponse response = batchService.getBatchResponseById(id);
@@ -141,6 +146,7 @@ public class DictationBatchController {
      * 获取批次中的所有词语
      */
     @GetMapping("/{id}/words")
+    @AuditLog(operation = "获取批次词语")
     public ApiResponse<List<Word>> getBatchWords(@PathVariable Long id) {
         List<Word> words = wordService.getWordsByBatchId(id);
         return ApiResponse.success(words);

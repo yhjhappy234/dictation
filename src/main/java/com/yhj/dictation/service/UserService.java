@@ -148,7 +148,7 @@ public class UserService {
     }
 
     /**
-     * 更新用户密码
+     * 更新用户密码（需验证旧密码）
      */
     @Transactional
     public User updatePassword(Long userId, String newPassword) {
@@ -158,6 +158,30 @@ public class UserService {
         }
 
         User user = userOpt.get();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(LocalDateTime.now());
+
+        user = userRepository.save(user);
+        log.info("更新用户密码: {}", user.getUsername());
+        return user;
+    }
+
+    /**
+     * 更新用户密码（需验证旧密码）
+     */
+    @Transactional
+    public User updatePasswordWithVerify(Long userId, String oldPassword, String newPassword) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("用户不存在: " + userId);
+        }
+
+        User user = userOpt.get();
+        // 验证旧密码
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new IllegalArgumentException("旧密码不正确");
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setUpdatedAt(LocalDateTime.now());
 

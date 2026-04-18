@@ -345,7 +345,7 @@
 <nav th:fragment="navbar(activePage)" class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand" href="/" id="navBrand">
-            <i class="bi bi-book-half me-2"></i>听写小助手 <small class="version-text"></small>
+            <i class="bi bi-book-half me-2"></i>听写小助手
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
@@ -451,6 +451,10 @@
                 </div>
                 <div class="modal-body">
                     <form id="passwordForm">
+                        <div class="mb-3">
+                            <label class="form-label">旧密码</label>
+                            <input type="password" class="form-control" id="oldPassword" required>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">新密码</label>
                             <input type="password" class="form-control" id="newPassword" required minlength="6">
@@ -614,8 +618,14 @@
 
         // 修改密码
         async function changePassword() {
+            const oldPassword = document.getElementById('oldPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!oldPassword) {
+                showToast('请输入旧密码', 'warning');
+                return;
+            }
 
             if (!newPassword || newPassword.length < 6) {
                 showToast('密码长度至少6位', 'warning');
@@ -632,11 +642,12 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ newPassword: newPassword })
+                    body: JSON.stringify({ oldPassword: oldPassword, newPassword: newPassword })
                 });
                 const result = await response.json();
                 if (result.success) {
                     bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+                    document.getElementById('oldPassword').value = '';
                     document.getElementById('newPassword').value = '';
                     document.getElementById('confirmPassword').value = '';
                     showToast('密码修改成功', 'success');

@@ -25,12 +25,14 @@ public class DifficultWordController {
     private final DifficultWordService difficultWordService;
 
     @GetMapping
+    @AuditLog(operation = "获取生词列表")
     public ApiResponse<List<DifficultWordDTO>> getAllDifficultWords() {
         List<DifficultWordDTO> words = difficultWordService.getDifficultWords();
         return ApiResponse.success(words);
     }
 
     @GetMapping("/dictator/{dictator}")
+    @AuditLog(operation = "获取听写人生词")
     public ApiResponse<List<DifficultWordDTO>> getDifficultWordsByDictator(@PathVariable String dictator) {
         List<DifficultWordDTO> words = difficultWordService.getDifficultWordsByDictator(dictator)
                 .stream()
@@ -40,6 +42,7 @@ public class DifficultWordController {
     }
 
     @GetMapping("/difficult")
+    @AuditLog(operation = "获取难词列表")
     public ApiResponse<List<DifficultWordDTO>> getDifficultWords(
             @RequestParam(defaultValue = "3") Integer maxMasteryLevel) {
         List<DifficultWordDTO> words = difficultWordService.getDifficultWordsByMasteryLevel(maxMasteryLevel)
@@ -50,6 +53,7 @@ public class DifficultWordController {
     }
 
     @GetMapping("/recommended")
+    @AuditLog(operation = "获取推荐生词")
     public ApiResponse<List<DifficultWordDTO>> getRecommendedWords(
             @RequestParam(defaultValue = "3") Integer minErrors,
             @RequestParam(defaultValue = "10") Integer minDuration) {
