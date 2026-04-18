@@ -907,7 +907,7 @@
         document.getElementById('completeArea').style.display = 'block';
         document.getElementById('correctCount').textContent = correctCount;
         document.getElementById('wrongCount').textContent = wrongCount;
-        document.getElementById('wordDisplay').innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>';
+        document.getElementById('wordDisplay').innerHTML = '<i class="bi bi-trophy-fill text-warning" style="font-size: 4rem;"></i><div class="ms-3 text-success fw-bold fs-4">恭喜完成听写！</div>';
 
         // 如果是从已保存任务开始的，自动标记任务为已完成
         if (selectedTaskId) {
