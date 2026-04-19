@@ -5,6 +5,8 @@ target/
 
 # Database (keep resources copy)
 # dictation.db in resources is kept for deployment
+*.db-wal
+*.db-shm
 
 # IDE
 .idea/

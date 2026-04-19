@@ -111,7 +111,7 @@
                 <div class="card-body d-flex flex-column">
                     <!-- 词语显示区 -->
                     <div class="word-display mb-4" id="wordDisplay">
-                        <span class="text-muted fs-5">请先选择听写任务</span>
+                        <span class="text-muted fs-4">请先选择听写任务</span>
                     </div>
 
                     <!-- 当前状态 -->
@@ -125,13 +125,13 @@
                     <!-- 控制按钮 -->
                     <div class="d-flex justify-content-center flex-wrap mb-3" id="controlButtons" style="display: none;">
                         <button class="btn btn-info btn-action" onclick="previousWord()" id="prevBtn">
-                            <i class="bi bi-arrow-left-circle me-2"></i>上一个 <small class="text-muted">(←)</small>
+                            <i class="bi bi-arrow-left-circle me-2"></i>上一个 <span class="text-muted fs-6">(←)</span>
                         </button>
                         <button class="btn btn-warning btn-action" onclick="readAgain()">
-                            <i class="bi bi-volume-up me-2"></i>再次朗读 <small class="text-muted">(↑)</small>
+                            <i class="bi bi-volume-up me-2"></i>再次朗读 <span class="text-muted fs-6">(↑)</span>
                         </button>
                         <button class="btn btn-info btn-action" onclick="nextWord()" id="nextBtn">
-                            <i class="bi bi-arrow-right-circle me-2"></i>下一个 <small class="text-muted">(→)</small>
+                            <i class="bi bi-arrow-right-circle me-2"></i>下一个 <span class="text-muted fs-6">(→)</span>
                         </button>
                     </div>
 
@@ -139,10 +139,10 @@
                     <div class="text-center" id="answerArea" style="display: none;">
                         <div class="d-flex justify-content-center gap-2 flex-wrap mb-3">
                             <button class="btn btn-outline-warning btn-action" onclick="toggleAutoDictation()" id="autoDictationBtn">
-                                <i class="bi bi-robot me-2"></i>自动听写 <small class="text-muted">(A)</small>
+                                <i class="bi bi-robot me-2"></i>自动听写 <span class="text-muted fs-6">(A)</span>
                             </button>
                             <button class="btn btn-outline-secondary btn-action" id="answerBtn" onclick="toggleAnswer()">
-                                <i class="bi bi-eye-slash me-2"></i>隐藏答案 <small class="text-muted">(↓)</small>
+                                <i class="bi bi-eye-slash me-2"></i>隐藏答案 <span class="text-muted fs-6">(↓)</span>
                             </button>
                         </div>
                     </div>
@@ -150,11 +150,11 @@
                     <!-- 实时统计信息 -->
                     <div class="text-center mb-3" id="realTimeStats" style="display: none;">
                         <div class="d-flex justify-content-center gap-3 flex-wrap">
-                            <span class="badge bg-info fs-6"><i class="bi bi-clock me-1"></i>耗时: <span id="dictationTime">00:00</span></span>
-                            <span class="badge bg-success fs-6"><i class="bi bi-check-circle me-1"></i>正确: <span id="realTimeCorrect">0</span></span>
-                            <span class="badge bg-danger fs-6"><i class="bi bi-x-circle me-1"></i>错误: <span id="realTimeWrong">0</span></span>
-                            <span class="badge bg-primary fs-6"><i class="bi bi-bar-chart me-1"></i><span id="realTimeProgress">0</span>/<span id="realTimeTotal">0</span></span>
-                            <span class="badge bg-secondary fs-6"><i class="bi bi-percent me-1"></i><span id="realTimePercent">0%</span></span>
+                            <span class="badge bg-info fs-5"><i class="bi bi-clock me-1"></i>耗时: <span id="dictationTime">00:00</span></span>
+                            <span class="badge bg-success fs-5"><i class="bi bi-check-circle me-1"></i>正确: <span id="realTimeCorrect">0</span></span>
+                            <span class="badge bg-danger fs-5"><i class="bi bi-x-circle me-1"></i>错误: <span id="realTimeWrong">0</span></span>
+                            <span class="badge bg-primary fs-5"><i class="bi bi-bar-chart me-1"></i><span id="realTimeProgress">0</span>/<span id="realTimeTotal">0</span></span>
+                            <span class="badge bg-secondary fs-5"><i class="bi bi-percent me-1"></i><span id="realTimePercent">0%</span></span>
                         </div>
                     </div>
 
@@ -531,12 +531,12 @@
         const btn = document.getElementById('autoDictationBtn');
 
         if (autoDictationEnabled) {
-            btn.innerHTML = '<i class="bi bi-robot me-2"></i>停止自动 <small class="text-muted">(A)</small>';
+            btn.innerHTML = '<i class="bi bi-robot me-2"></i>停止自动 <span class="text-muted fs-6">(A)</span>';
             btn.className = 'btn btn-warning btn-action';
             showToast(`已开启自动听写，每${autoInterval}秒自动执行下一个`, 'info');
             startAutoDictation();
         } else {
-            btn.innerHTML = '<i class="bi bi-robot me-2"></i>自动听写 <small class="text-muted">(A)</small>';
+            btn.innerHTML = '<i class="bi bi-robot me-2"></i>自动听写 <span class="text-muted fs-6">(A)</span>';
             btn.className = 'btn btn-outline-warning btn-action';
             stopAutoDictation();
             showToast('已关闭自动听写', 'info');
@@ -612,7 +612,7 @@
 
                 // 重置自动听写按钮状态
                 const btn = document.getElementById('autoDictationBtn');
-                btn.innerHTML = '<i class="bi bi-robot me-2"></i>自动听写 <small class="text-muted">(A)</small>';
+                btn.innerHTML = '<i class="bi bi-robot me-2"></i>自动听写 <span class="text-muted fs-6">(A)</span>';
                 btn.className = 'btn btn-outline-warning btn-action';
             } else {
                 showToast(result.message || '保存失败', 'warning');
@@ -1013,7 +1013,7 @@
         document.getElementById('completeArea').style.display = 'none';
         document.getElementById('wrongWordsSection').style.display = 'none';
         document.getElementById('startBtn').disabled = false;
-        document.getElementById('wordDisplay').innerHTML = '<span class="text-muted fs-5">请先选择听写任务</span>';
+        document.getElementById('wordDisplay').innerHTML = '<span class="text-muted fs-4">请先选择听写任务</span>';
 
         words = [];
         currentIndex = 0;
