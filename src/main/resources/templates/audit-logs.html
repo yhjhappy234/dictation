@@ -97,8 +97,8 @@
                         <div class="text-muted small">
                             共 <strong id="totalLogs">0</strong> 条记录，当前第 <strong id="currentPageNum">1</strong>/<strong id="totalPagesNum">1</strong> 页
                         </div>
-                        <nav id="pagination">
-                            <ul class="pagination pagination-sm mb-0">
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="paginationList">
                             </ul>
                         </nav>
                     </div>
@@ -328,8 +328,8 @@
 
     // 渲染分页
     function renderPagination(pageData) {
-        const pagination = document.getElementById('pagination');
-        pagination.innerHTML = '';
+        const paginationList = document.getElementById('paginationList');
+        paginationList.innerHTML = '';
 
         if (pageData.totalPages <= 1) return;
 
@@ -355,7 +355,7 @@
             <a class="page-link" href="#" onclick="goToPage(${pageData.number + 1})"><i class="bi bi-chevron-right"></i></a>
         </li>`;
 
-        pagination.innerHTML = html;
+        paginationList.innerHTML = html;
     }
 
     // 跳转到指定页
